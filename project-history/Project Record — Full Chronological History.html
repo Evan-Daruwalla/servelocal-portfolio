@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Record — ServeLocal</title>
+<style>
+  :root {
+    --bg: #0d1117; --fg: #c9d1d9; --muted: #8b949e; --link: #58a6ff;
+    --border: #30363d; --table-alt: #161b22; --code-bg: #161b22; --accent: #1f6feb;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --link: #0969da;
+      --border: #d0d7de; --table-alt: #f6f8fa; --code-bg: #f6f8fa; --accent: #0969da;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px; line-height: 1.6;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 120px; }
+  h1, h2, h3, h4 { font-weight: 600; line-height: 1.25; margin-top: 1.6em; margin-bottom: .5em; scroll-margin-top: 25vh; }
+  h1 { font-size: 1.9em; border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+  h2 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+  h3 { font-size: 1.2em; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; display: block; overflow-x: auto; }
+  th, td { border: 1px solid var(--border); padding: 6px 13px; }
+  tr:nth-child(2n) { background: var(--table-alt); }
+  th { background: var(--table-alt); font-weight: 600; }
+  code { background: var(--code-bg); padding: .2em .4em; border-radius: 6px; font-size: 85%;
+         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+  pre { background: var(--code-bg); padding: 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  blockquote { border-left: 4px solid var(--border); margin: 1em 0; padding: 0 1em; color: var(--muted); }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 2em 0; }
+  .topbar { position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border);
+            padding: 10px 24px; font-size: 14px; color: var(--muted); z-index: 10; }
+  .topbar a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="topbar">Project Record · <a href="#table-of-contents">Jump to Table of Contents</a></div>
+<div class="wrap">
+<h1 id="project-record--full-chronological-history">Project Record — Full Chronological History</h1>
+<p>Written 2026-07-08. This is the <strong>whole-project</strong> record for ServeLocal, spanning<br />
+both eras — the zero-dependency Node <strong>v1</strong> (<code>ServeLocal website/</code>, GitHub<br />
+<code>Evan-Daruwalla/ServeLocal</code>, branch <code>master</code>) and the production-stack <strong>v2</strong><br />
+rewrite (<code>servelocal-v2/</code>, FastAPI/SQLAlchemy/Postgres + Next.js/TS). It sits<br />
+above the two per-project append-only records and consolidates them into one<br />
+timeline.</p>
+<p>Every entry is grounded in one of:<br />
+- Git commit history (<code>git log</code> in each subproject — hash + author date)<br />
+- Existing docs (<code>HANDOFF.md</code>, <code>docs/state_*.md</code>, <code>docs/record_*.md</code>, <code>docs/adr/</code>)<br />
+- File contents / <code>CLAUDE.md</code> for each era</p>
+<p>Sections where a fact can't be verified from the above are explicitly marked.<br />
+No fabricated metrics, dates, hashes, or file names. Where a figure appears<br />
+(test counts, req/s, user ceilings), it is quoted from the doc/commit that<br />
+recorded it, not re-measured here.</p>
+<blockquote>
+<p><strong>REMINDER: after editing this file, refresh the HTML.</strong> The rendered view<br />
+(<code>Project Record — Full Chronological History.html</code>, same folder) does NOT<br />
+auto-update — it's a static snapshot. From the ServeLocal root run:<br />
+<code>python -m scripts.render_record_html</code> (overwrites the HTML, fails loudly on<br />
+any broken anchor). Never hand-edit the HTML.</p>
+</blockquote>
+<hr />
+<h2 id="update-protocol-read-before-editing">Update protocol (read before editing)</h2>
+<p>This document is <strong>append-only</strong> and updated <strong>when a medium-or-larger change<br />
+lands</strong> — a shipped feature/batch, an architectural decision (ADR / milestone),<br />
+a data-integrity or security fix, a scope/direction change, or a launch-gating<br />
+event. Trivial edits (typos, one-line doc tweaks, dependency bumps with no<br />
+behavior change) do NOT get an entry; they live in the per-project records.</p>
+<p>When appending:<br />
+1. Add a new dated <code>##</code> entry at the <strong>bottom</strong> of the relevant Part (I = v1,<br />
+   II = v2). Never edit or delete a prior entry — if something logged turns out<br />
+   wrong, add a NEW entry correcting it and reference the old one.<br />
+2. Capture <strong>WHAT</strong> changed, <strong>WHY</strong> (problem/tradeoff), <strong>HOW</strong> (approach,<br />
+   especially if an earlier approach was abandoned), and any <strong>bug + root cause<br />
+   + fix</strong> (the debugging trail is the most valuable narrative material).<br />
+3. Use absolute dates (<code>2026-07-08</code>, never "today"). Cite the commit hash.<br />
+4. Add a row to the <strong>Summary timeline</strong> and, if it's a new milestone/ADR,<br />
+   update the relevant index.<br />
+5. Keep the per-project records (<code>ServeLocal website/docs/record_2026-07-02.md</code>,<br />
+<code>servelocal-v2/docs/record_2026-07-07.md</code>) as the fine-grained log; this file<br />
+   is the consolidated, cross-era view.</p>
+<hr />
+<h2 id="how-this-document-is-organized">How this document is organized</h2>
+<ul>
+<li><strong>Part I — v1 (zero-dependency Node)</strong>: the original proven app. Chronological<br />
+  from the first commit through the last v1 change. This era is <em>frozen as the<br />
+  behavioral reference</em> for v2 — v1 work is not expected to continue, but the<br />
+  history stays here.</li>
+<li><strong>Part II — v2 (production-stack rewrite)</strong>: the FastAPI + Next.js rebuild,<br />
+  driven by <code>servelocal-v2/PRD_ROADMAP.md</code> (milestones M1–M10). This is the<br />
+  active era.</li>
+</ul>
+<p>The one-paragraph arc, the thematic digest, the <strong>current state snapshot</strong>, and the<br />
+summary timeline below are reading aids updated in place (not append-only); the<br />
+authoritative chronological detail always lives in the dated entry. The current<br />
+state snapshot consolidates what used to live in the per-project <code>state_&lt;date&gt;.md</code><br />
+files — that tier is retired (Evan's decision, 2026-07-08).</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<p><strong>Part I — v1 (zero-dep Node)</strong><br />
+- <a href="#i0--pre-git-origin-portfolio-brief-compliance-scaffolding">I.0 — Pre-git origin (portfolio brief, compliance scaffolding)</a><br />
+- <a href="#i1--initial-platform-commit-2026-07-02">I.1 — Initial platform commit (2026-07-02)</a><br />
+- <a href="#i2--guardian-consent--in-memory-indexes--editorial-restyle-2026-07-03">I.2 — Guardian consent + in-memory indexes + editorial restyle (2026-07-03)</a><br />
+- <a href="#i3--scaling-sqlite-migration-pagination-securityperf-batch-ci-2026-07-04">I.3 — Scaling: SQLite migration, pagination, security/perf batch, CI (2026-07-04)</a><br />
+- <a href="#i4--graph-audit-batch--csp-lockdown-2026-07-05">I.4 — Graph-audit batch + CSP lockdown (2026-07-05)</a><br />
+- <a href="#i5--claudemd-upgrade-v1-freeze-as-v2-reference-2026-07-07">I.5 — CLAUDE.md upgrade; v1 freeze as v2 reference (2026-07-07)</a></p>
+<p><strong>Part II — v2 (production rewrite)</strong><br />
+- <a href="#ii1--monorepo-scaffold--auth-slice-2026-07-07">II.1 — Monorepo scaffold + auth slice (2026-07-07)</a><br />
+- <a href="#ii2--core-domain--community-features-ported-from-v1-2026-07-07">II.2 — Core domain + community features ported from v1 (2026-07-07)</a><br />
+- <a href="#ii3--prd-adopted-m1-doc-system--ci-2026-07-07">II.3 — PRD adopted; M1 doc system + CI (2026-07-07)</a><br />
+- <a href="#ii4--m2-recurring-events--waitlist-2026-07-08">II.4 — M2: recurring events + waitlist (2026-07-08)</a><br />
+- <a href="#ii5--m3-hours-parity--self-report-appeals-check-in-codes-2026-07-08">II.5 — M3: hours parity — self-report, appeals, check-in codes (2026-07-08)</a><br />
+- <a href="#ii6--m4-email-infrastructure--password-reset-2026-07-08">II.6 — M4: email infrastructure + password reset (2026-07-08)</a><br />
+- <a href="#ii7--ship-publicly-decision-m11-added-claudemd-system-2026-07-08">II.7 — Ship-publicly decision; M11 added; CLAUDE.md system (2026-07-08)</a><br />
+- <a href="#ii8--m51-guardian-consent-schema--registration-age-branch-2026-07-08">II.8 — M5.1: guardian-consent schema + registration age branch (2026-07-08)</a><br />
+- <a href="#ii9--m5-complete-guardian-consent-flow-gate-and-frontend-2026-07-08">II.9 — M5 complete: guardian-consent flow, gate, and frontend (2026-07-08)</a><br />
+- <a href="#ii10--doc-system-cadence-enforced-by-a-deterministic-hook-2026-07-08">II.10 — Doc-system cadence enforced by a deterministic hook (2026-07-08)</a><br />
+- <a href="#ii11--m6-notifications-email-delivery--opt-out-2026-07-09">II.11 — M6: notifications email delivery + opt-out (2026-07-09)</a><br />
+- <a href="#ii12--m7-directed-messaging--shift-templates-2026-07-09">II.12 — M7: directed messaging + shift templates (2026-07-09)</a><br />
+- <a href="#ii13--m81-org-plan-enforcement-m82-blocked-on-stripe-keys-2026-07-09">II.13 — M8.1: org plan enforcement; M8.2 blocked on Stripe keys (2026-07-09)</a><br />
+- <a href="#ii14--m8-complete-stripe-test-mode-billing-checkout--webhook--ui-2026-07-09">II.14 — M8 complete: Stripe test-mode billing (checkout + webhook + UI) (2026-07-09)</a><br />
+- <a href="#ii15--m9-complete-rate-limiting--audit-log--leaderboard-2026-07-09">II.15 — M9 complete: rate limiting + audit log + leaderboard (2026-07-09)</a><br />
+- <a href="#ii16--m10-deploy-readiness-partial-billing-webhook-signature-verified-v2-pushed-2026-07-09">II.16 — M10 deploy readiness (partial); billing webhook signature-verified; v2 pushed (2026-07-09)</a><br />
+- <a href="#ii17--m10-verified-m12-v1-visual-parity-record-html-twin-auto-synced-by-a-git-hook-2026-07-12">II.17 — M10 verified; M12 v1 visual parity; record HTML twin auto-synced by a git hook (2026-07-12)</a><br />
+- <a href="#ii18--v1-exact-copy-complete-all-13-v1-screens-rebuilt-in-v2-with-a-scoped-v1-architecture-2026-07-13">II.18 — v1 exact-copy complete: all 13 v1 screens rebuilt in v2 with a scoped .v1 architecture (2026-07-13)</a><br />
+- <a href="#ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13">II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)</a></p>
+<ul>
+<li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
+</ul>
+<hr />
+<h2 id="thematic-digest">Thematic digest</h2>
+<h3 id="the-arc-in-one-paragraph">The arc in one paragraph</h3>
+<p>ServeLocal is a <strong>student-volunteering platform</strong> (students discover/track<br />
+service, log verified hours, earn national awards; orgs post opportunities and<br />
+verify attendance) — a college-application portfolio piece where the <em>documented<br />
+engineering process</em> is as much the deliverable as the app. <strong>v1</strong> was built as<br />
+a deliberately <strong>zero-dependency Node <code>http</code></strong> app (ADR-0001) and taken all the<br />
+way to a launch-gated, scale-tested, security-hardened state: guardian consent<br />
+for minors (the legal launch precondition, ADR-0010), a confirmed ~90k-user<br />
+serialization ceiling found by load testing and removed via a SQLite migration<br />
+(ADR-0013), a security/perf batch, and a CSP lockdown to <code>script-src 'self'</code><br />
+(ADR-0014). With v1 proven, the project pivoted to a <strong>v2 production-stack<br />
+rewrite</strong> (FastAPI/SQLAlchemy/Postgres + Next.js/TS/Tailwind/shadcn) whose job<br />
+is launch-critical parity on a deployable/scalable stack, driven by a formal<br />
+<code>PRD_ROADMAP.md</code> (now M1–M11). v2 has, so far, shipped auth, the full core domain +<br />
+community features, docs+CI (M1), recurring events + waitlist (M2), hours<br />
+parity (M3), and email + password reset (M4), and <strong>cleared M5 guardian consent —<br />
+the hard launch gate</strong> (schema, the request/approve/decline/revoke flow with a<br />
+reusable <code>require_consent</code> gate on apply+check-in, and the register/guardian UI).<br />
+<strong>Evan decided 2026-07-08 that the finish line is a real public launch (milestone<br />
+M11), not just launch-readiness</strong> — with M5 done, the remaining load-bearing work is<br />
+notifications/messaging/billing (M6–M8), hardening (M9), and the deploy + pre-launch<br />
+security/legal/infra pass (M10–M11).</p>
+<h3 id="the-two-era-split-why-there-are-two-codebases">The two-era split (why there are two codebases)</h3>
+<ul>
+<li><strong>v1</strong> = zero runtime deps, pure Node, SQLite-via-<code>better-sqlite3</code> (the single<br />
+  documented exception). Frozen as the <strong>behavioral reference</strong> — v2 must match<br />
+  its behavior, not its code (<code>v1 CLAUDE.md</code>: "Don't port v2 conventions into v1<br />
+  or vice versa").</li>
+<li><strong>v2</strong> = production stack chosen for deployability/scalability and to<br />
+  demonstrate a modern architecture. Diverges from v1 intentionally; the rewrite<br />
+  re-derives each feature against the PRD rather than transliterating server.js.</li>
+</ul>
+<h3 id="standing-lessons-recur-across-the-log">Standing lessons (recur across the log)</h3>
+<ol>
+<li><strong>The launch gate is guardian consent for minors</strong> — a platform with under-18<br />
+   users cannot go public without a verified-guardian precondition (v1 ADR-0010;<br />
+   v2 M5). Everything else is subordinate to it.</li>
+<li><strong>Students are free forever</strong> — no plan/billing may gate a student feature;<br />
+   paid plans are org-only (<code>PLANS</code> in v1 server.js).</li>
+<li><strong>Find the ceiling before optimizing</strong> — v1's real limit (V8's ~512 MB string<br />
+   cap → ~90k-user boot failure) was found by load testing, not guessed<br />
+   (ADR-0012/0013).</li>
+<li><strong>Never leak internal fields</strong> — check-in codes, guardian/reset tokens, and<br />
+   full names must never surface in a read response (<code>publicOpp()</code>/<code>safeUser()</code><br />
+   in v1; "never in a read schema" in v2). A leaked check-in code = self-verified<br />
+   hours without attending.</li>
+<li><strong>The recurring-date math is a known UTC/local hazard</strong> — v1 mixed<br />
+<code>toISOString()</code> UTC with local time; v2 deliberately re-anchored all<br />
+   occurrence math to UTC to avoid porting the bug (v2 M2).</li>
+</ol>
+<hr />
+<h1 id="current-state-snapshot">Current state snapshot</h1>
+<blockquote>
+<p><strong>Living section — updated in place, not append-only</strong> (like the thematic digest<br />
+above). This consolidates the always-current status that used to live in the<br />
+per-project <code>state_&lt;date&gt;.md</code> files; that tier is retired (Evan, 2026-07-08). The<br />
+dated entries in Parts I/II remain the chronological trail — this is the<br />
+"where it all stands right now" view. <strong>Last updated 2026-07-08 (v2 through M5).</strong></p>
+</blockquote>
+<h2 id="v2--active-production-rewrite">v2 — active (production rewrite)</h2>
+<p><strong>What it is.</strong> Production-stack rewrite of the v1 platform: students discover/track<br />
+service, log verified hours, earn awards; orgs post opportunities, manage applicants,<br />
+verify attendance. Students are <strong>free forever</strong>; orgs get free/paid plans (M8).<br />
+Driven by <code>servelocal-v2/PRD_ROADMAP.md</code> (M1–M11); end state = a real public launch<br />
+on servelocal.org (M11).</p>
+<p><strong>Architecture (as built).</strong><br />
+- <strong>Backend:</strong> FastAPI + SQLAlchemy 2.0 (sync sessions) + Alembic + PostgreSQL<br />
+  (SQLite in-memory for tests). <code>app/main.py</code> factory; <code>app/core/</code> (config, security,<br />
+  awards, occurrences, consent, email); <code>app/db/</code> (session, base); <code>app/models/</code>,<br />
+<code>app/schemas/</code>, <code>app/services/</code>; <code>app/api/router.py</code>, <code>app/api/deps.py</code>,<br />
+<code>app/api/routes/</code>. Auth: argon2 hashing, HS256 JWTs carrying <code>sub</code> + <code>tv</code><br />
+  (token_version) + <code>exp</code>. Models register in <code>app/models/__init__.py</code> (NOT<br />
+<code>db/base.py</code> — circular import); <code>.env</code> anchored via <code>Path(__file__)</code>, not cwd.<br />
+- <strong>Frontend:</strong> Next.js 15 (App Router) + React 19 + TypeScript + Tailwind 3 +<br />
+  shadcn/ui. <code>lib/api.ts</code> (typed fetch), <code>lib/auth-context.tsx</code> (token in<br />
+  localStorage under <code>TOKEN_KEY</code>, plus <code>refresh()</code>), <code>lib/types.ts</code>, <code>components/ui/</code>.<br />
+  Pages: home (+ consent banner), login, register (DOB/guardian), forgot, reset,<br />
+  discover, opportunities/[id] (+ signup/reviews/messages/org-checkin),<br />
+  opportunities/new, applications, applicants, hours (+awards), verify-hours,<br />
+  leaderboard, saved, notifications, consent/[token], consent/manage/[token].</p>
+<p><strong>Data model (migrations 0001–0014).</strong> users (+ token_version, reset-token<br />
+hash/expiry, dob + guardian-consent fields) · opportunities (+ recurrence/series_end,<br />
+checkin_codes JSON) · applications (+ subscription_type/single_date/excluded_dates,<br />
+status incl. waitlisted) · hours (+ occurrence_date, source/note/appeal_note/appealed)<br />
+· saved_opportunities · reviews · notifications · messages.</p>
+<p><strong>Done / shipped.</strong> Auth (<code>ddd5b0a</code>); core domain + community batch — opportunities,<br />
+applications, hours (auto-log + verify), awards, bookmarks, leaderboard, reviews,<br />
+in-app notifications, per-opportunity messaging (<code>94c185e</code>); M1 docs + CI (<code>f06d3ae</code>);<br />
+M2 recurring + waitlist (<code>a9e3651</code>); M3 hours parity (<code>08f59d1</code>); M4 email + password<br />
+reset (<code>ede7e14</code>); <strong>M5 guardian consent — the launch gate</strong> (<code>12f8281</code> / <code>1b88487</code> /<br />
+<code>98b3841</code>). 127 backend tests green; frontend lint + build clean.</p>
+<p><strong>In progress / next (PRD order).</strong> Next open task = <strong>M6 notifications</strong> (in-app +<br />
+email delivery, opt-out toggle, wired into application decisions, waitlist promotion,<br />
+hour verify/deny/appeal, and consent decisions). Then M7 messaging (bulk + inbox) →<br />
+M8 billing (Stripe test mode) → M9 hardening → M10 deploy readiness → M11 public<br />
+launch.</p>
+<p><strong>Known limitations.</strong> Notifications in-app only (email + opt-out owed at M6);<br />
+messaging is a shared per-opportunity thread, not the PRD's bulk + inbox model (M7);<br />
+one application per (opp, user) — subset attendance via <code>excluded_dates</code>, not<br />
+multi-row (M2 scope reduction); CI validated locally, not yet run against a push;<br />
+Reviews is out-of-PRD-scope, kept as a bonus. Not deployed.</p>
+<p><strong>Deployment.</strong> Not deployed. <code>docker compose up</code> for the full stack is an M10<br />
+deliverable (backend has a Dockerfile; frontend Dockerfile + root compose not yet<br />
+wired). Live production is M11 (host / DNS / domain / production secrets / Resend key<br />
+/ Stripe keys all BLOCKED-ON-EVAN).</p>
+<h2 id="v1--frozen-zero-dependency-node-reference">v1 — frozen (zero-dependency Node reference)</h2>
+<p>v1 is the proven, feature-complete reference — frozen since 2026-07-07, not under<br />
+active development. v2 ports its <strong>behavior</strong>, never its code. (Snapshot from the<br />
+retired <code>ServeLocal website/docs/state_2026-07-05.md</code>.)</p>
+<p><strong>Architecture (as built).</strong> Near-zero-dependency pure Node <code>http</code> (ADR-0001) + one<br />
+runtime dep, <code>better-sqlite3</code> (ADR-0013, isolated in <code>lib/persist.js</code>). SPA: shell in<br />
+<code>public/index.html</code>, all JS in <code>public/app.js</code> (ADR-0014), hash routing, self-hosted<br />
+Twemoji PNGs. <code>server.js</code> = API routes as <code>if (method &amp;&amp; path)</code> blocks (no router<br />
+lib) + request pipeline (rate limit → auth with <code>tokenVersion</code> → idempotency →<br />
+handler; security headers on every response). Extracted modules (ADR-0015):<br />
+<code>lib/persist.js</code> (SQLite/WAL, incremental per-row-sha1 writes), <code>lib/auth.js</code> (scrypt<br />
++ HMAC-JWT), <code>lib/totp.js</code> (RFC 6238 MFA). In-memory <code>IDX()</code> index layer<br />
+(ADR-0011/0012); pagination on <code>/api/opportunities</code> (ADR-0013).</p>
+<p><strong>Done / shipped.</strong> Full core domain (roles, opportunities, applications, recurring<br />
+events, hours, awards, plans, featured, waitlists, analytics, leaderboard, bookmarks,<br />
+check-in codes, reviews); guardian consent for minors (ADR-0010); SQLite persistence<br />
++ pagination removing the confirmed ~90k-user serialization ceiling (verified at<br />
+100k users); security/perf batch; graph-audit batch (notification email + opt-out,<br />
+TOTP MFA, ADR-0014 CSP lockdown to <code>script-src 'self'</code>, ADR-0015 module split). CI<br />
+green on 5 jobs.</p>
+<p><strong>Known limitations.</strong> Billing DEMO-only (ADR-0004); in-memory RAM ceiling not<br />
+addressed (ADR-0013 fixed serialization, not RAM); HttpOnly-cookie auth refactor +<br />
+signup CAPTCHA deferred; recurring-date UTC/local mixing bug; audit log / verified<br />
+hours / messages intentionally unbounded (bounding needs archival-with-chain-<br />
+preservation). Not deployed (<code>servelocal.org</code> aspirational).</p>
+<blockquote>
+<p><strong>Older v1 snapshots</strong> (<code>state_2026-07-03.md</code>, <code>state_2026-07-04.md</code>) were<br />
+superseded by <code>state_2026-07-05.md</code> before the tier was retired; their unique<br />
+content is the chronological trail, which lives in Part I above.</p>
+</blockquote>
+<hr />
+<h1 id="part-i--v1-zero-dependency-node">Part I — v1 (zero-dependency Node)</h1>
+<blockquote>
+<p>GitHub <code>Evan-Daruwalla/ServeLocal</code>, branch <code>master</code>. Hashes below are from<br />
+<code>git log</code> in <code>ServeLocal website/</code>. This era is frozen as v2's behavioral<br />
+reference; the fine-grained log is <code>ServeLocal website/docs/record_2026-07-02.md</code>.</p>
+</blockquote>
+<h2 id="i0--pre-git-origin-portfolio-brief-compliance-scaffolding">I.0 — Pre-git origin (portfolio brief, compliance scaffolding)</h2>
+<p><strong>Not fully captured in git.</strong> Several v1 files predate the first commit by their<br />
+on-disk mtimes — <code>docs/SECURITY.md</code> and <code>docs/compliance.md</code> (mtime 2026-06-18),<br />
+the <code>docs/README.md</code> scaffolding — indicating a scoping/compliance phase before<br />
+the tracked history begins. The concrete decisions that survived: zero-dependency<br />
+architecture (ADR-0001), JSON-file DB as the initial store (ADR-0002), and the<br />
+compliance/security framing appropriate to a platform serving minors. The<br />
+scoping conversation itself is not in the repo (see "honest gaps").</p>
+<h2 id="i1--initial-platform-commit-2026-07-02">I.1 — Initial platform commit (2026-07-02)</h2>
+<p><strong>WHAT:</strong> First tracked commit of the whole v1 app — <code>4b6451d</code> ("Initial commit:<br />
+ServeLocal volunteer platform"), followed by <code>2de36c9</code> ("Add README"). A working<br />
+single-page volunteer platform: roles (<code>student</code>/<code>org</code>), opportunities (one-time<br />
+/ weekly / monthly), applications, auto-logged pending hours + org verify, awards<br />
+by verified-hour milestones, leaderboard (first name + last initial only),<br />
+per-opportunity messaging, bookmarks, org plans (<code>free</code> Community / <code>pro</code> $19-mo,<br />
+students free forever), DEMO-mode billing (ADR-0004), and a hash-chained audit<br />
+log (ADR-0005).</p>
+<p><strong>HOW:</strong> Pure Node <code>http</code>, no framework (ADR-0001); JSON-file DB (ADR-0002);<br />
+HMAC-JWT auth with token revocation via <code>tokenVersion</code> (ADR-0003); scrypt<br />
+password hashing (ADR-0009); rate limiting + circuit breaker (ADR-0006). The<br />
+SPA shell is <code>public/index.html</code>; all routes are <code>if (method &amp;&amp; p===...)</code> blocks<br />
+in a single <code>server.js</code>.</p>
+<h2 id="i2--guardian-consent--in-memory-indexes--editorial-restyle-2026-07-03">I.2 — Guardian consent + in-memory indexes + editorial restyle (2026-07-03)</h2>
+<p><strong>WHAT:</strong> Three shipped items.<br />
+- <strong>Guardian consent for minors (ADR-0010)</strong> — <code>8a1e4fe</code>. The launch precondition:<br />
+  students under 18 need a verified guardian email before they can apply / message<br />
+  / check-in / be endorsed. <code>requireGuardianConsent(user)</code> recomputes age from<br />
+<code>dob</code> live, so 18+ students are never gated and a pending minor who turns 18 is<br />
+  auto-unblocked. Public approve/decline + revoke-anytime kill-switch flow.<br />
+  Tested (<code>test/guardian-consent.test.js</code>).<br />
+- <strong>In-memory indexes (ADR-0011)</strong> — same commit <code>8a1e4fe</code>. Hot lookups moved to<br />
+  id/FK-keyed Maps rebuilt lazily on structural change. <code>test/index.test.js</code>.<br />
+- <strong>Frontend editorial restyle + documentation cadence system</strong> — <code>10b0d05</code>.<br />
+  The editorial visual language (solid fills, tight radii, calm motion, no<br />
+  generic-AI signals) and the record/state/HANDOFF cadence rule.</p>
+<p><strong>WHY:</strong> Consent is the legal gate for a minor-serving platform; indexes were the<br />
+first step toward scale; the restyle set the brand language v2 still follows.</p>
+<h2 id="i3--scaling-sqlite-migration-pagination-securityperf-batch-ci-2026-07-04">I.3 — Scaling: SQLite migration, pagination, security/perf batch, CI (2026-07-04)</h2>
+<p><strong>WHAT:</strong> The scaling arc — the era's most substantive engineering.<br />
+- <strong>ADR-0012 scaling cost optimizations</strong> — <code>65ced71</code>: coalesced writes, indexed<br />
+  hot reads, bounded notifications, HTTP caching. Plus tooling: <code>npm run bench</code><br />
+  (<code>43ef219</code>) and <code>npm run loadtest:scale</code> (<code>a2164d4</code>) for repeatable before/after<br />
+  numbers.<br />
+- <strong>ADR-0013 SQLite migration + <code>/api/opportunities</code> pagination</strong> — <code>da9a27f</code>.<br />
+<strong>The bug that drove it:</strong> load testing found the whole DB was one JSON string,<br />
+  and V8 caps a string at ~512 MB, so <code>USERS=100000</code> failed outright with<br />
+<code>Invalid string length</code> — the app couldn't boot past ~90k users. Fix: persistence<br />
+  moved to SQLite (<code>better-sqlite3</code>, the single documented ADR-0001 exception,<br />
+  isolated in <code>lib/persist.js</code>), in-memory model unchanged; pagination on the<br />
+  opportunities list. Verified at 100k users (763 MB DB, 0 errors) per HANDOFF.<br />
+- <strong>Security/perf batch</strong> — <code>05abeb9</code>: WAL-incremental writes, gzip JSON,<br />
+  opportunities page cache, <strong>password reset flow</strong> (enumeration-safe, sha256<br />
+  single-use token, 1h TTL, throttled), check-in throttle + O(1) index, Discover<br />
+  URL state + Load More. 66 tests; recorded 130 → 4,167 req/s at 100k users.<br />
+- <strong>CI fix</strong> — <code>a7dda9f</code> + <code>5d3a852</code> + <code>310d3b6</code>: the SQLite dep made <code>coverage</code><br />
+  and <code>resilience</code> jobs crash on <code>Cannot find module 'better-sqlite3'</code> (they<br />
+  skipped <code>npm install</code>); added the install step, bumped actions to <code>@v5</code>. All 5<br />
+  jobs green.</p>
+<p><strong>WHY:</strong> Find the real ceiling, then remove it — the JSON-string limit was<br />
+confirmed by measurement, not assumed.</p>
+<h2 id="i4--graph-audit-batch--csp-lockdown-2026-07-05">I.4 — Graph-audit batch + CSP lockdown (2026-07-05)</h2>
+<p><strong>WHAT:</strong> <code>e092dea</code> — a six-item batch driven by a <code>/graphify</code> knowledge-graph<br />
+audit: (1) fixed stale <code>docs/security.md</code>; (2) <strong>notification email delivery</strong> +<br />
+per-user opt-out toggle (first slice of Track 2 #1); (3) zero-dep <strong>TOTP MFA</strong><br />
+(<code>lib/totp.js</code>, RFC 6238, <code>test/mfa.test.js</code>); (4) extracted the SPA JS to<br />
+<code>public/app.js</code> (<strong>ADR-0014</strong> step 1), then converted all ~271 inline handlers to<br />
+a delegated dispatch table and <strong>dropped <code>'unsafe-inline'</code> from <code>script-src</code></strong><br />
+(ADR-0014 step 2 — CSP now fully <code>'self'</code>); (5) split <code>server.js</code> →<br />
+<code>lib/persist.js</code> + <code>lib/auth.js</code> (<strong>ADR-0015</strong>). 74 tests, chaos 3/3, preview<br />
+verified. Docs recorded in <code>9ff50d8</code>.</p>
+<p><strong>HOW / tradeoff:</strong> the inline-handler → dispatch-table conversion was done<br />
+deliberately as a bounded step to avoid an XSS regression while removing the CSP<br />
+exception. <code>style-src 'unsafe-inline'</code> remains (hundreds of <code>style=</code> attrs, known<br />
+out-of-scope).</p>
+<h2 id="i5--claudemd-upgrade-v1-freeze-as-v2-reference-2026-07-07">I.5 — CLAUDE.md upgrade; v1 freeze as v2 reference (2026-07-07)</h2>
+<p><strong>WHAT:</strong> <code>f66ebb9</code> — synced <code>CLAUDE.md</code> with post-<code>e092dea</code> reality, added hard<br />
+rules + a definition of done. This is the last v1 commit: v1 is now the <strong>frozen<br />
+behavioral reference</strong> while active work moves to the v2 rewrite (Part II).</p>
+<p><strong>v1 known limitations carried forward (from HANDOFF):</strong> in-memory RAM ceiling<br />
+not addressed (ADR-0013 fixed serialization, not RAM); billing DEMO-only;<br />
+HttpOnly-cookie auth refactor and signup CAPTCHA intentionally deferred;<br />
+recurring-date UTC/local mixing bug; not deployed (<code>servelocal.org</code> aspirational).</p>
+<hr />
+<h1 id="part-ii--v2-production-stack-rewrite">Part II — v2 (production-stack rewrite)</h1>
+<blockquote>
+<p><code>servelocal-v2/</code>, FastAPI + SQLAlchemy 2.0 + Alembic + Postgres backend,<br />
+Next.js 15 + React 19 + TS + Tailwind + shadcn frontend. Driven by<br />
+<code>PRD_ROADMAP.md</code> (M1–M10). Hashes from <code>git log</code> in <code>servelocal-v2/</code>; the<br />
+fine-grained log is <code>servelocal-v2/docs/record_2026-07-07.md</code>. Commits are on<br />
+<code>main</code>, <strong>not pushed</strong> (pushing is Evan's call).</p>
+</blockquote>
+<h2 id="ii1--monorepo-scaffold--auth-slice-2026-07-07">II.1 — Monorepo scaffold + auth slice (2026-07-07)</h2>
+<p><strong>WHAT:</strong> <code>33388bd</code> scaffolds the monorepo (backend + frontend). <code>ddd5b0a</code> ships<br />
+the auth vertical slice end to end: <code>register</code>/<code>login</code>/<code>me</code>, argon2 password<br />
+hashing, HS256 JWTs (PyJWT), session persistence (token in localStorage under<br />
+<code>TOKEN_KEY</code>), with <code>tests/test_auth.py</code>.</p>
+<p><strong>HOW / decisions that stuck:</strong> SQLAlchemy models register in<br />
+<code>app/models/__init__.py</code> (NOT <code>db/base.py</code> — circular import); config anchors<br />
+<code>.env</code> via <code>Path(__file__)</code> not cwd (a launcher-cwd bug fixed during this slice);<br />
+sync sessions, SQLite in-memory for tests.</p>
+<h2 id="ii2--core-domain--community-features-ported-from-v1-2026-07-07">II.2 — Core domain + community features ported from v1 (2026-07-07)</h2>
+<p><strong>WHAT:</strong> <code>94c185e</code> — a large batch porting the core domain + several community<br />
+features from v1: opportunities, applications (spots tracking), hours (auto-log +<br />
+verify), awards, bookmarks, leaderboard, reviews, notifications (in-app), and<br />
+per-opportunity messaging. Each backend feature = model + migration + schema +<br />
+routes + tests (66 pytest cases); matching frontend pages; browser-verified end<br />
+to end.</p>
+<p><strong>HOW / honest note:</strong> this batch was built <strong>ahead of</strong> the PRD's milestone<br />
+order (the PRD was discovered/adopted mid-stream, II.3). Some features are<br />
+thinner than their eventual PRD milestone (notifications = in-app only vs M6's<br />
+email+opt-out; messaging = shared thread vs M7's bulk+inbox) and <strong>Reviews is<br />
+out of PRD scope</strong> — kept as a bonus at Evan's direction. The off-order history<br />
+is logged honestly rather than cleaned up.</p>
+<h2 id="ii3--prd-adopted-m1-doc-system--ci-2026-07-07">II.3 — PRD adopted; M1 doc system + CI (2026-07-07)</h2>
+<p><strong>WHAT:</strong> <code>f06d3ae</code> — adopted <code>PRD_ROADMAP.md</code> as the source of truth and<br />
+bootstrapped the v2 doc system (HANDOFF + <code>docs/record_2026-07-07.md</code> +<br />
+<code>docs/state_2026-07-07.md</code>), then added <code>.github/workflows/ci.yml</code> (backend<br />
+pytest on SQLite fixture + frontend lint/build). M1.</p>
+<p><strong>WHY / course-correction:</strong> the rewrite had been progressing from v1-parity<br />
+intuition; a formal PRD existed in the repo laying out a deliberate M1→M10 order<br />
+whose point is to reach <strong>M5 guardian consent (the launch gate)</strong> without<br />
+building out of order. Evan's decision: follow the PRD from here, keep the<br />
+already-built Reviews as a bonus, commit the in-flight work first. CI validated<br />
+locally (<code>act</code> unavailable) — first real run on the next push.</p>
+<h2 id="ii4--m2-recurring-events--waitlist-2026-07-08">II.4 — M2: recurring events + waitlist (2026-07-08)</h2>
+<p><strong>WHAT:</strong> <code>a9e3651</code> — the biggest genuine gap vs v1. Opportunities can recur<br />
+weekly/monthly; students subscribe to all dates or a single date, exclude/<br />
+re-include individual dates; a full one-time opportunity now <strong>waitlists</strong> new<br />
+applicants and auto-promotes FIFO. Recurring hours auto-log one row per past<br />
+occurrence. 20 new tests (86 total, green); migrations through 0010 clean<br />
+up/down/up.</p>
+<p><strong>HOW / design decisions:</strong><br />
+- Recurrence <strong>anchor derived from <code>start_time</code></strong> (v1-faithful), storing only<br />
+<code>recurrence</code> + <code>series_end</code> on Opportunity — not separate day-of-week columns.<br />
+- <strong>One application per (opportunity, user)</strong>; subset attendance via<br />
+<code>excluded_dates</code> or a single <code>single_date</code> — a deliberate scope reduction from<br />
+  v1's multiple single-date rows, meeting the PRD criterion without the extra<br />
+  rows.<br />
+- Occurrence math <strong>anchored to UTC</strong> (<code>app/core/occurrences.py</code>), deliberately<br />
+  NOT porting v1's known UTC/local mixing bug; monthly clamps to the short-month<br />
+  last day without drift.<br />
+- Capacity: one-time uses the global counter + FIFO waitlist; recurring uses<br />
+  per-occurrence-date capacity (<code>GET /opportunities/{id}/date-spots</code>), no<br />
+  waitlist (waitlisting is one-time only, per v1).</p>
+<p><strong>Behavior change flagged:</strong> a full one-time opportunity now returns <code>201
+waitlisted</code> instead of <code>409</code>; the existing test was renamed/updated to assert<br />
+the new PRD-intended behavior.</p>
+<h2 id="ii5--m3-hours-parity--self-report-appeals-check-in-codes-2026-07-08">II.5 — M3: hours parity — self-report, appeals, check-in codes (2026-07-08)</h2>
+<p><strong>WHAT:</strong> <code>08f59d1</code> — completed the verified-hours loop. Three Hours sources now:<br />
+auto-logged, student <strong>self-reported</strong> (<code>POST /hours</code>), and <strong>check-in-code<br />
+redeemed</strong> (<code>POST /opportunities/{id}/checkin</code>). A denied entry can be <strong>appealed<br />
+once</strong> (<code>POST /hours/{id}/appeal</code> → status <code>appealed</code> → org re-decides). Orgs<br />
+generate per-date codes (<code>POST /opportunities/{id}/checkin-codes</code>). 14 new tests<br />
+(100 total, green); migrations 0011–0012 up/down/up clean; frontend builds clean;<br />
+render-verified live end to end.</p>
+<p><strong>HOW / design decisions:</strong><br />
+- <strong>Self-report is the simpler variant</strong> (PRD-sanctioned): student logs hours for<br />
+  an opportunity they applied to; status <code>pending</code>; org verifies. v1's<br />
+  supervisor-email verification path is deferred — it needs M4 email. Self-report<br />
+  rows carry a <strong>null <code>occurrence_date</code></strong> so they never collide with the<br />
+  per-occurrence unique index.<br />
+- <strong>Appeals</strong>: single-use <code>appealed</code> flag; only <code>denied</code> rows are appealable;<br />
+  guarded against double-appeal / appealing verified rows.<br />
+- <strong>Check-in codes</strong> live in a JSON <code>checkin_codes</code> column on Opportunity,<br />
+<strong>never exposed in any read schema</strong> (a leaked code = self-verified hours<br />
+  without attending — asserted by a test). Redemption requires an approved signup<br />
+  covering that date, is idempotent (409 on double check-in), throttled<br />
+  in-memory (10 fails/15min), constant-time compared, ambiguity-free alphabet.</p>
+<h2 id="ii6--m4-email-infrastructure--password-reset-2026-07-08">II.6 — M4: email infrastructure + password reset (2026-07-08)</h2>
+<p><strong>WHAT:</strong> Shared transactional-email infra (<code>app/core/email.py</code>) and its first<br />
+consumer — enumeration-safe password reset (<code>POST /auth/forgot</code>, <code>POST
+/auth/reset</code>). Backend + frontend, 7 new tests (107 total, green); migration 0013<br />
+up/down/up clean; verified live end to end against a real running server. Committed<br />
+<code>ede7e14</code>.</p>
+<p><strong>WHY:</strong> M4 precedes M5/M6 in the PRD because guardian consent and notifications<br />
+both need email; password reset is the first flow that exercises the infra and<br />
+closes a real account-recovery gap.</p>
+<p><strong>HOW / design decisions:</strong><br />
+- <strong>Email is a logged no-op without <code>RESEND_API_KEY</code></strong> (dev/CI default) and POSTs<br />
+  to Resend's HTTP API when the key is set. httpx is imported <strong>lazily</strong> in the<br />
+  real-send branch, so the stub path has no import-time dependency.<br />
+<strong>Fire-and-forget</strong> — a send failure is logged and swallowed, never raised into<br />
+  the request (a user must not see a 500 because email is down). Real key is<br />
+  BLOCKED-ON-EVAN; everything downstream works on the stub.<br />
+- <strong>Enumeration-safe:</strong> <code>/auth/forgot</code> always returns the same 200 body whether or<br />
+  not the account exists. Only the sha256 <strong>hash</strong> of a single-use<br />
+<code>secrets.token_urlsafe(32)</code> token is stored (+1h expiry); the raw token lives<br />
+  only in the emailed link. In-memory per-identity throttle (3/15 min).<br />
+- <strong>Session invalidation</strong> via a <code>token_version</code> int on User, embedded in the JWT<br />
+  (<code>tv</code>) and checked in <code>get_current_user</code>; reset bumps it, so every pre-reset JWT<br />
+  is rejected. Mirrors v1's <code>tokenVersion</code> mechanism (ADR-0003 lineage).</p>
+<p><strong>Verification:</strong> 107 pytest (+7). Migration 0013 round-trips. Frontend lint +<br />
+production build clean (<code>/forgot</code>, <code>/reset</code> prerendered). Live end-to-end on a real<br />
+uvicorn/SQLite server: register → forgot (identical body for known vs unknown<br />
+email) → reset token read from the email stub log → reset → old password 401 / new<br />
+200 → pre-reset JWT now 401 → token reuse 400. (Browser form not driven — the<br />
+preview-harness click/submit flakiness recorded since M2; the live server proves<br />
+the wiring and the pages mirror the browser-verified login page.)</p>
+<p><strong>Next per PRD:</strong> <strong>M5 guardian consent — the LAUNCH GATE</strong> (port v1 ADR-0010: dob<br />
+on User, consent state, request/approve/decline/revoke via M4 email, a reusable<br />
+<code>require_consent</code> dependency on apply/check-in). BLOCKED-ON-EVAN downstream: Resend<br />
+key (M4, real send), Stripe test keys (M8), deploy host/domain/secrets (M10).</p>
+<h2 id="ii7--ship-publicly-decision-m11-added-claudemd-system-2026-07-08">II.7 — Ship-publicly decision; M11 added; CLAUDE.md system (2026-07-08)</h2>
+<p><strong>WHAT:</strong> Evan resolved the launch-ready-vs-launched question this record had<br />
+flagged (see the "one honest tension" the digest raised): <strong>v2 will actually launch<br />
+publicly</strong>, not stop at launch-readiness. <code>servelocal-v2/PRD_ROADMAP.md</code> gained<br />
+milestone <strong>M11</strong> — a pre-launch security pass, legal pages for a minors-serving<br />
+platform, production infra on a real domain, live email, a billing decision under<br />
+the Stripe-18+ constraint, monitoring/backups, and a soft launch with a real cohort.<br />
+Out-of-scope shifted accordingly: the HttpOnly-cookie decision and signup CAPTCHA<br />
+moved <strong>into</strong> scope at M11. The same pass built the missing CLAUDE.md system —<br />
+<code>servelocal-v2/CLAUDE.md</code> (the project had none; conventions lived only in the PRD)<br />
+and a router <code>CLAUDE.md</code> at the repo root — and moved five project skills up to the<br />
+root <code>.claude/skills/</code> so both eras can use them (<code>50c4445</code>).</p>
+<p><strong>WHY:</strong> a public launch with minor users pulls in obligations "launch-ready" could<br />
+quietly defer — bot defense, a token-storage decision, ToS/privacy drafted for<br />
+minors, monitoring, prod backups. Leaving them out would make the PRD dishonest<br />
+about what "done" costs. The CLAUDE.md exists so any model starting cold in the repo<br />
+loads the conventions, definition of done, and doc cadence without first knowing to<br />
+read the PRD.</p>
+<p><strong>Notable calls:</strong> live Stripe carries the 18+ account-holder constraint (default:<br />
+launch orgs on the free tier, enable live billing at 18 — Evan to confirm at M11.4);<br />
+the legal-page drafts are explicitly marked as needing adult/guardian review — a<br />
+minor operating a service for minors makes that review a launch <strong>blocker</strong>, not<br />
+paperwork. This decision supersedes the "launch-ready vs launched" ambiguity the<br />
+digest and I.5/II.6 noted: the finish line is <strong>live</strong>.</p>
+<h2 id="ii8--m51-guardian-consent-schema--registration-age-branch-2026-07-08">II.8 — M5.1: guardian-consent schema + registration age branch (2026-07-08)</h2>
+<p><strong>WHAT:</strong> First task of the launch gate (<code>12f8281</code>). <code>User</code> gained <code>dob</code> plus the<br />
+eleven guardian-consent fields from v1's ADR-0010 spec (guardian name/email, status,<br />
+one-time + manage token hashes, expiry, requested/decided timestamps, decision<br />
+IP/user-agent) — as User columns matching the v1 shape, not a separate table. New<br />
+<code>app/core/consent.py</code> (age helper + constants), migration <code>0014_guardian_consent</code>.<br />
+Register now branches on <strong>live-computed age</strong>: a student must supply <code>dob</code> (400<br />
+without); under-12 is rejected (v1's floor); under-18 requires guardian name+email<br />
+(400 without, or if the guardian email equals the student's own) and lands<br />
+<code>pending</code>; 18+ lands <code>not_required</code> and any guardian fields sent are ignored.<br />
+<code>UserRead</code> exposes only <code>dob</code> + <code>guardian_consent_status</code>; token hashes/IP/UA are<br />
+schema-stripped like the reset-token fields.</p>
+<p><strong>WHY:</strong> M5 is the hard launch gate; the schema and age branch must exist before the<br />
+consent-flow endpoints (M5.2) and the reusable <code>require_consent</code> route gate can be<br />
+built on them.</p>
+<p><strong>HOW / decisions:</strong> age is exact calendar math in <code>age_on()</code> — deliberately NOT<br />
+v1's 365.25-day float division (a PRD rule against porting v1's date handling), with<br />
+a boundary test pinning "born exactly 18 years ago today = adult". Consent status is<br />
+a plain string column (like <code>role</code>) for SQLite/Postgres portability. Making <code>dob</code><br />
+mandatory broke every registration fixture — all 13 register helpers across the suite<br />
+gained an adult <code>"dob": "2000-01-01"</code> (the intended consequence, not incidental<br />
+churn). v1's <code>legacy_pending</code> migration state was <strong>not</strong> ported: v2 has no<br />
+pre-existing minor accounts, so it would be dead code. Tokens and the guardian email<br />
+are NOT generated at register — that is M5.2's request-consent flow, deliberately.</p>
+<p><strong>Verification:</strong> 116 pytest green (+9: no-dob 400, under-12 400, minor-no-guardian<br />
+400, self-consent-email 400, minor→pending, exactly-18→not_required boundary, adult<br />
+guardian fields ignored, org unaffected, secret-leak scan on the response). Migration<br />
+0014 up/down/up clean. No frontend touched (register UI collects dob at M5.3), so<br />
+lint/build not run.</p>
+<p><strong>Next per PRD:</strong> M5.2 — the request/approve/decline/revoke consent-flow endpoints<br />
+(guardian emails via the M4 infra) and the reusable <code>require_consent</code> dependency on<br />
+apply/check-in. M5 stays the launch gate until that lands.</p>
+<h2 id="ii9--m5-complete-guardian-consent-flow-gate-and-frontend-2026-07-08">II.9 — M5 complete: guardian-consent flow, gate, and frontend (2026-07-08)</h2>
+<p><strong>WHAT:</strong> Cleared the launch gate. M5.2 backend (<code>1b88487</code>): a consent flow<br />
+(<code>POST /consent/request</code>, public approve/decline <code>/consent/{token}</code>, revoke<br />
+<code>/consent/manage/{token}</code>) and a reusable <code>require_consent</code> dependency gating apply +<br />
+check-in. M5.3 frontend (<code>98b3841</code>): register collects DOB and — for a student the<br />
+client computes as under 18 — guardian name/email; a pending-consent banner with<br />
+resend; and public guardian approve/decline + manage/revoke pages needing no login.<br />
+127 pytest green; frontend lint + build clean.</p>
+<p><strong>WHY:</strong> no public launch with minors is allowed before a guardian can approve — and<br />
+revoke — a minor's account. This is the PRD's hard gate; M11 (public launch) depends<br />
+on it.</p>
+<p><strong>HOW / design decisions:</strong><br />
+- The gate is <code>consent_blocks(user)</code> — age recomputed live from dob every call, so an<br />
+  18+ student is never gated and a pending minor who ages into 18 unblocks with no<br />
+  migration (proven by a direct unit test; unreachable via the API otherwise).<br />
+- Only sha256 token hashes are stored; the 72h one-time approve token and a separate<br />
+  long-lived manage token live only in emailed links. Public responses expose only<br />
+  first name + last initial (v1 spec §4).<br />
+- <strong>Bug caught in verification:</strong> the consent router was imported but never<br />
+<code>include_router</code>'d, so every consent call 404'd (and one test passed for the wrong<br />
+  reason). Mounting it fixed all 11.</p>
+<p><strong>Verification:</strong> the full consent state machine is exercised live by the 127 backend<br />
+tests (pending→403 <code>GUARDIAN_CONSENT_REQUIRED</code>, approve→apply-ok, single-use token,<br />
+decline stays gated, revoke re-gates, adult never gated, expiry 410, resend 429). The<br />
+browser click-through of the consent UI was not driven (the preview harness's<br />
+cwd/flakiness limit, as since M2); the build is clean and the pages mirror verified<br />
+patterns.</p>
+<p><strong>Next per PRD:</strong> M6 notifications (in-app + email, opt-out, wired into decisions/<br />
+waitlist/consent). Paused before M6 at Evan's instruction.</p>
+<hr />
+<h2 id="ii10--doc-system-cadence-enforced-by-a-deterministic-hook-2026-07-08">II.10 — Doc-system cadence enforced by a deterministic hook (2026-07-08)</h2>
+<p><strong>WHAT:</strong> Wired the <code>/project-memory</code> cadence to a <code>UserPromptSubmit</code> hook and<br />
+armed it for this workspace. <code>~/.claude/skills/project-memory/hooks/pm-cadence.js</code><br />
+(portable Node, no deps) counts prompts per project and injects a top-of-turn<br />
+reminder every Nth; registered once globally in <code>~/.claude/settings.json</code>. This<br />
+workspace opted in via <code>.claude/pm-cadence.json</code> (<code>record_entry: 3</code>; the other<br />
+subparts left event-driven at 0). The generic skill + hook were pushed to the<br />
+public repo (<code>1a9e2f6</code>, github.com/Evan-Daruwalla/claude-project-memory). The<br />
+ServeLocal <code>.claude/pm-cadence.json</code> is untracked (<code>.claude/</code> is gitignored at<br />
+this root) — there is no root-repo commit for the config itself.</p>
+<p><strong>WHY:</strong> the cadence rule ("append a record entry every ~3 prompts") was a<br />
+CLAUDE.md line a model forgets deep in a session — unreliable as cheaper models<br />
+(Opus/Sonnet) take over from Fable 5. A hook makes the counting + reminder<br />
+injection deterministic regardless of context length. Honest ceiling: a hook<br />
+cannot invoke a skill, so obeying the reminder is still the model's job — but a<br />
+fresh top-of-turn order beats an instruction buried 40k tokens back.</p>
+<p><strong>HOW / design decisions:</strong><br />
+- The hook reads the project from the stdin <code>cwd</code> field and looks for<br />
+<code>&lt;cwd&gt;/.claude/pm-cadence.json</code>; <strong>absent → exit silently</strong>, so one global<br />
+  registration stays dormant everywhere until a project opts in. That is what<br />
+  keeps Trading (which runs its own <code>check_docs_cadence.py</code>) from double-firing<br />
+  — it deliberately gets no <code>pm-cadence.json</code>.<br />
+- Config schema: <code>record_entry</code>/<code>handoff</code>/<code>prd_next_task</code>/<code>bins</code> = "remind every<br />
+  N prompts" (0 = event-driven), plus a persisted <code>_count</code>. On first load in a<br />
+  project the skill (§0) asks per-subpart cadence and writes the file.<br />
+- cwd dependency (a real limit): the reminder fires only when the session roots<br />
+  at <code>D:\ClaudeCode\ServeLocal</code>, where the config lives; launching from the<br />
+<code>D:\ClaudeCode</code> parent would look at the parent's <code>.claude/</code> and miss it.</p>
+<p><strong>Verification:</strong> ran the global hook against <code>cwd=D:\ClaudeCode\ServeLocal</code> for<br />
+three prompts — silent on 1–2, fired the record-entry reminder on prompt 3 —<br />
+then reset <code>_count</code> to 0. No-config and corrupt-config cases both exit silently<br />
+(tested against a scratch project). Takes effect on the next session start<br />
+(hooks load at launch), so it is not yet live in the session that wrote this.</p>
+<p><strong>Next per PRD:</strong> unchanged — M6 notifications, still paused at Evan's<br />
+instruction.</p>
+<hr />
+<h2 id="ii11--m6-notifications-email-delivery--opt-out-2026-07-09">II.11 — M6: notifications email delivery + opt-out (2026-07-09)</h2>
+<p><strong>WHAT:</strong> Brought the notifications feature up to the PRD's M6 spec. Every<br />
+in-app notification now also sends an email unless the recipient has opted out;<br />
+an opt-out toggle works end to end; the list endpoint is paginated. Backend:<br />
+<code>email_notifications</code> bool on <code>User</code> (default true, migration <code>0015</code>);<br />
+<code>create_notification</code> fires <code>send_email</code> when the flag is on; <code>PATCH /auth/me</code><br />
+toggles it; <code>GET /notifications</code> gained <code>limit</code>/<code>offset</code>. Frontend: an<br />
+accessible opt-out toggle on the notifications page. 131 backend tests green<br />
+(was 127); lint + build clean; browser-verified.</p>
+<p><strong>WHY:</strong> The trigger events were already wired — application approve/reject,<br />
+waitlist promotion, hours verify/deny/appeal, and consent approve/revoke all<br />
+route through <code>create_notification</code>. So the PRD's "wire email into every event"<br />
+requirement collapsed to adding the email dispatch in that ONE helper rather<br />
+than editing eight call sites — and no future caller can forget to email.</p>
+<p><strong>HOW / tradeoff:</strong> Email is dispatched inside <code>create_notification</code>, before<br />
+the caller's commit. <code>send_email</code> never raises and is a logged no-op without<br />
+<code>RESEND_API_KEY</code>, so the at-most-once edge (email sent, then the outer<br />
+transaction rolls back) is an accepted, deliberately-simple tradeoff — not an<br />
+outbox/queue. Recorded as a known limitation to revisit if transactional-email<br />
+guarantees ever matter (M9/M11).</p>
+<p><strong>Verification note (honest):</strong> dev Postgres was down, so the migration<br />
+up/down/up was proven on a scratch SQLite DB (a plain boolean <code>add_column</code>,<br />
+dialect-agnostic) and the browser check ran the API on SQLite. CDP synthetic<br />
+clicks did not trigger React's delegated <code>onChange</code> on the controlled checkbox,<br />
+so the click→handler link was driven by invoking the element's real <code>onChange</code><br />
+prop via its React fiber (exercising the true<br />
+<code>saveEmailPref → api.updateMe → refresh</code> chain); the backend <code>PATCH</code> was also<br />
+confirmed directly via curl and a fresh reload showed the persisted "Off"<br />
+state. Only DOM-event delivery was the harness gap — consistent with II.9's<br />
+note.</p>
+<p><strong>Next per PRD:</strong> M7 — messaging (org→applicant bulk messaging + student inbox<br />
++ shift templates). The M5 consent gate already exists to cover minor<br />
+messaging.</p>
+<hr />
+<h2 id="ii12--m7-directed-messaging--shift-templates-2026-07-09">II.12 — M7: directed messaging + shift templates (2026-07-09)</h2>
+<p><strong>WHAT:</strong> Completed the messaging milestone in three sub-tasks (each its own<br />
+commit).<br />
+- <strong>M7.1</strong> (<code>4abbc79</code>) — directed messaging. A nullable <code>recipient_id</code> on the<br />
+<code>messages</code> table (migration 0016) turns the one table into two shapes: NULL =<br />
+  the existing shared per-opportunity thread (v1 parity, untouched), set = a<br />
+  directed message. Added org→applicant broadcast (audience all/approved/<br />
+  pending → one directed message + one M6 notification per recipient), a<br />
+  paginated student inbox (<code>GET /messages</code>), and reply (<code>POST /messages/{id}/
+  reply</code>, back to the sender, reply-auth 404). Also closed the M5 debt: the<br />
+  thread-post and reply paths now depend on <code>require_consent</code>, so minors are<br />
+  gated on messaging.<br />
+- <strong>M7.2</strong> (<code>6bfa780</code>) — shift templates. New <code>OpportunityTemplate</code> table<br />
+  (migration 0017) storing an opportunity's reusable fields as a JSON <code>data</code><br />
+  blob; <code>POST/GET /opportunity-templates</code>, org-owner-gated.<br />
+- <strong>M7.3</strong> — frontend: a student inbox page with inline reply, a "Message<br />
+  applicants" broadcast composer on the (now opportunity-grouped) applicants<br />
+  page, and template use (a "Start from a template" picker that pre-fills the<br />
+  create form) + save (a "Save as a reusable template" checkbox).</p>
+<p><strong>WHY / decisions:</strong> (1) The existing shared thread already matched v1; the<br />
+PRD's bulk+inbox is a NEW v2 feature. Chose to EXTEND the one table with<br />
+<code>recipient_id</code> rather than replace the working thread — surgical, keeps v1<br />
+parity, lets inbox/broadcast reuse the rows (<code>list_messages</code> filters<br />
+<code>recipient_id IS NULL</code> so the thread never leaks directed messages). (2)<br />
+Templates went in their OWN table, not an <code>is_template</code> flag on Opportunity: a<br />
+flag would force every opportunity query (Discover, detail, apply, bookmark) to<br />
+exclude templates — more surface and a real leak risk.</p>
+<p><strong>Tradeoff:</strong> broadcast fan-out is an O(N) per-recipient loop (one message + one<br />
+notification each) in a single request — fine at launch scale, flagged for M9<br />
+if it ever needs a queue.</p>
+<p><strong>Verification:</strong> 144 backend tests green (up from 131); both migrations<br />
+up/down/up clean on scratch SQLite. Frontend lint + build clean. Flows<br />
+browser-verified against a live API on SQLite — org broadcast landed in a<br />
+student inbox, the student's reply landed in the org inbox, and the template<br />
+picker pre-filled the create form — with zero console errors. As in II.11, CDP<br />
+synthetic clicks don't reach React's delegated handlers on this stack, so the<br />
+interactions were driven through the elements' real <code>onClick</code>/<code>onChange</code> fiber<br />
+props (true <code>handler → api → backend</code> chain; only DOM-event delivery was<br />
+simulated).</p>
+<p><strong>Next per PRD:</strong> M8 — billing (Stripe test mode). M8.1 (plan enforcement:<br />
+free = 3 active listings, pro = unlimited + featured) needs no Stripe and can<br />
+start immediately; M8.2 (Checkout + webhook) is BLOCKED-ON-EVAN for test keys.</p>
+<hr />
+<h2 id="ii13--m81-org-plan-enforcement-m82-blocked-on-stripe-keys-2026-07-09">II.13 — M8.1: org plan enforcement; M8.2 blocked on Stripe keys (2026-07-09)</h2>
+<p><strong>WHAT:</strong> Built the Stripe-free half of billing. A <code>plan</code><br />
+field on <code>User</code> ("free"/"pro", orgs only, migration 0018) — <strong>no student feature<br />
+is ever gated by it; students are free forever.</strong> Free orgs are capped at 3<br />
+active listings (the 4th <code>POST /opportunities</code> → 402 Payment Required); pro is<br />
+unlimited. Featuring a listing (<code>PATCH /opportunities/{id}/featured</code>) is pro-only<br />
+(free → 402), capped at 3 (→ 409), and featured listings sort first in Discover<br />
+(<code>featured DESC, created_at DESC</code>). 7 new tests; 151 backend green (was 144).<br />
+The test harness (<code>conftest.py</code>) gained a <code>db_session</code> fixture so a test can flip<br />
+an org to "pro" directly — in production only the M8.2 Stripe webhook does that,<br />
+so there is deliberately no self-serve upgrade endpoint.</p>
+<p><strong>WHY:</strong> used 402 for plan-limit blocks (needs a paid plan) and 409 for the<br />
+featured-count cap (a conflict, not a payment issue). Kept <code>plan</code> off <code>UserRead</code><br />
+for now — the billing UI that consumes it (M8.3) is gated behind M8.2, so<br />
+surfacing it would be speculative.</p>
+<p><strong>BLOCKED-ON-EVAN — the wall.</strong> M8.2 (Stripe Checkout session + signature-verified<br />
+webhook that flips <code>plan</code> on <code>checkout.session.completed</code>) needs <strong>Stripe test-mode<br />
+keys</strong> (<code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>) — Evan's to create. Per the<br />
+PRD these are not stubbed-as-live or worked around. <strong>This is where the autonomous<br />
+run stopped</strong> (this session ran M6 → M7 → M8.1). M8.3's featured-toggle UI depends<br />
+only on M8.1 and could be built ahead of Stripe if Evan wants; the billing page's<br />
+upgrade flow needs M8.2.</p>
+<hr />
+<h2 id="ii14--m8-complete-stripe-test-mode-billing-checkout--webhook--ui-2026-07-09">II.14 — M8 complete: Stripe test-mode billing (checkout + webhook + UI) (2026-07-09)</h2>
+<p><strong>WHAT:</strong> Finished billing across three commits after Evan supplied Stripe<br />
+<strong>test-mode</strong> keys (he chose the official <code>stripe</code> SDK over hand-rolling).<br />
+- <strong>M8.2</strong> (<code>b943e5a</code>) — <code>POST /billing/checkout</code> creates a Pro-subscription<br />
+  Checkout Session (inline <code>price_data</code>, so no dashboard Price to pre-create),<br />
+  org-only, 503 if unconfigured / 409 if already pro. <code>POST /billing/webhook</code><br />
+  verifies the Stripe signature over the raw body and flips <code>User.plan</code>:<br />
+<code>checkout.session.completed</code> → pro (+ store <code>stripe_customer_id</code>, migration<br />
+  0019), <code>customer.subscription.deleted</code> → free. <code>stripe==11.4.1</code>; config gained<br />
+<code>STRIPE_SECRET_KEY</code>/<code>STRIPE_WEBHOOK_SECRET</code>/<code>STRIPE_PRO_PRICE_CENTS</code>.<br />
+- <strong>M8.3</strong> (<code>a8d1c1b</code>) — <code>plan</code> on <code>UserRead</code>; an org billing page<br />
+  (current plan, Upgrade → Checkout redirect, <code>?status</code> handling, manage note for<br />
+  pro) and a Feature/Unfeature toggle on the opportunity detail page for the<br />
+  owning pro org (free orgs get an Upgrade link).</p>
+<p><strong>VERIFICATION:</strong> 159 backend tests (Stripe mocked + <code>settings</code> monkeypatched, so<br />
+CI needs no keys); both migrations up/down/up clean; frontend lint+build clean.<br />
+Beyond mocks, made a <strong>real test-mode call</strong> — <code>stripe.checkout.Session.create</code><br />
+returned a live <code>cs_test_…</code> session (<code>livemode=False</code>), and in the browser the<br />
+Upgrade button's endpoint returned a real <code>checkout.stripe.com</code> URL. The featured<br />
+toggle was driven through the real handlers (free org gated to an Upgrade link;<br />
+pro org flipped <code>featured</code> true/false). Zero console errors.</p>
+<p><strong>WHY / decisions:</strong> inline <code>price_data</code> (no Price ID for Evan to create);<br />
+<code>stripe_customer_id</code> on User so the cancellation webhook can map back to the user;<br />
+checkout uses normal 2xx/4xx (the plan-limit 402s live on the opportunity routes,<br />
+M8.1). <strong>Test mode only</strong> — live billing stays deferred (Stripe requires account<br />
+holders 18+; PRD M11.4). No self-serve plan flip exists: only the webhook grants<br />
+pro.</p>
+<p><strong>Still owed (manual, Evan):</strong> the full webhook round-trip — <code>stripe listen
+--forward-to localhost:8000/api/v1/billing/webhook</code>, put the printed <code>whsec_</code> in<br />
+<code>.env</code>, pay with test card <code>4242 4242 4242 4242</code>, confirm <code>plan</code> flips. The code<br />
++ mocked tests are done; that live run is a human step.</p>
+<p><strong>Next per PRD:</strong> M9 — hardening (rate limiting, audit log, leaderboard; the<br />
+leaderboard shipped early in the pre-PRD batch and gets reconciled here).</p>
+<hr />
+<h2 id="ii15--m9-complete-rate-limiting--audit-log--leaderboard-2026-07-09">II.15 — M9 complete: rate limiting + audit log + leaderboard (2026-07-09)</h2>
+<p><strong>WHAT:</strong> Hardening, three commits.<br />
+- <strong>M9.1</strong> (<code>0205fb1</code>) — <code>RateLimitMiddleware</code>: an in-memory sliding-60s window<br />
+  per (client IP, bucket). <code>/auth/*</code> gets a tight bucket (30/min), other write<br />
+  methods a looser one (120/min); reads are free. Over-limit → 429 with<br />
+<code>Retry-After</code>. Added before CORS so a 429 still carries CORS headers. Config<br />
+  toggles + limits; the <code>conftest</code> fixture resets the window per test so shared<br />
+  state never leaks.<br />
+- <strong>M9.2</strong> (<code>f79c481</code>) — an append-only <code>audit_log</code> table (migration 0020) +<br />
+<code>append_audit()</code> wired into login, password reset, consent decisions, Stripe<br />
+  plan changes, and hours verify/deny. <code>GET /audit-log</code> is admin-only; an admin<br />
+  is <code>User.is_admin</code> (seeded from <code>ADMIN_EMAILS</code> at registration) OR any address<br />
+  in <code>ADMIN_EMAILS</code> at request time — so granting admin needs no DB edit. No<br />
+  admin UI (PRD scope).<br />
+- <strong>M9.3</strong> (<code>9b4585e</code>) — the leaderboard already matched the spec (public,<br />
+  verified-hours ranking, first name + last initial, pending excluded), so this<br />
+  was a reconcile: added a test asserting the payload is exactly<br />
+<code>{rank, name, hours}</code> with no email or full last name.</p>
+<p><strong>VERIFICATION:</strong> 171 backend tests green (127 at session start). Migration 0020<br />
+up/down/up clean. Confirmed the new middleware doesn't break the Stripe webhook's<br />
+raw-body signature read.</p>
+<p><strong>Known limitations (stated):</strong> the rate limiter is <strong>single-process</strong> — a<br />
+multi-process/instance deploy needs a shared store (Redis); behind a proxy,<br />
+<code>request.client.host</code> is the proxy IP, so prod should trust a validated<br />
+<code>X-Forwarded-For</code>. Both flagged for M11. Consistent with the other in-memory<br />
+throttles (reset, consent-resend, check-in).</p>
+<p><strong>Next per PRD:</strong> M10 — deploy readiness (full-stack <code>docker compose</code>,<br />
+production-config audit, deploy runbook). Host/DNS/production secrets are<br />
+BLOCKED-ON-EVAN and already inventoried in <code>servelocal-v2/docs/API_KEYS.md</code>.</p>
+<hr />
+<h2 id="ii16--m10-deploy-readiness-partial-billing-webhook-signature-verified-v2-pushed-2026-07-09">II.16 — M10 deploy readiness (partial); billing webhook signature-verified; v2 pushed (2026-07-09)</h2>
+<p><strong>WHAT:</strong> The session closed at the M10 environment wall, plus a deeper billing<br />
+verification and the first GitHub push of the v2 work.</p>
+<ul>
+<li><strong>M10.2</strong> (<code>c1ed64c</code>) — a production-config boot guard: <code>create_app()</code> calls<br />
+<code>check_production_config</code>, which raises (refuses to boot) when<br />
+<code>ENVIRONMENT=production</code> and <code>SECRET_KEY</code>/<code>DATABASE_URL</code> are still the dev<br />
+  defaults. Lenient in dev/test. 4 tests; 175 backend green. Also documented the<br />
+  remaining config knobs in <code>.env.example</code>.</li>
+<li><strong>M10.3</strong> (<code>e7529cc</code>) — a host-agnostic deploy runbook, <code>servelocal-v2/docs/
+  DEPLOY.md</code>: the three-container stack, prod env-var list (→ <code>API_KEYS.md</code>),<br />
+<code>alembic upgrade head</code> on release, domain/TLS, a post-deploy smoke test,<br />
+  rollback, and the M11 hardening still owed. Every account/purchase/legal step<br />
+  tagged BLOCKED-ON-EVAN.</li>
+<li><strong>M10.1 artifacts</strong> (<code>81b5ad5</code>) — <code>frontend/Dockerfile</code> (Next.js<br />
+<code>output: "standalone"</code> runtime), root <code>docker-compose.yml</code> (Postgres + api<br />
+  running <code>alembic upgrade head</code> then uvicorn + web), and the standalone config.<br />
+<code>npm run build</code> verified it emits <code>.next/standalone/server.js</code> (the path the<br />
+  Dockerfile copies). <strong><code>docker compose up</code> itself is unverified — Docker is not<br />
+  installed in this dev session — so M10.1's done-check is Evan's on a Docker<br />
+  machine.</strong></li>
+<li><strong>Billing webhook — signature-verified end to end</strong> (same commit): with a<br />
+  local <code>STRIPE_WEBHOOK_SECRET</code>, HMAC-signed a <code>checkout.session.completed</code> and<br />
+  POSTed it to <code>/billing/webhook</code> — valid signature flipped <code>plan</code> free→pro and<br />
+  wrote a <code>plan_upgraded</code> audit row; a tampered signature returned 400. This<br />
+  exercises the real <code>construct_event</code> path the mocked unit test skipped; only the<br />
+  Stripe-CLI + browser-payment run (Stripe's servers originating the event)<br />
+  remains Evan's.</li>
+<li><strong>First push</strong> — the 16 v2 commits of this session's work (M6→M10) were pushed<br />
+  to <code>github.com/Evan-Daruwalla/servelocal-v2</code> (<code>main</code>). <code>graphify-out/</code> (a 1.1 MB<br />
+  regenerable graph) and the <code>pm-cadence.json</code> hook counter were gitignored, not<br />
+  committed. The v1 repo was already clean/up-to-date. <strong>This root repo (the<br />
+  whole-project record) has no remote and stays LOCAL by Evan's decision — it is<br />
+  portfolio narrative, not code of record.</strong></li>
+</ul>
+<p><strong>State:</strong> v2 is through <strong>M9 complete + M10 partial</strong>; 127 → <strong>175 backend tests</strong>,<br />
+all green; migrations 0015–0020 up/down/up clean. <strong>Remaining:</strong> M10.1<br />
+<code>docker compose up</code> (Docker, Evan), M10.4 success-criteria checklist, and <strong>M11<br />
+public launch — almost entirely BLOCKED-ON-EVAN</strong> (host account, domain + DNS,<br />
+prod secrets, Resend prod key, Stripe live decision, guardian/legal sign-off).</p>
+<hr />
+<h2 id="ii17--m10-verified-m12-v1-visual-parity-record-html-twin-auto-synced-by-a-git-hook-2026-07-12">II.17 — M10 verified; M12 v1 visual parity; record HTML twin auto-synced by a git hook (2026-07-12)</h2>
+<p><strong>WHAT:</strong> Three threads across 2026-07-12, all in the v2 repo except the last<br />
+(this root repo). All commit hashes below are <code>Evan-Daruwalla/servelocal-v2</code><br />
+<code>main</code> unless noted.</p>
+<ul>
+<li><strong>M10 COMPLETE.</strong> Evan ran <code>docker compose up --build</code> on a Docker machine —<br />
+  the one done-check no dev session could run. All three containers came up<br />
+  healthy; the API applied the <strong>entire migration chain 0001–0020 against real<br />
+  Postgres</strong> (the test suite runs on SQLite, so this was the first Postgres run<br />
+  of the full chain — it validated no migration leaned on SQLite-only behavior)<br />
+  and served uvicorn; web ready. One build bug surfaced + fixed en route: the<br />
+  frontend image's <code>COPY /app/public</code> failed because the app had no <code>public/</code><br />
+  dir (Next <code>output:"standalone"</code> excludes it, so the Dockerfile copies it back<br />
+  by hand) — fixed with a tracked <code>frontend/public/.gitkeep</code> (<code>bd32540</code>). M10<br />
+  close + PRD §3 box: <code>a911821</code>.</li>
+<li><strong>M12 added — v1 visual parity (Evan-directed).</strong> Seeing the containerized UI,<br />
+  Evan flagged it as "very basic" and then "make the frontend look like the<br />
+  ServeLocal v1 frontend." Diagnosis was honest: the v2 frontend had been built<br />
+  function-first (every slice browser-verified for <em>behavior</em>, never <em>design</em>),<br />
+  so it had NO web font (browser default serif), stock shadcn slate tokens (pure<br />
+  greyscale), and no shared chrome. A first foundation pass with a<br />
+  logo-sampled green + Inter (<code>61e42ad</code>) was then <strong>superseded the same day</strong> by<br />
+  a faithful port of v1's editorial system (<code>1cdeeea</code>): Fraunces (display) + DM<br />
+  Sans (body) via <code>next/font</code>, v1's <code>:root</code> palette as shadcn tokens (green<br />
+<code>#175c41</code>, gold <code>#c9a84c</code>, warm off-white bg, 6px radius), the paper-grain<br />
+  noise overlay, green selection/scrollbar, a two-tone Fraunces "ServeLocal"<br />
+  wordmark in a sticky header + footer, and a v1-style hero. Browser-verified<br />
+  (logged-out landing screenshotted; the CDP screenshot tool flaked mid-verify,<br />
+  so structure was confirmed via the a11y tree + clean console + 200s). Recorded<br />
+  as a new milestone M12 in the PRD/HANDOFF (<code>472153c</code>), with M12.2 (discover +<br />
+  opportunity cards) and M12.3 (forms/tables/dashboards) still open and ordered<br />
+  before M11.6's soft launch. <strong>This is foundation only — per-page component<br />
+  parity is the open follow-up.</strong> Honest caveat carried in the docs: Fraunces/DM<br />
+  Sans self-host via a Google fetch at <em>build</em> time, so a fully offline<br />
+<code>docker build</code> would need <code>next/font/local</code> instead.</li>
+<li><strong>Record HTML twin auto-synced by a standalone git hook</strong> (this root repo).<br />
+  The whole-project record's HTML twin (<code>…History.html</code>) is generated by<br />
+<code>python -m scripts.render_record_html</code> and has always been a <em>manual</em> step —<br />
+  the exact staleness risk the doc's own banner warns about. Added a<br />
+  version-controlled <code>scripts/git-hooks/pre-commit</code>: when the record <code>.md</code> is<br />
+  staged it regenerates the twin and <code>git add</code>s it, so the two can't drift;<br />
+  activated via <code>git config core.hooksPath scripts/git-hooks</code>. It also chains<br />
+  the pre-existing secret-scanner (git runs only one <code>pre-commit</code>, so pointing<br />
+<code>hooksPath</code> here would otherwise silently drop that gate). A real bug was<br />
+  found and fixed while verifying it: the record's filename contains an em-dash,<br />
+  and <code>git diff --name-only</code> octal-escapes non-ASCII paths under the default<br />
+<code>core.quotepath</code>, so the first detection <code>grep</code> for the literal em-dash missed<br />
+  entirely — fixed with <code>-c core.quotepath=false</code> plus an ASCII-only match<br />
+  substring. Fail policy is deliberate: the secret scan fails <em>open</em> (a scanner<br />
+  bug must not wedge commits), the render fails <em>closed</em> (a stale/broken twin is<br />
+  the whole problem it prevents — and the render already exits non-zero on any<br />
+  broken TOC anchor). This entry is itself the end-to-end test of that hook.</li>
+</ul>
+<p><strong>State:</strong> v2 is <strong>M1–M10 complete</strong>; <strong>M12 partial</strong> (M12.1 done); M11 public<br />
+launch remains almost entirely BLOCKED-ON-EVAN (host, domain/DNS, prod secrets,<br />
+Resend prod key, Stripe live decision, guardian/legal sign-off). 175 backend<br />
+tests green; frontend lint + build clean. The six 2026-07-12 v2 commits<br />
+(<code>bd32540</code>→<code>fdb4327</code>) are pushed to <code>main</code>.</p>
+<hr />
+<h2 id="ii18--v1-exact-copy-complete-all-13-v1-screens-rebuilt-in-v2-with-a-scoped-v1-architecture-2026-07-13">II.18 — v1 exact-copy complete: all 13 v1 screens rebuilt in v2 with a scoped .v1 architecture (2026-07-13)</h2>
+<p><strong>WHAT:</strong> M12 achieved v1's visual <em>language</em> (fonts, palette, component vocabulary)<br />
+across v2's shadcn pages. Evan then asked to go further — "copy the v1 UI exactly,<br />
+all screens" (scope confirmed via a picker: <em>all</em> v1 screens, including ones v2<br />
+doesn't fully back, built as faithful static/stubbed UI). Over 2026-07-13 all <strong>13<br />
+v1 screens</strong> were rebuilt pixel-for-pixel in the v2 frontend. All commits are<br />
+<code>Evan-Daruwalla/servelocal-v2</code> <code>main</code>, <code>0dfbaed</code>→<code>2dbae31</code> (pushed).</p>
+<p><strong>HOW — the scoped <code>.v1</code> architecture (the load-bearing decision):</strong> v1's raw CSS<br />
+uses hex custom-properties with the same <em>names</em> as shadcn's HSL design tokens<br />
+(<code>--border</code>, <code>--muted</code>, <code>--card</code>…), so importing it globally would corrupt every<br />
+unconverted page. Instead v1's stylesheet was ported <strong>verbatim into<br />
+<code>frontend/app/v1.css</code> under a <code>.v1</code> wrapper</strong> — every variable defined on <code>.v1{}</code>,<br />
+every rule prefixed <code>.v1 …</code> — so it can never collide with the shadcn tokens. Three<br />
+shared pieces make each screen cheap: <code>components/v1/v1-shell.tsx</code> (v1's exact<br />
+nav+footer + the <code>.v1</code> root, wrapping page content), <code>lib/v1-routes.ts</code><br />
+(<code>isV1Route()</code> — the global <code>SiteHeader</code>/<code>SiteFooter</code> return <code>null</code> on converted<br />
+routes so there's no double chrome), and the growing <code>v1.css</code>. Each screen: read<br />
+v1's markup/CSS from <code>../ServeLocal website/public/{index.html,app.js}</code>, port the<br />
+needed classes into <code>v1.css</code>, build the page in <code>&lt;V1Shell&gt;</code> wired to real v2 data,<br />
+rebuild the Docker <code>web</code> image, verify, commit, push.</p>
+<p><strong>The 13 screens</strong> (route · backing): <code>/</code> landing · <code>/discover</code> · <code>/opportunities/[id]</code><br />
+· <code>/dashboard</code> (student) · <code>/applicants</code> (org, 7-tab) · <code>/leaderboard</code> · auth ×4<br />
+(<code>/login</code> <code>/register</code> <code>/forgot</code> <code>/reset</code>) · <code>/pricing</code> · <code>/for-organizations</code> ·<br />
+<code>/donate</code> · <code>/privacy</code> <code>/terms</code> · <code>/portfolio</code> · <code>/admin</code>. Landing→org-dashboard and<br />
+leaderboard→portfolio wire real API data; auth is v1's card look over the unchanged<br />
+<code>useAuth</code> calls; pricing/for-orgs/legal are exact static copy; donate is a demo stub<br />
+(as v1 itself ships); portfolio renders the <em>logged-in student's own</em> transcript<br />
+(v1's public <code>#portfolio/&lt;id&gt;</code> link has no v2 endpoint); admin mirrors v1's chrome<br />
+but carries a clear "moderation backend not ported" banner over a read-only<br />
+public-data snapshot.</p>
+<p><strong>HONEST v2 gaps surfaced, never faked</strong> (each a candidate backend task): no<br />
+public-portfolio endpoint; <strong>no admin role / moderation endpoints at all</strong>; no<br />
+analytics or inactive-inclusive org-listings endpoint; org applications &amp; hours<br />
+don't expose student name/email (columns dropped, not invented); no endorsements;<br />
+no <code>school</code> field (leaderboard Top-Schools shows v1's empty state); no donations<br />
+backend; <code>PATCH /me</code> persists only <code>email_notifications</code> (org-profile text fields<br />
+are visual). Where v1 shows data v2 can't yet supply, the v1 empty/absent-data<br />
+state is rendered — nothing fabricated.</p>
+<p><strong>Verification:</strong> every screen checked live at <code>localhost:3000</code> (Docker stack) via<br />
+computed-style + DOM assertions and <strong>zero console errors</strong>, with <code>npm run build</code><br />
+clean each time and the <code>web</code> image rebuilt per screen. The CDP <strong>screenshot tool<br />
+timed out the entire session</strong> (as in prior 2026-07-12 work), so visual proof came<br />
+from computed styles, not images — called out for honesty. Backend untouched: 175<br />
+pytest cases remain green; this was a frontend-only pass. Per-screen detail lives in<br />
+the v2 record (<code>servelocal-v2/docs/record_2026-07-07.md</code>, entries 2026-07-13).</p>
+<p><strong>STATUS:</strong> v1 exact-copy COMPLETE. Frontier is unchanged — <strong>M11 public launch,<br />
+BLOCKED-ON-EVAN</strong>. This pass changed how v2 <em>looks</em>, not what it can do.</p>
+<hr />
+<h2 id="ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13">II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)</h2>
+<p>Same-day follow-on to II.18, all <code>Evan-Daruwalla/servelocal-v2</code> <code>main</code><br />
+<code>0dfbaed</code>→<code>60495e4</code> (pushed). Backend <strong>175 → 189 pytest green</strong>. Per-item detail<br />
+in the v2 record (<code>servelocal-v2/docs/record_2026-07-07.md</code>, 2026-07-13 entries).</p>
+<p><strong>End-to-end QA.</strong> Drove one real user journey through the actual UI: student<br />
+self-reports 4h → org clicks Verify in the <code>/applicants</code> dashboard → the public<br />
+leaderboard shows "🥇 Alex R. · 4 hrs" (privacy-safe name) → the student's<br />
+transcript reflects it. Confirmed the whole data path works, not just per-screen<br />
+rendering.</p>
+<p><strong>Public-portfolio gap closed (real full-stack slice).</strong> v1's portfolio is a<br />
+public <code>#portfolio/&lt;userId&gt;</code> share link; v2 had no such endpoint, so the copied<br />
+screen could only show the logged-in student's own data. Added <code>User.portfolio_public</code><br />
+(migration <strong>0021</strong>, opt-in, default OFF) + <code>GET /portfolio/{id}</code> returning the<br />
+verified-hours transcript ONLY for opted-in students — a single 404 for<br />
+unknown/non-student/opted-out alike, so a private or missing id never leaks<br />
+existence. Frontend: public <code>/portfolio/[id]</code> page + own-page "make public" toggle +<br />
+copy-link. 7 tests. Verified live: 404 before opt-in → 200 after; the page renders<br />
+while logged out.</p>
+<p><strong>/audit → all 5 findings fixed.</strong> A full sweeping audit of the session's work, then<br />
+"do all": <strong>#1 (high)</strong> a minor could publish a full-name transcript with no guardian<br />
+consent — now <code>PATCH /me</code> gates enabling <code>portfolio_public</code> behind verified consent<br />
+for minors (reusing <code>consent_blocks</code>) AND the endpoint minimizes a minor's public name<br />
+to first+last-initial like the leaderboard; <strong>#2 (high, pre-existing)</strong> Next.js 15.1.3<br />
+carried a critical advisory — bumped to <strong>15.5.20</strong> + a <code>postcss</code> override, clearing<br />
+<code>npm audit</code> to <strong>0 vulnerabilities</strong>; <strong>#3 (med)</strong> the org dashboard couldn't see<br />
+inactive listings — added <code>GET /opportunities/mine</code>; <strong>#4/#5 (low)</strong> student-only flag<br />
+guard + lint clean. The audit also <em>validated</em> the scoped-<code>.v1</code> architecture (0<br />
+unscoped CSS rules, <code>v1</code>-namespaced keyframes) and that the public route is covered by<br />
+the global rate-limit middleware.</p>
+<p><strong>UI polish (emil-design-eng + a sourced research brief).</strong> <code>docs/research/2026-07-13_
+ui-professional-polish.md</code> (5 web sweeps, verdict: professionalism = discipline of<br />
+interaction states + calm fast motion, not decoration). Applied: <code>scale(.97)</code> <code>:active</code><br />
+press feedback on every pressable (v1 + shadcn Button), all 8 <code>transition:all</code> replaced<br />
+with explicit property lists, a branded 2px <code>:focus-visible</code> outline (white on dark<br />
+bands, WCAG 2.4.13-quality), marquee paused under <code>prefers-reduced-motion</code>, plus<br />
+<code>tabular-nums</code>/<code>text-wrap:balance</code>/<code>::selection</code>; round 2 added <code>@starting-style</code> card<br />
+entrance, hero-card stagger, and a <code>-2px</code> opp-card hover-lift (gated<br />
+<code>hover:hover</code>+<code>no-preference</code>). Two verification gotchas recorded: an <code>:is()</code><br />
+specificity bug left footer focus rings green-on-green (fixed by widening the<br />
+override's list), and the browser-pane tab is <code>visibility:hidden</code> so CSS animation<br />
+clocks freeze at t=0 — anims verified via <code>getAnimations().finish()</code>.</p>
+<p><strong>Also (root repo).</strong> Discovered the local <code>D:\ClaudeCode\ServeLocal</code> docs repo has an<br />
+<strong>unrelated history</strong> to GitHub <code>Evan-Daruwalla/ServeLocal</code> (which holds the actual v1<br />
+code) — no common ancestor. Pushing the docs history there would have destroyed the v1<br />
+codebase; did NOT push. Root record stays local (Evan: "leave it local"); hazard saved<br />
+to auto-memory.</p>
+<p><strong>STATUS unchanged:</strong> frontier is <strong>M11 public launch, BLOCKED-ON-EVAN</strong>. This session<br />
+added one real feature (public portfolio) and hardened + polished; the launch blockers<br />
+(host/DNS/keys/legal) are Evan's.</p>
+<hr />
+<h2 id="summary-timeline">Summary timeline</h2>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Era</th>
+<th>Event</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~2026-06-18</td>
+<td>v1</td>
+<td>Pre-git scoping / compliance scaffolding</td>
+<td><code>docs/SECURITY.md</code>, <code>docs/compliance.md</code> mtimes</td>
+</tr>
+<tr>
+<td>2026-07-02</td>
+<td>v1</td>
+<td>Initial platform commit + README</td>
+<td><code>4b6451d</code>, <code>2de36c9</code></td>
+</tr>
+<tr>
+<td>2026-07-03</td>
+<td>v1</td>
+<td>Guardian consent (ADR-0010) + indexes (ADR-0011) + editorial restyle</td>
+<td><code>8a1e4fe</code>, <code>10b0d05</code></td>
+</tr>
+<tr>
+<td>2026-07-03/04</td>
+<td>v1</td>
+<td>Scaling cost optimizations (ADR-0012) + bench/loadtest tooling</td>
+<td><code>65ced71</code>, <code>43ef219</code>, <code>a2164d4</code></td>
+</tr>
+<tr>
+<td>2026-07-04</td>
+<td>v1</td>
+<td>SQLite migration + pagination (ADR-0013); ~90k-user ceiling removed, verified 100k</td>
+<td><code>da9a27f</code></td>
+</tr>
+<tr>
+<td>2026-07-04</td>
+<td>v1</td>
+<td>Security/perf batch (WAL, gzip, password reset, check-in hardening); 130→4,167 req/s</td>
+<td><code>05abeb9</code></td>
+</tr>
+<tr>
+<td>2026-07-04/05</td>
+<td>v1</td>
+<td>CI fix (install deps in coverage/chaos jobs; actions @v5)</td>
+<td><code>a7dda9f</code>, <code>5d3a852</code>, <code>310d3b6</code></td>
+</tr>
+<tr>
+<td>2026-07-05</td>
+<td>v1</td>
+<td>Graph-audit batch: email delivery, TOTP MFA, ADR-0014 CSP lockdown, ADR-0015 module split</td>
+<td><code>e092dea</code>, <code>9ff50d8</code></td>
+</tr>
+<tr>
+<td>2026-07-07</td>
+<td>v1</td>
+<td>CLAUDE.md upgrade; v1 frozen as v2 reference</td>
+<td><code>f66ebb9</code></td>
+</tr>
+<tr>
+<td>2026-07-07</td>
+<td>v2</td>
+<td>Monorepo scaffold + auth vertical slice</td>
+<td><code>33388bd</code>, <code>ddd5b0a</code></td>
+</tr>
+<tr>
+<td>2026-07-07</td>
+<td>v2</td>
+<td>Core domain + community features ported (66 tests)</td>
+<td><code>94c185e</code></td>
+</tr>
+<tr>
+<td>2026-07-07</td>
+<td>v2</td>
+<td>PRD adopted; M1 doc system + CI</td>
+<td><code>f06d3ae</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>M2 recurring events + waitlist (86 tests)</td>
+<td><code>a9e3651</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>M3 hours parity — self-report, appeals, check-in codes (100 tests)</td>
+<td><code>08f59d1</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>M4 email infra stub + enumeration-safe password reset (107 tests)</td>
+<td><code>ede7e14</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>Ship-publicly decision; PRD gains M11; CLAUDE.md system built</td>
+<td><code>50c4445</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>M5.1 guardian-consent schema + registration age branch (116 tests)</td>
+<td><code>12f8281</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>M5.2 consent flow + require_consent gate on apply/check-in</td>
+<td><code>1b88487</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>M5.3 consent frontend — M5 launch gate complete (127 tests)</td>
+<td><code>98b3841</code></td>
+</tr>
+<tr>
+<td>2026-07-08</td>
+<td>v2</td>
+<td>Doc-system cadence hook (pm-cadence.js) wired + armed for this workspace</td>
+<td><code>1a9e2f6</code> (public skill repo)</td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M6 notifications — email delivery on every event + opt-out + pagination (131 tests)</td>
+<td><code>2f84fab</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M7.1 directed messaging — org broadcast + student inbox + reply; minor gate (138 tests)</td>
+<td><code>4abbc79</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M7.2 shift templates (OpportunityTemplate table, 144 tests)</td>
+<td><code>6bfa780</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M7 complete — messaging + templates frontend (inbox, broadcast, template use/save)</td>
+<td><code>819d6dd</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M8.1 org plan enforcement (free cap, pro featured; 151 tests). M8.2 Stripe BLOCKED-ON-EVAN</td>
+<td><code>bdd41d1</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M8.2 Stripe Checkout + signature-verified webhook (test mode; 159 tests)</td>
+<td><code>b943e5a</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M8 complete — billing page + featured toggle UI (browser-verified, real test-mode session)</td>
+<td><code>a8d1c1b</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M9.1 per-IP rate limiting + M9.2 append-only audit log (migration 0020)</td>
+<td><code>0205fb1</code>, <code>f79c481</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M9 complete — leaderboard reconciled to no-PII spec (171 tests)</td>
+<td><code>9b4585e</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M10.2 prod-config boot guard + M10.3 deploy runbook (175 tests)</td>
+<td><code>c1ed64c</code>, <code>e7529cc</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>M10.1 Docker artifacts + billing webhook signed round-trip verified</td>
+<td><code>81b5ad5</code></td>
+</tr>
+<tr>
+<td>2026-07-09</td>
+<td>v2</td>
+<td>First GitHub push of the session's M6→M10 work</td>
+<td><code>3f06d5a</code> (main)</td>
+</tr>
+<tr>
+<td>2026-07-12</td>
+<td>v2</td>
+<td>M10 COMPLETE — <code>docker compose up</code> verified by Evan; full 0001–0020 chain on real Postgres; <code>public/</code> build-bug fixed</td>
+<td><code>bd32540</code>, <code>a911821</code></td>
+</tr>
+<tr>
+<td>2026-07-12</td>
+<td>v2</td>
+<td>M12 v1 visual parity added — Fraunces/DM Sans + v1 green/gold palette + chrome (foundation; M12.1)</td>
+<td><code>1cdeeea</code>, <code>472153c</code></td>
+</tr>
+<tr>
+<td>2026-07-12</td>
+<td>root</td>
+<td>Standalone pre-commit hook auto-regenerates the record HTML twin (chains the secret scanner)</td>
+<td><code>scripts/git-hooks/pre-commit</code></td>
+</tr>
+<tr>
+<td>2026-07-13</td>
+<td>v2</td>
+<td>v1 exact-copy — all 13 v1 screens rebuilt in v2 via the scoped <code>.v1</code> architecture (frontend-only)</td>
+<td><code>0dfbaed</code>→<code>2dbae31</code> (main)</td>
+</tr>
+<tr>
+<td>2026-07-13</td>
+<td>v2</td>
+<td>Post-copy: public-portfolio slice (migration 0021), /audit all-5 fixes (Next→15.5.20, 0 npm vulns), UI polish r1–2. 189 tests</td>
+<td><code>91eab3e</code>→<code>60495e4</code> (main)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="whats-not-in-this-record-honest-gaps">What's not in this record (honest gaps)</h2>
+<ul>
+<li><strong>Pre-git v1 history</strong> — the initial scoping brief and any work before<br />
+<code>4b6451d</code> (2026-07-02). Only surviving artifacts (compliance/security docs<br />
+  dated 2026-06-18, ADR decisions) are referenced; the conversation isn't in the<br />
+  repo.</li>
+<li><strong>v1 file-level detail</strong> — the per-feature "why/how" for v1 lives in<br />
+<code>ServeLocal website/docs/record_2026-07-02.md</code> and the 15 ADRs<br />
+  (<code>docs/adr/</code>), summarized (not transcribed) here.</li>
+<li><strong>Exact v1 metrics beyond what docs recorded</strong> — figures like "100k users /<br />
+  763 MB / 0 errors" and "130 → 4,167 req/s" are quoted from HANDOFF, not<br />
+  re-measured for this document.</li>
+<li><strong>This root repo (whole-project record) stays LOCAL</strong> — no remote, by Evan's<br />
+  decision; it's portfolio narrative, not code of record. (The v2 repo <em>is</em><br />
+  pushed to <code>Evan-Daruwalla/servelocal-v2</code> <code>main</code> as of 2026-07-09, updated<br />
+  2026-07-12 — corrects the earlier "not pushed" note here.)</li>
+<li><strong>Reasoning/decision conversations</strong> — this record covers WHAT was built and<br />
+  WHAT was learned; the deliberations live in the session transcripts under<br />
+<code>~/.claude/projects/D--ClaudeCode-ServeLocal/*.jsonl</code>.</li>
+</ul>
+</div>
+</body>
+</html>

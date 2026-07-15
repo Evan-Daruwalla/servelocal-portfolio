@@ -1,0 +1,267 @@
+/** Thin typed fetch wrapper for the FastAPI backend (see ../backend). */
+import type {
+  Application,
+  ApplicationWithOpportunity,
+  ConsentContext,
+  ConsentManageContext,
+  Hours,
+  HoursWithOpportunity,
+  LeaderboardEntry,
+  Message,
+  MyAwards,
+  Notification,
+  Opportunity,
+  OpportunityCreateInput,
+  OpportunityTemplate,
+  OrgReviews,
+  PublicPortfolio,
+  Review,
+  Token,
+  User,
+} from "@/lib/types";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function request<T>(
+  path: string,
+  options: RequestInit & { token?: string } = {}
+): Promise<T> {
+  const { token, headers, ...rest } = options;
+  const res = await fetch(`${API_URL}${path}`, {
+    ...rest,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+  });
+
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = body.detail ?? detail;
+    } catch {
+      // response wasn't JSON — fall back to statusText
+    }
+    throw new ApiError(res.status, typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  register: (input: {
+    email: string;
+    password: string;
+    full_name?: string;
+    role?: string;
+    dob?: string;
+    guardian_name?: string;
+    guardian_email?: string;
+  }) => request<User>("/auth/register", { method: "POST", body: JSON.stringify(input) }),
+
+  login: (input: { email: string; password: string }) =>
+    request<Token>("/auth/login", { method: "POST", body: JSON.stringify(input) }),
+
+  me: (token: string) => request<User>("/auth/me", { token }),
+  updateMe: (token: string, input: { email_notifications?: boolean; portfolio_public?: boolean }) =>
+    request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(input), token }),
+
+  // Password reset (M4)
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/auth/forgot", { method: "POST", body: JSON.stringify({ email }) }),
+  resetPassword: (token: string, new_password: string) =>
+    request<{ message: string }>("/auth/reset", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password }),
+    }),
+
+  // Guardian consent (M5)
+  requestConsent: (token: string) =>
+    request<{ message: string }>("/consent/request", { method: "POST", token }),
+  consentContext: (linkToken: string) => request<ConsentContext>(`/consent/${linkToken}`),
+  decideConsent: (linkToken: string, decision: "approve" | "decline") =>
+    request<{ message: string }>(`/consent/${linkToken}`, {
+      method: "POST",
+      body: JSON.stringify({ decision }),
+    }),
+  manageContext: (linkToken: string) =>
+    request<ConsentManageContext>(`/consent/manage/${linkToken}`),
+  revokeConsent: (linkToken: string) =>
+    request<{ message: string }>(`/consent/manage/${linkToken}`, {
+      method: "POST",
+      body: JSON.stringify({ action: "revoke" }),
+    }),
+
+  listOpportunities: (params: { category?: string; query?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.category) qs.set("category", params.category);
+    if (params.query) qs.set("query", params.query);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return request<Opportunity[]>(`/opportunities${suffix}`);
+  },
+
+  getOpportunity: (id: string) => request<Opportunity>(`/opportunities/${id}`),
+
+  // Org's OWN listings incl. inactive/expired (the public list hides those).
+  myOpportunities: (token: string) => request<Opportunity[]>("/opportunities/mine", { token }),
+
+  createOpportunity: (input: OpportunityCreateInput, token: string) =>
+    request<Opportunity>("/opportunities", { method: "POST", body: JSON.stringify(input), token }),
+
+  apply: (
+    opportunityId: string,
+    token: string,
+    body?: { subscription_type: "all_dates" | "single_date"; single_date?: string }
+  ) =>
+    request<Application>(`/opportunities/${opportunityId}/apply`, {
+      method: "POST",
+      token,
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    }),
+
+  withdraw: (opportunityId: string, token: string) =>
+    request<void>(`/opportunities/${opportunityId}/apply`, { method: "DELETE", token }),
+
+  excludeDate: (opportunityId: string, date: string, action: "exclude" | "include", token: string) =>
+    request<Application>(`/opportunities/${opportunityId}/exclude-date`, {
+      method: "PATCH",
+      body: JSON.stringify({ date, action }),
+      token,
+    }),
+
+  dateSpots: (opportunityId: string) =>
+    request<Record<string, number>>(`/opportunities/${opportunityId}/date-spots`),
+
+  myApplications: (token: string) =>
+    request<ApplicationWithOpportunity[]>("/applications/my", { token }),
+
+  orgApplications: (token: string) =>
+    request<ApplicationWithOpportunity[]>("/applications/org", { token }),
+
+  decideApplication: (applicationId: string, action: "approve" | "reject", token: string) =>
+    request<ApplicationWithOpportunity>(`/applications/${applicationId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ action }),
+      token,
+    }),
+
+  autoLogHours: (token: string) => request<{ created: number }>("/hours/auto-log", { method: "POST", token }),
+
+  listHours: (token: string) => request<HoursWithOpportunity[]>("/hours", { token }),
+
+  verifyHours: (hoursId: string, action: "approve" | "deny", token: string, note?: string) =>
+    request<HoursWithOpportunity>(`/hours/${hoursId}/verify`, {
+      method: "PATCH",
+      body: JSON.stringify({ action, note }),
+      token,
+    }),
+
+  selfReportHours: (input: { opportunity_id: string; hours: number; note?: string }, token: string) =>
+    request<HoursWithOpportunity>("/hours", { method: "POST", body: JSON.stringify(input), token }),
+
+  appealHours: (hoursId: string, note: string, token: string) =>
+    request<HoursWithOpportunity>(`/hours/${hoursId}/appeal`, {
+      method: "POST",
+      body: JSON.stringify({ note }),
+      token,
+    }),
+
+  createCheckinCode: (opportunityId: string, date: string, token: string) =>
+    request<{ date: string; code: string }>(`/opportunities/${opportunityId}/checkin-codes`, {
+      method: "POST",
+      body: JSON.stringify({ date }),
+      token,
+    }),
+
+  redeemCheckin: (opportunityId: string, code: string, token: string) =>
+    request<Hours>(`/opportunities/${opportunityId}/checkin`, {
+      method: "POST",
+      body: JSON.stringify({ code }),
+      token,
+    }),
+
+  myAwards: (token: string) => request<MyAwards>("/awards/my", { token }),
+
+  // Bookmarks
+  listSaved: (token: string) => request<Opportunity[]>("/saved", { token }),
+  listSavedIds: (token: string) => request<string[]>("/saved/ids", { token }),
+  save: (opportunityId: string, token: string) =>
+    request<void>(`/saved/${opportunityId}`, { method: "PUT", token }),
+  unsave: (opportunityId: string, token: string) =>
+    request<void>(`/saved/${opportunityId}`, { method: "DELETE", token }),
+
+  // Leaderboard (public)
+  leaderboard: () => request<LeaderboardEntry[]>("/leaderboard"),
+
+  // Public verified-service transcript (only for students who opted in; else 404).
+  publicPortfolio: (userId: string) => request<PublicPortfolio>(`/portfolio/${userId}`),
+
+  // Reviews
+  orgReviews: (orgId: string) => request<OrgReviews>(`/orgs/${orgId}/reviews`),
+  createReview: (orgId: string, input: { rating: number; text: string }, token: string) =>
+    request<Review>(`/orgs/${orgId}/reviews`, { method: "POST", body: JSON.stringify(input), token }),
+
+  // Notifications
+  notifications: (token: string) => request<Notification[]>("/notifications", { token }),
+  unreadCount: (token: string) => request<{ unread: number }>("/notifications/unread-count", { token }),
+  markNotificationRead: (id: string, token: string) =>
+    request<Notification>(`/notifications/${id}/read`, { method: "PATCH", token }),
+  markAllNotificationsRead: (token: string) =>
+    request<{ unread: number }>("/notifications/read-all", { method: "POST", token }),
+
+  // Messaging
+  messages: (opportunityId: string, token: string) =>
+    request<Message[]>(`/opportunities/${opportunityId}/messages`, { token }),
+  postMessage: (opportunityId: string, body: string, token: string) =>
+    request<Message>(`/opportunities/${opportunityId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+      token,
+    }),
+
+  // Directed messaging (M7): inbox, reply, org→applicant broadcast
+  inbox: (token: string) => request<Message[]>("/messages", { token }),
+  replyMessage: (id: string, body: string, token: string) =>
+    request<Message>(`/messages/${id}/reply`, { method: "POST", body: JSON.stringify({ body }), token }),
+  broadcast: (
+    opportunityId: string,
+    body: string,
+    audience: "all" | "approved" | "pending",
+    token: string
+  ) =>
+    request<{ sent: number }>(`/opportunities/${opportunityId}/messages/broadcast`, {
+      method: "POST",
+      body: JSON.stringify({ body, audience }),
+      token,
+    }),
+
+  // Shift templates (M7)
+  templates: (token: string) => request<OpportunityTemplate[]>("/opportunity-templates", { token }),
+  saveTemplate: (opportunity_id: string, name: string, token: string) =>
+    request<OpportunityTemplate>("/opportunity-templates", {
+      method: "POST",
+      body: JSON.stringify({ opportunity_id, name }),
+      token,
+    }),
+
+  // Billing (M8)
+  createCheckout: (token: string) =>
+    request<{ url: string }>("/billing/checkout", { method: "POST", token }),
+  setFeatured: (opportunityId: string, featured: boolean, token: string) =>
+    request<Opportunity>(`/opportunities/${opportunityId}/featured`, {
+      method: "PATCH",
+      body: JSON.stringify({ featured }),
+      token,
+    }),
+};

@@ -1,0 +1,119 @@
+# Handoff — ServeLocal v2
+
+## Goal
+
+ServeLocal is a volunteer-opportunity platform (students discover/track community service, log
+verified hours, earn awards; organizations post opportunities and verify attendance). v2 is a
+production-stack rewrite (FastAPI/SQLAlchemy/Postgres backend + Next.js/TypeScript/Tailwind/shadcn
+frontend) of the proven v1 zero-dependency Node app (`../ServeLocal website`, GitHub
+`Evan-Daruwalla/ServeLocal`). v1 is the behavioral reference; v2's job is launch-critical parity on
+a deployable/scalable stack, preserving Evan's documented engineering process (this is a
+college-application portfolio piece — the process is the product).
+
+The work is driven by `PRD_ROADMAP.md` (a standing M1–M11 plan). Read that first, then this file.
+**Decided by Evan 2026-07-08: the finish line is a real public launch (new M11), not just
+launch-readiness.** M5 guardian consent remains the hard gate before any public exposure.
+
+## Current state — M1–M10 + M12 + v1 EXACT-COPY + public-portfolio + UI-polish COMPLETE; frontier is M11 launch (BLOCKED-ON-EVAN)
+
+**Last updated: 2026-07-13** (big Evan-directed frontend+polish session, v2 `main` `0dfbaed`→`60495e4`, all pushed; backend **189 pytest green**, up from 175). Four threads, all live-verified via computed-style/DOM checks + zero console errors + clean build (the CDP **screenshot tool timed out the whole session** — proof is computed styles, not images; a background browser-pane tab is `visibility:hidden` so CSS animation clocks freeze at t=0, verify anims with `getAnimations().finish()`):
+1. **v1 EXACT-COPY COMPLETE** — "copy the v1 UI exactly, all screens." All **13 v1 screens** render in v2 with v1's pixel-for-pixel editorial UI via a scoped `.v1` architecture: `frontend/app/v1.css` (v1's raw CSS ported verbatim under a `.v1` root so it can't collide with shadcn's HSL tokens; **0 unscoped rules, keyframes `v1`-namespaced**) + shared `components/v1/V1Shell` nav/footer + `lib/v1-routes.ts` (`isV1Route()` suppresses the global chrome on converted routes, incl. dynamic `/opportunities/<id>` and `/portfolio/<id>`). Screens: landing, discover, opp-detail, student dash, **org dash = `/applicants`**, leaderboard, auth ×4, pricing, for-organizations, donate, privacy, terms, portfolio, admin.
+2. **Public-portfolio gap closed (real full-stack slice)** — `GET /portfolio/{id}` (opt-in via `User.portfolio_public`, migration **0021**, default OFF; single 404 for unknown/non-student/opted-out so nothing leaks). Frontend public `/portfolio/[id]` page + own-page toggle + copy-link. E2E-verified: self-report → org-Verify (real UI) → 🥇 leaderboard → transcript.
+3. **`/audit` → all 5 findings fixed** — minor-privacy gate (a minor can't publish a full-name transcript without verified guardian consent; minor public names minimized to first+last-initial), **Next 15.1.3→15.5.20 + postcss override → `npm audit` 0 vulns**, new `GET /opportunities/mine` (org sees inactive listings), student-only flag guard, lint clean.
+4. **UI polish (emil-design-eng + sourced research brief `docs/research/2026-07-13_ui-professional-polish.md`)** — `scale(.97)` `:active` press feedback on every pressable (v1 + shadcn Button), all 8 `transition:all` → explicit lists, branded 2px `:focus-visible` outline (white on dark bands), marquee paused under `prefers-reduced-motion`, `tabular-nums`/`text-wrap:balance`/`::selection`; round 2: `@starting-style` card entrance, hero mini-card stagger, opp-card `-2px` hover-lift (gated `hover:hover`+`no-preference`).
+
+**Remaining honest v2 gaps** (each a candidate backend task): no admin role/moderation endpoints (admin screen is an honest stub); no analytics endpoint (org Analytics tab = derived subset); org applications+hours don't expose student name/email; no endorsements; no `school` field; no donations backend (donate is a demo stub); `PATCH /me` persists `email_notifications` + `portfolio_public` only. Seed data (demo org `greenroots@demo.com` + student `alex@demo.com`, pw redacted (local Docker seed only), 3 opps + 1 verified-hours transcript) lives in the Docker Postgres volume — **local only**. Prior: M12 visual parity (`67266d5`), M10 Docker boot verified. **Frontier: M11 public launch — BLOCKED-ON-EVAN.**
+
+The auth vertical slice shipped earlier (`ddd5b0a`). Since then a large batch ported the core
+domain and several community features from v1 to the v2 stack (`94c185e`): opportunities,
+applications, hours, awards, bookmarks, leaderboard, reviews, notifications, and per-opportunity
+messaging — each backend feature as model + migration + schema + routes + tests (66 pytest cases),
+with matching frontend pages, browser-verified end to end. This batch was built partly ahead of the
+PRD's `M1→M10` order (the PRD was adopted mid-stream, 2026-07-07); work is now realigning to that
+order. See `docs/record_2026-07-07.md` for the full trail, including the off-order note.
+
+### Workstreams (mapped to PRD milestones)
+
+| Workstream | PRD | Status | Notes |
+|---|---|---|---|
+| Auth (register/login/me, argon2 + JWT) | pre-M1 | **Done** | `ddd5b0a`; `tests/test_auth.py` |
+| Opportunities (post/browse/detail) | pre-M1 | **Done** | `94c185e`; `tests/test_opportunities.py` |
+| Applications (apply/withdraw/approve/reject) | pre-M1 | **Done** | `94c185e`; `tests/test_applications.py` |
+| Hours (auto-log past + org verify/deny) | pre-M1 | **Done** | `94c185e`; `tests/test_hours.py` |
+| Awards (thresholds from verified hours) | pre-M1 | **Done** | `94c185e`; `tests/test_awards.py` |
+| Bookmarks (saved opportunities) | M1 | **Done** | `94c185e`; route `/saved` (PRD suggested `/saved-opps`) |
+| Doc system bootstrap | M1.1 | **Done** | This file + record + state, 2026-07-07 |
+| CI workflow | M1.5 | **Done** | `.github/workflows/ci.yml` — backend pytest + frontend lint/build; validated locally, first run on next push |
+| Recurring events + waitlist | M2 | **Done** | Weekly/monthly recurrence, subscribe-all/single-date + exclude-date, one-time FIFO waitlist, recurring hours auto-log. 86 tests. 2026-07-08 |
+| Hours parity (self-report, appeals, check-in codes) | M3 | **Done** | Self-report + one-time appeals + per-date check-in codes (throttled). 100 tests. 2026-07-08 |
+| Email infra + password reset | M4 | **Done** | Resend stub (logged no-op without key) + enumeration-safe reset with `token_version` session invalidation. 107 tests. Live end-to-end verified. 2026-07-08 |
+| Guardian consent (LAUNCH GATE) | M5 | **Done** | M5.1 schema (migration 0014) + M5.2 flow (request/approve/decline/revoke, `require_consent` gate on apply+checkin) + M5.3 frontend (DOB/guardian register, pending banner, public guardian pages). 127 tests. Browser click-through not driven (harness). 2026-07-08 |
+| Notifications | M6 | **Done** | In-app create/list/read + email delivery on every event (opt-out via `PATCH /auth/me`, `email_notifications` default true, migration 0015) + paginated list. All trigger sites already routed through `create_notification`, so email added in one helper. 131 tests. Browser-verified. 2026-07-09 |
+| Messaging | M7 | **Done** | Shared thread (v1 parity) PLUS directed messaging: org→applicant broadcast (audience filter), student inbox, reply — via a nullable `recipient_id` on Message (migration 0016). Shift templates as `OpportunityTemplate` (migration 0017). Minor messaging consent-gated (M5 debt closed). Frontend: inbox, Message-applicants, template use/save. 144 tests. Browser-verified. 2026-07-09 |
+| Billing (Stripe test mode) | M8 | **Done** | Plan enforcement (M8.1, migration 0018) + Stripe Checkout/webhook (M8.2, `stripe==11.4.1`, migration 0019) + billing page & featured toggle UI (M8.3). Free = 3-listing cap → 402; pro-only featured. Verified incl. a real test-mode Stripe session. 159 tests, browser-verified. Only remainder: Evan's manual `stripe listen` round-trip for the live webhook (needs `whsec_`). 2026-07-09 |
+| Hardening (rate limit, audit log, leaderboard) | M9 | **Done** | Per-IP rate limiting (M9.1: auth 30/min + write 120/min buckets, 429+Retry-After); append-only audit log (M9.2: migration 0020, admin-only `/audit-log`, events on login/reset/consent/plan/hours); leaderboard reconciled to the no-PII spec (M9.3). 171 tests. Single-process limiter → Redis at M11. 2026-07-09 |
+| Deploy readiness | M10 | **Done** | M10.1 `docker compose up --build` VERIFIED by Evan 2026-07-12 — db+api+web all healthy, migrations 0001–0020 applied on real Postgres, uvicorn + Next serving (fixed a missing-`public/` build bug, `bd32540`). M10.2 boot guard + M10.3 runbook (`docs/DEPLOY.md`) + M10.4 docs sync done. Remaining: Evan's browser click-through of localhost:3000. |
+| Public launch | M11 | **Not started** | Added 2026-07-08 (ship-publicly decision); host/DNS/keys/legal review BLOCKED-ON-EVAN |
+| v1 visual parity | M12 | **Done** | Added 2026-07-12 (Evan: match v1's look). M12.1 foundation (`1cdeeea`) + M12.2/M12.3 per-page vocabulary (`67266d5`): opp-card accent bars, badge/status pills, section headers, uppercase form labels, form-box — applied across all 20 routes. Detail-page subcomponents inherit tokens but aren't individually v1-classed (minor follow-up) |
+| v1 EXACT-COPY + UI polish | off-roadmap | **Done** | 2026-07-13, Evan-directed. All 13 v1 screens rebuilt in the scoped `.v1` architecture; emil-design-eng polish rounds 1–2 (press feedback, `:focus-visible`, reduced-motion, entrance/stagger/hover). `0dfbaed`→`60495e4` |
+| Public portfolio (v1 parity) | off-roadmap | **Done (bonus)** | 2026-07-13. `GET /portfolio/{id}` opt-in (migration 0021, minor consent-gated + name-minimized) + public `/portfolio/[id]` page + `GET /opportunities/mine`. From the /audit follow-up. 189 tests |
+| Reviews (student→org ratings) | out of scope | **Done (bonus)** | `94c185e`; PRD marks reviews out of scope — kept at Evan's direction |
+
+## Design
+- **v1 look ported 2026-07-12** (off-roadmap, Evan-directed: "make the frontend look like v1").
+  Supersedes the same-day foundation pass (which had used the logo green `#1A6B4A` + Inter — wrong
+  targets). Now matches v1's editorial system faithfully: **fonts** Fraunces (serif display, all
+  headings + wordmark) + DM Sans (body) via `next/font`; **palette** ported from v1's
+  `public/index.html` `:root` — deep green `#175c41` primary, **gold** `#c9a84c` accent, warm
+  off-white `#f7f7f1` background, green-tinted text `#21352a`, 6px radius; **touches** two-tone
+  "**Serve**Local" wordmark, faint page noise texture, green selection/scrollbar. Shared
+  header/footer (`site-header.tsx`/`site-footer.tsx`) + hero (tag pill, italic-emphasis serif
+  headline, stat columns) mirror v1. Verified via computed styles (body=DM Sans/#f8f8f2, h1=Fraunces/
+  #175e42 — matches v1). Both fonts self-host at BUILD time via a Google fetch — an offline
+  `docker build` needs `next/font/local`.
+- **Per-page parity complete 2026-07-12 (M12.2/M12.3, `67266d5`)**: v1 component vocabulary lives in
+  a `@layer components` block in `app/globals.css` — `.opp-card` (left accent bar), `.badge`/
+  `.status-pill` variants, `.section-title`/`.section-tag`, `.form-box`, `.tbl`, `.pill`,
+  `.empty-state` — applied across all 20 routes; shared `Label` restyled to v1's uppercase
+  micro-label. Detail-page subcomponents inherit tokens but aren't individually v1-classed (minor).
+- **Dev gotcha:** `next dev` and `npm run build` share `.next/` — building against a live dev server
+  desyncs its manifest (unstyled page + 404 chunks). Restart the dev server after any build.
+
+## Known limitations / notes
+- **Built partly off the PRD order.** Leaderboard (M9), notifications (M6), messaging (M7) were
+  built before M2–M5 and are thinner than the PRD spec; they'll be upgraded when their milestone
+  comes up. Reviews is out-of-scope in the PRD but kept as a bonus (Evan's call, 2026-07-07).
+- **Notifications** (M6, 2026-07-09): in-app + email on every event, opt-out toggle, paginated.
+  Email is fire-and-forget, dispatched inside `create_notification` before commit (accepted
+  at-most-once edge; no outbox — see record 2026-07-09). No `RESEND_API_KEY` yet → logged no-op.
+- **Messaging** (M7, 2026-07-09): the shared per-opportunity thread PLUS directed messaging
+  (org→applicant broadcast, student inbox, reply) on one table via `recipient_id`; shift templates
+  in their own `OpportunityTemplate` table. Minor messaging is consent-gated.
+- **Recurring scope reduction:** one application per (opp, user) — a subset of a series is expressed
+  via `excluded_dates`, not multiple single-date rows (see record 2026-07-08).
+- Not deployed to any host yet, but the full-stack `docker compose up` (Postgres + api + web) is
+  verified to boot locally (Evan, 2026-07-12) — including the full 0001–0020 migration chain on
+  real Postgres, which the SQLite test suite doesn't exercise. M11 is the actual public deploy.
+
+## Documentation
+- `../docs/Project Record — Full Chronological History.md` — **whole-project** (v1 + v2)
+  consolidated chronological record, updated on every medium-or-larger change (rendered HTML twin via
+  `python -m scripts.render_record_html` from the ServeLocal root). Read for the cross-era arc; the
+  files below are the day-to-day v2 sources.
+- `PRD_ROADMAP.md` — the standing M1–M11 plan. Source of truth for what to build and in what order.
+- `docs/record_2026-07-07.md` — append-only, timestamped build log (the "why"/"how", bugs,
+  abandoned approaches). Never edited retroactively. Point-in-time snapshots live inside it —
+  the state-doc tier was retired 2026-07-08 (`state_2026-07-07.md` archived there, banner-marked,
+  deletion pending Evan's approval); this HANDOFF is the only live snapshot.
+- `backend/README.md`, `frontend/README.md` — per-subproject stack + layout + scope-cut list.
+- `docs/API_KEYS.md` — single registry of every key/secret (env var, purpose, milestone, status,
+  how to obtain). No real values; those live in gitignored `.env`. The "what Evan must provide" list.
+
+## BLOCKED-ON-EVAN (as of 2026-07-12)
+- ~~Stripe test keys (M8)~~ — supplied 2026-07-09, live in gitignored `backend/.env`.
+- ~~`docker compose up` boot verification (M10.1)~~ — done by Evan 2026-07-12, stack boots clean.
+- `stripe listen` hosted-page test payment round-trip (M8.2's last step; needs the CLI's `whsec_`).
+- Resend API key (M4 email — currently a logged no-op; needed for real delivery at M11).
+- M11 everything account-shaped: deploy host, domain/DNS, production secrets, CAPTCHA keys,
+  legal/guardian sign-off. Full secret inventory: `docs/API_KEYS.md`.
+- Everything downstream works against stubs/test mode until Evan supplies these.
