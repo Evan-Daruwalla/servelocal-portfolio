@@ -10,10 +10,8 @@
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, TOKEN_KEY } from "@/lib/api";
 import type { User } from "@/lib/types";
-
-export const TOKEN_KEY = "servelocal_token";
 
 type RegisterInput = {
   email: string;
@@ -71,6 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    // Best-effort server-side invalidation (bumps token_version so the token
+    // dies everywhere). Fire-and-forget: never block the UI or trap the user
+    // logged-in if the network/server is down — we clear locally regardless.
+    if (token) void api.logout(token).catch(() => {});
     localStorage.removeItem(TOKEN_KEY);
     setUser(null);
   }
@@ -88,4 +91,4 @@ export function useAuth() {
   return ctx;
 }
 
-export { ApiError };
+export { ApiError, TOKEN_KEY };

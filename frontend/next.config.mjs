@@ -42,6 +42,10 @@ const nextConfig = {
           { key: "Content-Security-Policy", value: csp },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Browsers only honor HSTS over HTTPS, so this is inert on local http
+          // and takes effect automatically once prod TLS is live (M11.3). No
+          // `preload` — that's a hard-to-undo registry commitment, Evan's call.
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
         ],
       },
     ];

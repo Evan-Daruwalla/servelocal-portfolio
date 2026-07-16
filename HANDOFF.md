@@ -136,8 +136,8 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 ## BLOCKED-ON-EVAN (as of 2026-07-16 — the complete launch list)
 **Decisions:**
 - ADR 0001 sign-off (token storage: keep localStorage-JWT) + the TTL choice (currently 7 days;
-  ADR recommends tightening — pick the number) + whether to apply its follow-ups (server-side
-  logout, 401 interceptor).
+  ADR recommends tightening — pick the number). Its follow-ups #2 (server-side logout) and
+  #3 (401 interceptor) SHIPPED 2026-07-16 (`0573d69`, E2E-verified); only the TTL number remains.
 - ADR 0002 sign-off (billing: launch free-tier-only, PRD default) + the launch-UI choice for the
   Pro upgrade surface (currently would 503 without keys — "coming soon" state vs leave).
 - Terms refund-policy default (drafted: cancel anytime, end-of-period, no proration).
@@ -149,7 +149,11 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 - Turnstile site + secret keys (feature ships off-by-default until set).
 - Railway account, Postgres provisioning, prod secret VALUES (SECRET_KEY, DATABASE_URL,
   RESEND_API_KEY, STRIPE_*, TURNSTILE_*), domain purchase + DNS — runbook: docs/DEPLOY_RAILWAY.md.
-- Sentry/uptime accounts (M11.5), soft-launch org outreach (M11.6).
+- Sentry/uptime accounts (M11.5) — plus the "Sentry vs host-native error tracking?" pick before
+  any code gets wired; soft-launch org outreach (M11.6).
+- Run one real backup restore-drill (`python scripts/backup_db.py`, then `--restore-drill` — see
+  docs/BACKUPS.md): needs Docker Desktop up (compose db) or Postgres client tools on PATH; this
+  box had neither on 2026-07-16, so the drill is verified-by-inspection only.
 - `stripe listen` webhook round-trip (M8.2 leftover; needs the CLI's `whsec_`).
 - ~~Stripe test keys / docker boot verification~~ — done 2026-07-09 / 2026-07-12.
 - ~~Stripe test keys (M8)~~ — supplied 2026-07-09, live in gitignored `backend/.env`.

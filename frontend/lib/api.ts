@@ -28,6 +28,13 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
+// The localStorage key the JWT is stored under. Defined HERE (not in
+// auth-context) so the 401 interceptor below can clear it without importing
+// auth-context — which imports this module and would form a cycle. auth-context
+// re-exports it, so every existing `import { TOKEN_KEY } from "@/lib/auth-context"`
+// still resolves.
+export const TOKEN_KEY = "servelocal_token";
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -51,6 +58,13 @@ async function request<T>(
   });
 
   if (!res.ok) {
+    // A rejected token must never linger. If we attached a token and the server
+    // rejected it (401 — expired, or invalidated by a logout/reset elsewhere),
+    // drop it so the app hydrates logged-out instead of a confusing half-signed-in
+    // state. Tokenless 401s (e.g. a failed login) attach no token and clear nothing.
+    if (res.status === 401 && token && typeof window !== "undefined") {
+      localStorage.removeItem(TOKEN_KEY);
+    }
     let detail = res.statusText;
     try {
       const body = await res.json();
@@ -82,6 +96,9 @@ export const api = {
     request<Token>("/auth/login", { method: "POST", body: JSON.stringify(input) }),
 
   me: (token: string) => request<User>("/auth/me", { token }),
+  // Server-side logout: invalidates the token (bumps token_version). Best-effort
+  // from the client — auth-context clears localStorage regardless of the result.
+  logout: (token: string) => request<void>("/auth/logout", { method: "POST", token }),
   updateMe: (token: string, input: { email_notifications?: boolean; portfolio_public?: boolean }) =>
     request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(input), token }),
 
