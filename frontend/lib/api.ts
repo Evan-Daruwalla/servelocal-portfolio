@@ -75,6 +75,7 @@ export const api = {
     dob?: string;
     guardian_name?: string;
     guardian_email?: string;
+    turnstile_token?: string;
   }) => request<User>("/auth/register", { method: "POST", body: JSON.stringify(input) }),
 
   login: (input: { email: string; password: string }) =>
@@ -90,8 +91,11 @@ export const api = {
     request<void>("/auth/me", { method: "DELETE", body: JSON.stringify({ password }), token }),
 
   // Password reset (M4)
-  forgotPassword: (email: string) =>
-    request<{ message: string }>("/auth/forgot", { method: "POST", body: JSON.stringify({ email }) }),
+  forgotPassword: (email: string, turnstile_token?: string) =>
+    request<{ message: string }>("/auth/forgot", {
+      method: "POST",
+      body: JSON.stringify({ email, turnstile_token }),
+    }),
   resetPassword: (token: string, new_password: string) =>
     request<{ message: string }>("/auth/reset", {
       method: "POST",

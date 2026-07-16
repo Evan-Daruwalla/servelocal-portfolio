@@ -1175,6 +1175,7 @@ copy fixed to match behavior. **M11 is now the only open milestone.**
 | 2026-07-15 | v2 | Graph refresh (1320 nodes) + navigational comments (lib/types, api, auth-context; opportunities router) | `598f9ed` |
 | 2026-07-15 | v2 | 33-item launch checklist reviewed → PRD M13 hardening plan (CSP, deletion/export, SEO meta, resilience UX) | PRD `§6 M13`, HANDOFF 2026-07-15 |
 | 2026-07-16 | v2 | M13 executed via Opus workers + orchestrator review: CSP, GDPR deletion/export (E2E-verified, 200 tests), sitemap/OG, skeletons+retry | `e5aa990`→`dcf87cc` |
+| 2026-07-16 | v2 | M11 model-doable prep complete (same pattern): ADR 0001 token-storage, Turnstile off-by-default (209 tests), Terms/Privacy drafts, Railway config + runbook (found the migrations-not-in-image bug), ADR 0002 billing. All remaining M11 steps BLOCKED-ON-EVAN | `1c81dc5`→`9009382` |
 
 ## What's not in this record (honest gaps)
 

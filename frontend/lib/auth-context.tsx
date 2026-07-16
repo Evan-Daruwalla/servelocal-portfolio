@@ -23,6 +23,7 @@ type RegisterInput = {
   dob?: string;
   guardian_name?: string;
   guardian_email?: string;
+  turnstile_token?: string;
 };
 
 interface AuthContextValue {

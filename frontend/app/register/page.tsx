@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, useAuth } from "@/lib/auth-context";
 
@@ -28,6 +29,7 @@ export default function RegisterPage() {
   const [dob, setDob] = useState("");
   const [guardianName, setGuardianName] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -46,6 +48,7 @@ export default function RegisterPage() {
         role,
         ...(role === "student" ? { dob } : {}),
         ...(isMinor ? { guardian_name: guardianName, guardian_email: guardianEmail } : {}),
+        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
       });
       router.push("/");
     } catch (err) {
@@ -112,9 +115,16 @@ export default function RegisterPage() {
                   </div>
                 </div>
               )}
+              <TurnstileWidget onToken={setTurnstileToken} />
               <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting}>
                 {submitting ? "Creating account…" : role === "org" ? "Register Organization" : "Create Student Account"}
               </button>
+              <p style={{ fontSize: ".76rem", color: "var(--muted)", textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
+                By signing up you agree to our{" "}
+                <Link href="/terms" style={{ color: "var(--green)", fontWeight: 600 }}>Terms of Service</Link>{" "}
+                and{" "}
+                <Link href="/privacy" style={{ color: "var(--green)", fontWeight: 600 }}>Privacy Policy</Link>.
+              </p>
             </form>
             <p style={{ fontSize: ".8rem", color: "var(--muted)", textAlign: "center", marginTop: 14 }}>
               Already have an account?{" "}

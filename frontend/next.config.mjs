@@ -14,13 +14,18 @@ const isDev = process.env.NODE_ENV === "development";
 
 // Restores the CSP layer v1 had (ADR-0014) in v2's Next idiom. 'unsafe-eval' is
 // only allowed in dev (Next's HMR needs it); production must never ship it.
+// Cloudflare Turnstile (signup bot defense, M11.1) loads its script AND runs its
+// challenge in an iframe, so it needs both script-src and frame-src for its origin.
+const turnstile = "https://challenges.cloudflare.com";
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${turnstile}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
   `connect-src 'self' ${apiOrigin}`,
+  `frame-src 'self' ${turnstile}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

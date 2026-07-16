@@ -46,12 +46,18 @@ Tailwind 3 + shadcn/ui.
 (canonical).
 
 ## Deploy shape (M10 COMPLETE — `docker compose up` verified by Evan 2026-07-12)
-- 3 containers: Postgres + API (backend/Dockerfile; `alembic upgrade head` then uvicorn) + web
-  (frontend/Dockerfile, multi-stage → Next `output: "standalone"`); root `docker-compose.yml`.
-  `NEXT_PUBLIC_API_URL` is baked into the client bundle at BUILD time (compose build arg).
+- 3 containers: Postgres + API + web (frontend/Dockerfile, multi-stage → Next
+  `output: "standalone"`); root `docker-compose.yml`. **NEXT_PUBLIC_* vars are baked into the
+  client bundle at BUILD time** — each needs an ARG/ENV pair in frontend/Dockerfile (API_URL,
+  APP_URL, TURNSTILE_SITE_KEY as of 2026-07-16) AND a compose `build.args`/Railway service-var.
+- **Migrations are NOT in the api image** (corrected 2026-07-16; supersedes the "entrypoint runs
+  alembic on boot" claim): backend/Dockerfile CMD is uvicorn-only; `alembic upgrade head` runs via
+  docker-compose's `command:` override locally, and via `deploy.preDeployCommand` in
+  `backend/railway.json` on Railway. Any OTHER deploy target must wire migrations explicitly.
 - **Docker IS available in the dev session now** (2026-07-13; the old "no Docker in dev" note is
   obsolete). Iterate with `docker compose build web && docker compose up -d web` (rebuild the image —
-  the web/api images bake code at build time, so a rebuild is required to pick up changes). Backend
-  changes → rebuild `api` (its entrypoint runs `alembic upgrade head` on boot, applying new
-  migrations). All services back: `docker compose up -d`.
-- Runbook: `docs/DEPLOY.md`; secret inventory: `docs/API_KEYS.md` (registry only, never values).
+  the web/api images bake code at build time, so a rebuild is required to pick up changes).
+  All services back: `docker compose up -d`.
+- Runbooks: `docs/DEPLOY.md` (compose) + `docs/DEPLOY_RAILWAY.md` (Railway config-as-code,
+  2026-07-16 — per-service railway.json, DATABASE_URL needs `postgresql+psycopg://` scheme);
+  secret inventory: `docs/API_KEYS.md` (registry only, never values).

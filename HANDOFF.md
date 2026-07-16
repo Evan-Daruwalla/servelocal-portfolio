@@ -75,7 +75,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | Billing (Stripe test mode) | M8 | **Done** | Plan enforcement (M8.1, migration 0018) + Stripe Checkout/webhook (M8.2, `stripe==11.4.1`, migration 0019) + billing page & featured toggle UI (M8.3). Free = 3-listing cap → 402; pro-only featured. Verified incl. a real test-mode Stripe session. 159 tests, browser-verified. Only remainder: Evan's manual `stripe listen` round-trip for the live webhook (needs `whsec_`). 2026-07-09 |
 | Hardening (rate limit, audit log, leaderboard) | M9 | **Done** | Per-IP rate limiting (M9.1: auth 30/min + write 120/min buckets, 429+Retry-After); append-only audit log (M9.2: migration 0020, admin-only `/audit-log`, events on login/reset/consent/plan/hours); leaderboard reconciled to the no-PII spec (M9.3). 171 tests. Single-process limiter → Redis at M11. 2026-07-09 |
 | Deploy readiness | M10 | **Done** | M10.1 `docker compose up --build` VERIFIED by Evan 2026-07-12 — db+api+web all healthy, migrations 0001–0020 applied on real Postgres, uvicorn + Next serving (fixed a missing-`public/` build bug, `bd32540`). M10.2 boot guard + M10.3 runbook (`docs/DEPLOY.md`) + M10.4 docs sync done. Remaining: Evan's browser click-through of localhost:3000. |
-| Public launch | M11 | **Not started** | Added 2026-07-08 (ship-publicly decision); host/DNS/keys/legal review BLOCKED-ON-EVAN |
+| Public launch | M11 | **Prep COMPLETE — all remaining steps BLOCKED-ON-EVAN** | Model-doable work done 2026-07-16 via opus-workers: M11.1a ADR 0001 token-storage (`1c81dc5`, Proposed — sign-off + TTL choice = Evan) + M11.1b Turnstile bot defense env-gated off-by-default (`83c3a06`, 209 tests; keys = Evan) + M11.2 Terms/Privacy DRAFTS (`ce3569c`; placeholders + legal sign-off = Evan) + M11.3-prep railway.json ×2 + DEPLOY_RAILWAY.md runbook (`b2ebb84`; account/domain/secrets = Evan) + M11.4 ADR 0002 billing free-tier-only (`9009382`, Proposed — decision = Evan). M11.5–.7 need accounts/deployment |
 | v1 visual parity | M12 | **Done** | Added 2026-07-12 (Evan: match v1's look). M12.1 foundation (`1cdeeea`) + M12.2/M12.3 per-page vocabulary (`67266d5`): opp-card accent bars, badge/status pills, section headers, uppercase form labels, form-box — applied across all 20 routes. Detail-page subcomponents inherit tokens but aren't individually v1-classed (minor follow-up) |
 | v1 EXACT-COPY + UI polish | off-roadmap | **Done** | 2026-07-13, Evan-directed. All 13 v1 screens rebuilt in the scoped `.v1` architecture; emil-design-eng polish rounds 1–2 (press feedback, `:focus-visible`, reduced-motion, entrance/stagger/hover). `0dfbaed`→`60495e4` |
 | Public portfolio (v1 parity) | off-roadmap | **Done (bonus)** | 2026-07-13. `GET /portfolio/{id}` opt-in (migration 0021, minor consent-gated + name-minimized) + public `/portfolio/[id]` page + `GET /opportunities/mine`. From the /audit follow-up. 189 tests |
@@ -133,10 +133,25 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 - `docs/API_KEYS.md` — single registry of every key/secret (env var, purpose, milestone, status,
   how to obtain). No real values; those live in gitignored `.env`. The "what Evan must provide" list.
 
-## BLOCKED-ON-EVAN (as of 2026-07-15)
-- Analytics decision (checklist item, deferred 2026-07-15): if wanted, must be cookieless/
-  consent-aware — users include minors (COPPA/GDPR-K). Currently the site sets zero cookies.
-- M13.6 DECIDE: adopt SWR/React Query for client caching + optimistic updates (new dependency).
+## BLOCKED-ON-EVAN (as of 2026-07-16 — the complete launch list)
+**Decisions:**
+- ADR 0001 sign-off (token storage: keep localStorage-JWT) + the TTL choice (currently 7 days;
+  ADR recommends tightening — pick the number) + whether to apply its follow-ups (server-side
+  logout, 401 interceptor).
+- ADR 0002 sign-off (billing: launch free-tier-only, PRD default) + the launch-UI choice for the
+  Pro upgrade surface (currently would 503 without keys — "coming soon" state vs leave).
+- Terms refund-policy default (drafted: cancel anytime, end-of-period, no proration).
+- Analytics decision (deferred 2026-07-15): must be cookieless/consent-aware — minors platform.
+- M13.6 DECIDE: SWR/React Query client caching (new dependency).
+**Values/accounts (all prepared up to the blocked step):**
+- Legal placeholders in the Terms/Privacy DRAFTS: [CONTACT EMAIL], [GOVERNING STATE],
+  [LEGAL ENTITY NAME] — then adult/guardian + legal review sign-off (hard launch gate).
+- Turnstile site + secret keys (feature ships off-by-default until set).
+- Railway account, Postgres provisioning, prod secret VALUES (SECRET_KEY, DATABASE_URL,
+  RESEND_API_KEY, STRIPE_*, TURNSTILE_*), domain purchase + DNS — runbook: docs/DEPLOY_RAILWAY.md.
+- Sentry/uptime accounts (M11.5), soft-launch org outreach (M11.6).
+- `stripe listen` webhook round-trip (M8.2 leftover; needs the CLI's `whsec_`).
+- ~~Stripe test keys / docker boot verification~~ — done 2026-07-09 / 2026-07-12.
 - ~~Stripe test keys (M8)~~ — supplied 2026-07-09, live in gitignored `backend/.env`.
 - ~~`docker compose up` boot verification (M10.1)~~ — done by Evan 2026-07-12, stack boots clean.
 - `stripe listen` hosted-page test payment round-trip (M8.2's last step; needs the CLI's `whsec_`).

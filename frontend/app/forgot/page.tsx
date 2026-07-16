@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -17,7 +19,7 @@ export default function ForgotPasswordPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await api.forgotPassword(email);
+      const res = await api.forgotPassword(email, turnstileToken ?? undefined);
       setMessage(res.message);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -47,6 +49,7 @@ export default function ForgotPasswordPage() {
                   <label>Email</label>
                   <input className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                 </div>
+                <TurnstileWidget onToken={setTurnstileToken} />
                 <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting}>
                   {submitting ? "Sending…" : "Send Reset Link"}
                 </button>
