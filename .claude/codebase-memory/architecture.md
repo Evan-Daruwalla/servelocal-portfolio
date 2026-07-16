@@ -3,12 +3,10 @@
 Last updated 2026-07-13.
 
 ## Stack
-- Backend: FastAPI **0.139 / starlette 1.3.1 / pyjwt 2.13 / pytest 9.1** (bumped 2026-07-13 — pip-audit found PYSEC advisories in pyjwt/starlette/pytest; scan now clean; pip-audit is installed in the venv) + SQLAlchemy 2.0 (**sync** sessions) + Alembic + PostgreSQL (dev, via
-  `docker compose`). Tests run on an in-memory SQLite fixture (`backend/tests/conftest.py`) — no
-  Postgres needed.
-- Frontend: **Next.js 15.5.20** (App Router; bumped from 15.1.3 on 2026-07-13 to clear a critical
-  advisory — a `postcss` override in package.json dedupes Next's bundled copy to ≥8.5.10) + React 19
-  + TypeScript + Tailwind 3 + shadcn/ui.
+**Dependencies + pinned versions → `dependencies.md`** (canonical). In brief:
+FastAPI + SQLAlchemy 2.0 (**sync** sessions) + Alembic + PostgreSQL (dev) /
+in-memory SQLite (tests); Next.js (App Router) + React 19 + TypeScript +
+Tailwind 3 + shadcn/ui.
 
 ## Two frontend visual layers (BOTH live — know which a route uses)
 - **Scoped `.v1` exact-copy (2026-07-13, the 13 v1 screens):** v1's raw CSS ported VERBATIM into
@@ -44,13 +42,8 @@ Last updated 2026-07-13.
 - NEXT_PUBLIC_API_URL (default `http://localhost:8000/api/v1`) is where the client hits the backend.
 
 ## Migrations
-- Chain `0001`–`0022` in `backend/alembic/versions/` (0015 email_notifications, 0016
-  message.recipient_id, 0017 opportunity_templates, 0018 user.plan, 0019 stripe_customer_id,
-  0020 audit_log + is_admin, **0021 user.portfolio_public**, **0022 ix_hours_status** — leaderboard scan). One
-  revision per schema change; autogenerate then READ the file
-  (autogen misses server defaults + enum/constraint changes); NEVER edit an applied revision.
-  SQLite constraint changes need `op.batch_alter_table` (recreates the table); plain column ADDs
-  don't. Always verify a new migration up/down/up on a scratch SQLite DB.
+**Migration chain 0001–0022, Alembic rules, and schema conventions → `data.md`**
+(canonical).
 
 ## Deploy shape (M10 COMPLETE — `docker compose up` verified by Evan 2026-07-12)
 - 3 containers: Postgres + API (backend/Dockerfile; `alembic upgrade head` then uvicorn) + web
