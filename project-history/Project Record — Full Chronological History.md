@@ -97,6 +97,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.17 — M10 verified; M12 v1 visual parity; record HTML twin auto-synced by a git hook (2026-07-12)](#ii17--m10-verified-m12-v1-visual-parity-record-html-twin-auto-synced-by-a-git-hook-2026-07-12)
 - [II.18 — v1 exact-copy complete: all 13 v1 screens rebuilt in v2 with a scoped .v1 architecture (2026-07-13)](#ii18--v1-exact-copy-complete-all-13-v1-screens-rebuilt-in-v2-with-a-scoped-v1-architecture-2026-07-13)
 - [II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)](#ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13)
+- [II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)](#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -1064,6 +1065,70 @@ added one real feature (public portfolio) and hardened + polished; the launch bl
 
 ---
 
+## II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)
+
+*(Catch-up entry, written 2026-07-15 ~22:35 CST — the 2026-07-13 evening events below missed the
+root-record cadence at the time; logged here per the miss-logging rule. Day-level detail lives in
+`servelocal-v2/docs/record_2026-07-07.md`.)*
+
+**2026-07-13 evening — 4-lens audit + fixes (v2 `e6b9933`, `f7e077b`).** Evan requested a full
+audit across security / high-user-count + hosting-cost optimization / guardian protections / UX.
+(Planned as parallel agents; they died to an account session limit, so it ran inline
+single-reviewer — noted honestly.) 13 findings, all actionable ones fixed: dependency bumps
+clearing real PYSEC advisories (pyjwt 2.10.1→2.13, starlette →1.3.1, fastapi →0.139; pip-audit
+installed + re-scan clean), GZip middleware, pagination + `selectinload` on list endpoints,
+`Cache-Control` on public GETs, org-facing `student_name`/`student_email` (org branches only —
+v1 parity), name minimization extended to reviews + messages (shared `app/core/names.py`),
+migration **0022** `ix_hours_status`, Postgres bound to 127.0.0.1 + container `mem_limit`s.
+Tests 189 → **192 green**.
+
+**2026-07-13 evening — repo split + sync script (`b3ee570`, `7af0827`).** Evan's call: "make the
+servelocal v2 repo private then make a new one only with the files that won't compromise the
+security of the platform." Evan ran both visibility flips himself (repo access changes are a
+prohibited action class for the assistant): `servelocal-v2` → **PRIVATE**; new **public mirror
+`Evan-Daruwalla/servelocal-portfolio`** (frontend + doc system + memory bins minus `security.md`;
+fresh history unrelated to the private repo). `scripts/sync_portfolio.py` regenerates the mirror:
+manifest-driven wipe+recopy, `git archive` for tracked-only frontend files, redaction of
+known-private strings, and a **fail-closed secret guard** (proved by injecting a fake `whsec_` +
+JWT → abort exit 4). Codebase-memory bins also restructured (`b33e5a2`, `0157342`).
+
+**2026-07-15 — graph refresh + navigational comments (`598f9ed`).** v2 code graph rebuilt via
+pure-AST `graphify update` (1320 nodes / 2283 edges); degree-ranking showed the backend core was
+already well-commented, so comments went only to the genuine gaps: `lib/types.ts` (schema-mirror
+header + domain banners), `lib/api.ts` (uniform banners), `lib/auth-context.tsx` (was 0 comments),
+`routes/opportunities.py` (endpoint-group banners). Verified: 192 pytest, lint + tsc clean.
+
+**2026-07-15 — 33-item launch checklist reviewed → PRD milestone M13 added.** Evan submitted a
+33-item checklist; item-by-item verdicts against the code (not assumed): CSRF moot (header JWT,
+zero cookies), stored-XSS surface clean (no `dangerouslySetInnerHTML`), CORS env-scoped, SSRF N/A
+(no user-supplied URL fetching), sign-up-late + DI already architectural. Real gaps → **M13
+"Launch-checklist hardening"** in `PRD_ROADMAP.md`: **M13.1 CSP + security headers** (v1 had a CSP
+via ADR-0014; v2 lost it in the rewrite), **M13.2–.3 account deletion + data export** (GDPR/CCPA;
+anonymize-not-delete semantics; must land before M11.6 soft launch), **M13.4 sitemap/robots/OG
+metadata**, **M13.5 skeletons + per-section error/retry + tooltips**, M13.6 DECIDE (client
+caching). Rejections recorded as dated strike-throughs in the PRD (subdomain split,
+animations-everywhere, Radix rebuild of v1 screens; analytics deferred BLOCKED-ON-EVAN with a
+minors/COPPA caveat; growth items stay behind M11 per Track-2). HANDOFF current-state rewritten to
+2026-07-15; auto-memory consolidated (state refreshed, repo-visibility facts fixed, one stale file
+retired) and put under local git.
+
+**STATUS:** next open task **M13.1 (CSP)**; frontier unchanged — **M11 public launch,
+BLOCKED-ON-EVAN** (host, DNS, prod secrets, Resend key, legal/guardian sign-off).
+
+**2026-07-16 addendum (same entry-window, logged before commit):** M13 was then executed the same
+night via the opus-workers pattern — three workflow phases of Opus workers implementing while the
+orchestrator reviewed diffs, re-ran suites, and E2E-verified in the browser. Shipped: M13.1 CSP +
+security headers (`e5aa990`), M13.2 deletion/export API — anonymize-in-place, 192→200 tests
+(`166fcab`), M13.3 its UI on both dashboards, E2E-driven on a scratch-SQLite backend: gating,
+wrong-password 403 inline, export bundle, delete→401 (`bd26052`), M13.4 sitemap/robots/OG
+(`4879068`), M13.5 skeletons + per-section error/Retry — failure→recovery cycle live-verified by
+killing/restarting the API (`dcf87cc`). M13.6 SWR skipped (Evan, PRD default). Review catches worth
+recording: OG wordmark corrected to v1's dark-band treatment (spec itself had said gold); org
+delete-copy overpromised name removal (backend keeps `org_name` so student transcripts survive) —
+copy fixed to match behavior. **M11 is now the only open milestone.**
+
+---
+
 ## Summary timeline
 
 | Date | Era | Event | Evidence |
@@ -1105,6 +1170,11 @@ added one real feature (public portfolio) and hardened + polished; the launch bl
 | 2026-07-12 | root | Standalone pre-commit hook auto-regenerates the record HTML twin (chains the secret scanner) | `scripts/git-hooks/pre-commit` |
 | 2026-07-13 | v2 | v1 exact-copy — all 13 v1 screens rebuilt in v2 via the scoped `.v1` architecture (frontend-only) | `0dfbaed`→`2dbae31` (main) |
 | 2026-07-13 | v2 | Post-copy: public-portfolio slice (migration 0021), /audit all-5 fixes (Next→15.5.20, 0 npm vulns), UI polish r1–2. 189 tests | `91eab3e`→`60495e4` (main) |
+| 2026-07-13 | v2 | 4-lens audit fixes: PYSEC dep bumps, gzip, pagination, org student identity, name minimization, migration 0022. 192 tests | `e6b9933`, `f7e077b` |
+| 2026-07-13 | v2 | Repo split: `servelocal-v2` → private; public mirror `servelocal-portfolio` + `scripts/sync_portfolio.py` (fail-closed secret guard) | `b3ee570`, `7af0827` |
+| 2026-07-15 | v2 | Graph refresh (1320 nodes) + navigational comments (lib/types, api, auth-context; opportunities router) | `598f9ed` |
+| 2026-07-15 | v2 | 33-item launch checklist reviewed → PRD M13 hardening plan (CSP, deletion/export, SEO meta, resilience UX) | PRD `§6 M13`, HANDOFF 2026-07-15 |
+| 2026-07-16 | v2 | M13 executed via Opus workers + orchestrator review: CSP, GDPR deletion/export (E2E-verified, 200 tests), sitemap/OG, skeletons+retry | `e5aa990`→`dcf87cc` |
 
 ## What's not in this record (honest gaps)
 

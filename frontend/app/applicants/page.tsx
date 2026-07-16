@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
@@ -43,6 +44,7 @@ const isExpired = (o: Opportunity, nowMs: number) =>
 
 export default function OrgDashboardPage() {
   const { user, logout, loading } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("listings");
   const [opps, setOpps] = useState<Opportunity[]>([]);
   const [apps, setApps] = useState<ApplicationWithOpportunity[]>([]);
@@ -60,6 +62,12 @@ export default function OrgDashboardPage() {
   // Profile form state.
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [savedProfile, setSavedProfile] = useState(false);
+
+  // Account section (export + delete).
+  const [delConfirm, setDelConfirm] = useState("");
+  const [delPassword, setDelPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function refresh() {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -177,6 +185,38 @@ export default function OrgDashboardPage() {
     a.download = "volunteer-roster.csv";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function downloadExport() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    setDeleteError(null);
+    try {
+      const data = await api.exportMe(token);
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "servelocal-data-export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Could not export your data.");
+    }
+  }
+
+  async function deleteAccount() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteMe(delPassword, token);
+      logout();
+      router.push("/");
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Could not delete your account.");
+      setDeleting(false);
+    }
   }
 
   if (loading) return null;
@@ -464,11 +504,30 @@ export default function OrgDashboardPage() {
                 {savedProfile && <span style={{ marginLeft: 12, fontSize: ".82rem", color: "var(--green)" }}>Saved ✓</span>}
                 <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <Link className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} href="/billing">Manage Billing</Link>
+                  <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}>⬇ Download my data (JSON)</button>
                 </div>
                 <div className="delete-zone" style={{ maxWidth: 580 }}>
                   <h4>⚠️ Delete Account</h4>
-                  <p>This will permanently delete your organization account, all listings, applicants, and messages. <strong>This cannot be undone.</strong></p>
-                  <button className="btn-s" style={{ color: "var(--red)", borderColor: "var(--red)", padding: "9px 18px", fontSize: ".83rem" }} disabled>Delete Organization Account</button>
+                  <p>
+                    Your past listings and the hours you verified are kept so your volunteers’ records stay intact.
+                    Your account — profile, login, messages you sent, and notifications — is permanently erased.
+                    You must deactivate all active listings first. <strong>This cannot be undone.</strong>
+                  </p>
+                  <div className="fr">
+                    <label>Type DELETE to confirm</label>
+                    <input className="fc" value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="DELETE" />
+                  </div>
+                  <div className="fr">
+                    <label>Current password</label>
+                    <input className="fc" type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
+                  </div>
+                  {deleteError && <div className="ferr" style={{ display: "block" }}>{deleteError}</div>}
+                  <button
+                    className="btn-s"
+                    style={{ color: "var(--red)", borderColor: "var(--red)", padding: "9px 18px", fontSize: ".83rem" }}
+                    disabled={delConfirm !== "DELETE" || !delPassword || deleting}
+                    onClick={deleteAccount}
+                  >{deleting ? "Deleting…" : "Delete Organization Account"}</button>
                 </div>
               </div>
             </div>

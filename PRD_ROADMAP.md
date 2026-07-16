@@ -204,6 +204,7 @@ The plan is complete when every box checks. Verify each with the command given.
 | M10 | Deploy readiness | Containerized stack, runbook, human-gated launch steps. |
 | M11 | Public launch | The site is live on a real domain with real users. Added 2026-07-08 (Evan's decision: ship, don't stop at ready). |
 | M12 | v1 visual parity | Frontend adopts v1's editorial design system end to end. Added 2026-07-12 (Evan: "make the frontend look like the servelocal v1 frontend"). M12.2–.3 land BEFORE M11.6's soft launch. |
+| M13 | Launch-checklist hardening | CSP/security headers, account deletion + data export (GDPR/CCPA), SEO/share metadata, per-section resilience UX. Added 2026-07-15 from Evan's 33-item checklist review; M13.2–.3 land BEFORE M11.6. |
 
 Order is deliberate: M2–M3 before consent because consent gating must cover check-in and
 recurring signups (building it first would mean re-touching it every milestone). M4 before M5–M6
@@ -487,6 +488,73 @@ are otherwise independent and may interleave.
    leaderboard. Done-check: every routed page browser-verified in the v1 system; lint + build
    clean; record entry with honest gaps if any page is deferred.
 
+### M13 — Launch-checklist hardening (added 2026-07-15, Evan-directed)
+
+Source: Evan's 33-item launch checklist, reviewed item-by-item on 2026-07-15 (record entry
+"33-item launch-checklist review"). Most items were verified already-covered or rejected with
+reasons (see the dated decisions block at the end of this milestone). What remains below is the
+real work. M13 interleaves with M11.1–.5 like M12 did, but **M13.2–.3 (deletion/export) must land
+before M11.6's soft launch** — real users have deletion rights from day one.
+
+1. **CSP + security headers.** Add a `headers()` block to `frontend/next.config.mjs`:
+   `Content-Security-Policy` (Next.js needs `'unsafe-inline'` for styles; `default-src 'self'`;
+   `connect-src` 'self' + the API origin env; `img-src 'self' data:`; `frame-ancestors 'none'`),
+   `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.
+   Context: v1 had a tightened CSP (ADR-0014); v2 lost it in the rewrite — this restores the
+   defense-in-depth layer for the localStorage-token XSS risk (found via checklist #27,
+   2026-07-15). Done: headers visible in browser devtools on `/` and one `.v1` route; zero CSP
+   violations in console across dashboard/discover/detail; lint + build clean.
+2. **Account deletion + data export, backend.** `GET /auth/me/export` (JSON bundle: user profile,
+   applications, hours, messages sent, reviews authored, notifications) and `DELETE /auth/me`
+   (requires current password in the body to confirm). Deletion = **anonymize, not row-delete**,
+   so org-side verified-hours history stays intact with zero PII: user row keeps id, email →
+   unique tombstone, password hash + all token/guardian/dob fields cleared, `full_name` →
+   "Deleted student", `is_active` → false, `portfolio_public` → false; delete bookmarks +
+   notifications; scrub snapshotted `sender_name`/`author_name` on messages/reviews to "Deleted";
+   audit-log rows keep `actor_id` (accountability). Semantics decided with Evan's approval of
+   this plan, 2026-07-15. Done: pytest covers export shape, wrong-password 403, post-delete login
+   failure, org hours listing still shows the (anonymized) rows, leaderboard/portfolio exclude
+   the deleted user; migrations unchanged or up/down/up-verified.
+3. **Account deletion + data export, frontend.** Settings surface (existing account/dashboard
+   area): "Download my data" (fetch export → client-side JSON download) and a delete flow
+   (type-DELETE-to-confirm + password field → call API → logout → land on `/`). Done: flow
+   browser-verified end to end on the live stack; lint + build clean; zero console errors.
+4. **SEO + share metadata.** `app/sitemap.ts` (static public routes; dynamic opportunity URLs can
+   come later), `app/robots.ts`, `metadataBase` + `openGraph`/`twitter` metadata in the root
+   layout, and a static branded OG image (editorial: solid green, wordmark — no gradients) in
+   `public/`. Done: `/sitemap.xml` + `/robots.txt` serve; view-source shows `og:*` tags on `/`
+   and `/discover`; lint + build clean.
+5. **Resilience UX: skeletons + per-section errors + tooltips.** Skeleton loaders (calm pulse,
+   `prefers-reduced-motion`-gated) and per-section error states with a working Retry button —
+   dashboard + discover first, other pages only if trivial; `title` attributes on icon-only
+   buttons (🔔 etc.). Done: with the API stopped, dashboard/discover show per-section errors
+   whose Retry recovers after the API restarts (browser-verified); lint + build clean.
+6. **DECIDE (unscheduled): client-side caching + optimistic updates.** SWR or React Query +
+   optimistic bookmark/notification toggles. New dependency — Evan decides; default is skip
+   until post-launch unless real-use performance says otherwise.
+
+**Dated decisions from the 2026-07-15 checklist review (don't re-litigate without Evan):**
+
+- ~~Analytics + cookie banner~~ — DEFERRED (BLOCKED-ON-EVAN decision): the site sets zero
+  cookies today (JWT in localStorage), so a banner is currently theater; any analytics must be
+  cookieless/consent-aware and mind that users include minors (COPPA/GDPR-K). Revisit post-launch.
+- ~~Subdomain split (app vs landing)~~ — REJECTED 2026-07-15: no payoff at this scale; Next.js
+  serves both. DNS shape is decided inside M11.3 anyway.
+- ~~Animations on every screen~~ — REJECTED 2026-07-15: violates the editorial calm-motion
+  language (§4); selective motion already landed 2026-07-13.
+- ~~Rebuild v1-screen menus on Radix primitives~~ — REJECTED 2026-07-15: contradicts the
+  2026-07-13 exact-copy decision; non-v1 routes already use shadcn/Radix.
+- ~~Onboarding checklist / discovery sheets / dream-points messaging / push notifications~~ —
+  DEFERRED behind M11 per the standing Track-2 sequencing (LLM-council, 2026-07-09).
+- ~~Zod runtime validation of API responses~~ — DEFERRED: extra-field tolerance is correct TS
+  behavior; low value while both API sides are owned here.
+- Checklist legal items (terms/refund/liability/warranty, GDPR/CCPA privacy content, IP/DMCA
+  clause + takedown contact) map to **M11.2/M11.4** — drafted there, final review
+  BLOCKED-ON-EVAN (+ adult/guardian). Not duplicated in M13.
+- CSRF/origin checks (checklist #27): verified moot with header-carried JWT (no ambient cookie
+  credential). The M11.1(a) token-storage ADR is where this re-opens if auth ever moves to
+  cookies.
+
 ## 7. HANDOFF NOTES
 
 **Read first, in order:** this file → `servelocal-v2/HANDOFF.md` (after M1.1 creates it) →
@@ -497,7 +565,8 @@ are otherwise independent and may interleave.
 finish (tests green + commit + record entry) before starting the next. If a task turns out to be
 wrong-sized or blocked, log it in the record and move on only if independent. *(Amended
 2026-07-12: M12 was added out of numeric order — it interleaves with M11.1–.5 but M12.2–.3 must
-complete before M11.6's soft launch.)*
+complete before M11.6's soft launch.)* *(Amended 2026-07-15: M13 added the same way — interleaves
+with M11.1–.5, but M13.2–.3 must complete before M11.6.)*
 
 **Gotchas that will bite you:**
 

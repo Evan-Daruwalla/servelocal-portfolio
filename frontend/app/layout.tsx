@@ -15,9 +15,19 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "ServeLocal",
-  description: "Volunteer-opportunity platform (v2).",
+  description: "Verified community service for students — free forever.",
   icons: { icon: "/logo.png" },
+  openGraph: {
+    title: "ServeLocal",
+    description: "Verified community service for students — free forever.",
+    siteName: "ServeLocal",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

@@ -1,4 +1,10 @@
-/** Thin typed fetch wrapper for the FastAPI backend (see ../backend). */
+/**
+ * Thin typed fetch wrapper for the FastAPI backend (see ../backend/app/api/routes).
+ * `request()` handles the base URL, bearer token, JSON body, 204s, and unwraps the
+ * backend's `{detail}` error into an `ApiError(status, message)`. The `api` object
+ * below is one method per endpoint, grouped by domain (banners: `── Domain ──`) in
+ * roughly the same order as the route modules.
+ */
 import type {
   Application,
   ApplicationWithOpportunity,
@@ -60,6 +66,7 @@ async function request<T>(
 }
 
 export const api = {
+  // ── Auth & account ──
   register: (input: {
     email: string;
     password: string;
@@ -76,6 +83,11 @@ export const api = {
   me: (token: string) => request<User>("/auth/me", { token }),
   updateMe: (token: string, input: { email_notifications?: boolean; portfolio_public?: boolean }) =>
     request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(input), token }),
+
+  // Data export + account deletion (M13.3)
+  exportMe: (token: string) => request<Record<string, unknown>>("/auth/me/export", { token }),
+  deleteMe: (password: string, token: string) =>
+    request<void>("/auth/me", { method: "DELETE", body: JSON.stringify({ password }), token }),
 
   // Password reset (M4)
   forgotPassword: (email: string) =>
@@ -103,6 +115,7 @@ export const api = {
       body: JSON.stringify({ action: "revoke" }),
     }),
 
+  // ── Opportunities & applications ──
   listOpportunities: (params: { category?: string; query?: string } = {}) => {
     const qs = new URLSearchParams();
     if (params.category) qs.set("category", params.category);
@@ -156,6 +169,7 @@ export const api = {
       token,
     }),
 
+  // ── Hours & check-in ──
   autoLogHours: (token: string) => request<{ created: number }>("/hours/auto-log", { method: "POST", token }),
 
   listHours: (token: string) => request<HoursWithOpportunity[]>("/hours", { token }),
@@ -191,9 +205,10 @@ export const api = {
       token,
     }),
 
+  // ── Awards ──
   myAwards: (token: string) => request<MyAwards>("/awards/my", { token }),
 
-  // Bookmarks
+  // ── Bookmarks ──
   listSaved: (token: string) => request<Opportunity[]>("/saved", { token }),
   listSavedIds: (token: string) => request<string[]>("/saved/ids", { token }),
   save: (opportunityId: string, token: string) =>
@@ -201,18 +216,18 @@ export const api = {
   unsave: (opportunityId: string, token: string) =>
     request<void>(`/saved/${opportunityId}`, { method: "DELETE", token }),
 
-  // Leaderboard (public)
+  // ── Community (leaderboard + public portfolio) ──
   leaderboard: () => request<LeaderboardEntry[]>("/leaderboard"),
 
   // Public verified-service transcript (only for students who opted in; else 404).
   publicPortfolio: (userId: string) => request<PublicPortfolio>(`/portfolio/${userId}`),
 
-  // Reviews
+  // ── Reviews ──
   orgReviews: (orgId: string) => request<OrgReviews>(`/orgs/${orgId}/reviews`),
   createReview: (orgId: string, input: { rating: number; text: string }, token: string) =>
     request<Review>(`/orgs/${orgId}/reviews`, { method: "POST", body: JSON.stringify(input), token }),
 
-  // Notifications
+  // ── Notifications ──
   notifications: (token: string) => request<Notification[]>("/notifications", { token }),
   unreadCount: (token: string) => request<{ unread: number }>("/notifications/unread-count", { token }),
   markNotificationRead: (id: string, token: string) =>
@@ -220,7 +235,7 @@ export const api = {
   markAllNotificationsRead: (token: string) =>
     request<{ unread: number }>("/notifications/read-all", { method: "POST", token }),
 
-  // Messaging
+  // ── Messaging (per-opportunity threads) ──
   messages: (opportunityId: string, token: string) =>
     request<Message[]>(`/opportunities/${opportunityId}/messages`, { token }),
   postMessage: (opportunityId: string, body: string, token: string) =>
@@ -230,7 +245,7 @@ export const api = {
       token,
     }),
 
-  // Directed messaging (M7): inbox, reply, org→applicant broadcast
+  // ── Directed messaging (M7): inbox, reply, org→applicant broadcast ──
   inbox: (token: string) => request<Message[]>("/messages", { token }),
   replyMessage: (id: string, body: string, token: string) =>
     request<Message>(`/messages/${id}/reply`, { method: "POST", body: JSON.stringify({ body }), token }),
@@ -246,7 +261,7 @@ export const api = {
       token,
     }),
 
-  // Shift templates (M7)
+  // ── Shift templates (M7) ──
   templates: (token: string) => request<OpportunityTemplate[]>("/opportunity-templates", { token }),
   saveTemplate: (opportunity_id: string, name: string, token: string) =>
     request<OpportunityTemplate>("/opportunity-templates", {
@@ -255,7 +270,7 @@ export const api = {
       token,
     }),
 
-  // Billing (M8)
+  // ── Billing (M8) ──
   createCheckout: (token: string) =>
     request<{ url: string }>("/billing/checkout", { method: "POST", token }),
   setFeatured: (opportunityId: string, featured: boolean, token: string) =>

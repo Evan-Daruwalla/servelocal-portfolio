@@ -1,3 +1,11 @@
+/**
+ * Client-side mirror of the backend response schemas (`backend/app/schemas/*`).
+ * When a schema changes there, update the matching interface here, then the call
+ * that returns it in `lib/api.ts`. Grouped by domain below — search the banners
+ * (`── Domain ──`) to jump to a type.
+ */
+
+// ── Auth & user ──
 export type Role = "student" | "org" | "admin";
 
 export type ConsentStatus = "not_required" | "pending" | "verified" | "declined" | "revoked";
@@ -30,6 +38,7 @@ export interface Token {
   token_type: string;
 }
 
+// ── Opportunities & applications ──
 export interface Opportunity {
   id: string;
   org_id: string;
@@ -76,6 +85,7 @@ export interface ApplicationWithOpportunity extends Application {
   student_email?: string | null;
 }
 
+// ── Hours & awards ──
 export interface Hours {
   id: string;
   opportunity_id: string;
@@ -112,6 +122,7 @@ export interface MyAwards {
   next: Award | null;
 }
 
+// ── Community (public leaderboard, portfolio, reviews) ──
 export interface LeaderboardEntry {
   rank: number;
   name: string;
@@ -142,6 +153,7 @@ export interface OrgReviews {
   reviews: Review[];
 }
 
+// ── Notifications & messaging ──
 export interface Notification {
   id: string;
   type: string;
@@ -162,6 +174,7 @@ export interface Message {
   created_at: string;
 }
 
+// ── Templates & create/update inputs ──
 export interface OpportunityTemplate {
   id: string;
   name: string;

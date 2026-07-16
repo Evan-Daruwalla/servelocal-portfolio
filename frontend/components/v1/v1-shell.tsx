@@ -42,7 +42,7 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
             <>
               {/* Notifications + inbox lived only in the suppressed shadcn header,
                   orphaning both features on v1 screens (audit 2026-07-13 #3). */}
-              <Link className="nl" href="/notifications" aria-label="Notifications">
+              <Link className="nl" href="/notifications" aria-label="Notifications" title="Notifications">
                 🔔
               </Link>
               <Link className="nl" href="/inbox">

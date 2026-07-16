@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
@@ -38,11 +38,18 @@ export default function DiscoverPage() {
   const [category, setCategory] = useState("");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadOpps = useCallback(() => {
     setLoading(true);
-    api.listOpportunities({ category: category || undefined }).then(setOpps).catch(() => setOpps([])).finally(() => setLoading(false));
+    setError(false);
+    api.listOpportunities({ category: category || undefined })
+      .then((data) => { setOpps(data); setError(false); })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [category]);
+
+  useEffect(() => { loadOpps(); }, [loadOpps]);
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -153,10 +160,26 @@ export default function DiscoverPage() {
 
         {/* CARD GRID */}
         {loading ? (
-          <div className="cards-grid">
-            <div className="loading">
-              <div className="spinner" />
-              <div>Loading…</div>
+          <div className="cards-grid" aria-busy="true" aria-label="Loading opportunities">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skel-card">
+                <div className="skel skel-avatar" style={{ marginBottom: 14 }} />
+                <div className="skel skel-line" style={{ width: "70%", height: 16, marginBottom: 10 }} />
+                <div className="skel skel-line" style={{ width: "45%", marginBottom: 14 }} />
+                <div className="skel skel-line" style={{ width: "100%", marginBottom: 7 }} />
+                <div className="skel skel-line" style={{ width: "85%", marginBottom: 16 }} />
+                <div className="skel skel-line" style={{ width: "55%" }} />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="load-error">
+            <div className="empty-icon">⚠️</div>
+            <div className="ferr">Couldn&apos;t load opportunities. Check your connection and try again.</div>
+            <div>
+              <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={loadOpps}>
+                Retry
+              </button>
             </div>
           </div>
         ) : shown.length === 0 ? (

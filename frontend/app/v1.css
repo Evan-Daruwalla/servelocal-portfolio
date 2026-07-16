@@ -205,6 +205,17 @@
 .v1 .loading { text-align: center; padding: 48px; color: var(--muted); font-size: .88rem; }
 .v1 .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid var(--green-pale); border-top-color: var(--green); border-radius: 50%; animation: v1spin .7s linear infinite; margin-bottom: 12px; }
 @keyframes v1spin { to { transform: rotate(360deg); } }
+
+/* skeletons + section error (M13.5). Calm opacity pulse only — no shimmer/sweep;
+   reduced-motion swaps the pulse for a static block below. */
+.v1 .skel { background: var(--green-pale); border-radius: 8px; animation: v1skelpulse 1.6s ease-in-out infinite alternate; }
+.v1 .skel-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 22px; }
+.v1 .skel-line { height: 12px; border-radius: 6px; }
+.v1 .skel-avatar { width: 44px; height: 44px; border-radius: 6px; }
+@keyframes v1skelpulse { from { opacity: .5; } to { opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .v1 .skel { animation: none; opacity: .7; } }
+.v1 .load-error { text-align: center; padding: 40px 24px; color: var(--muted); }
+.v1 .load-error .ferr { display: inline-block; margin: 0 0 14px; text-align: left; }
 @media (max-width: 768px) { .v1 .cards-grid { grid-template-columns: 1fr; } .v1 .search-bar { flex-direction: column; } .v1 .si-wrap { min-width: 100%; } }
 
 /* ── OPPORTUNITY DETAIL (v1 modal card, rendered as a page block) ── */

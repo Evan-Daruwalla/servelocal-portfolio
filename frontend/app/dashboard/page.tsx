@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
@@ -8,7 +9,7 @@ import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import type { ApplicationWithOpportunity, HoursWithOpportunity, MyAwards, Opportunity } from "@/lib/types";
 
-type Tab = "calendar" | "history" | "log" | "saved" | "awards" | "impact" | "profile";
+type Tab = "calendar" | "history" | "log" | "saved" | "awards" | "impact" | "profile" | "account";
 const TABS: { id: Tab; label: string }[] = [
   { id: "calendar", label: "📅 Calendar" },
   { id: "history", label: "📋 Hours History" },
@@ -17,6 +18,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "awards", label: "🏆 Awards" },
   { id: "impact", label: "📊 Impact" },
   { id: "profile", label: "👤 Profile" },
+  { id: "account", label: "⚙️ Account" },
 ];
 const HOURS_STATUS: Record<string, [string, string]> = {
   pending: ["sp-pending", "Pending"],
@@ -28,22 +30,32 @@ const SRC: Record<string, string> = { auto: "Auto", self: "Self-report", checkin
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("calendar");
   const [hours, setHours] = useState<HoursWithOpportunity[]>([]);
   const [awards, setAwards] = useState<MyAwards | null>(null);
   const [apps, setApps] = useState<ApplicationWithOpportunity[]>([]);
   const [saved, setSaved] = useState<Opportunity[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [dataError, setDataError] = useState(false);
   // log-hours form
   const [srOpp, setSrOpp] = useState("");
   const [srHours, setSrHours] = useState(1);
   const [ciOpp, setCiOpp] = useState("");
   const [ciCode, setCiCode] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  // account section (export + delete)
+  const [delConfirm, setDelConfirm] = useState("");
+  const [delPassword, setDelPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [acctError, setAcctError] = useState<string | null>(null);
 
   function refresh() {
     const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
+    if (!token) { setDataLoading(false); return; }
+    setDataLoading(true);
+    setDataError(false);
     api.autoLogHours(token).catch(() => undefined)
       .then(() => Promise.all([api.listHours(token), api.myAwards(token), api.myApplications(token), api.listSaved(token)]))
       .then(([h, a, ap, sv]) => {
@@ -51,8 +63,10 @@ export default function DashboardPage() {
         setAwards(a);
         setApps(ap);
         setSaved(sv);
+        setDataError(false);
       })
-      .catch(() => undefined);
+      .catch(() => setDataError(true))
+      .finally(() => setDataLoading(false));
   }
   useEffect(() => { if (!loading) refresh(); }, [loading]);
 
@@ -96,6 +110,37 @@ export default function DashboardPage() {
     }
   }
 
+  async function downloadExport() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    setAcctError(null);
+    try {
+      const data = await api.exportMe(token);
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "servelocal-data-export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setAcctError(err instanceof ApiError ? err.message : "Could not export your data.");
+    }
+  }
+  async function deleteAccount() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    setDeleting(true);
+    setAcctError(null);
+    try {
+      await api.deleteMe(delPassword, token);
+      logout();
+      router.push("/");
+    } catch (err) {
+      setAcctError(err instanceof ApiError ? err.message : "Could not delete your account.");
+      setDeleting(false);
+    }
+  }
+
   if (loading) return null;
   if (!user || user.role !== "student") {
     return (
@@ -118,6 +163,39 @@ export default function DashboardPage() {
     d.setDate(gridStart.getDate() + i);
     return d;
   });
+
+  // Per-section resilience (M13.5): panels load via one refresh(), so a single
+  // skeleton-while-loading + inline error+Retry covers every data tab.
+  const sectionError = (
+    <div className="load-error">
+      <div className="empty-icon">⚠️</div>
+      <div className="ferr">Couldn&apos;t load your data. Check your connection and try again.</div>
+      <div>
+        <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={refresh}>
+          Retry
+        </button>
+      </div>
+    </div>
+  );
+  const skelPanel = (
+    <div className="skel-card" aria-busy="true">
+      <div className="skel skel-line" style={{ width: "55%", height: 16, marginBottom: 14 }} />
+      <div className="skel skel-line" style={{ width: "100%", marginBottom: 8 }} />
+      <div className="skel skel-line" style={{ width: "92%", marginBottom: 8 }} />
+      <div className="skel skel-line" style={{ width: "78%" }} />
+    </div>
+  );
+  const skelGrid = (
+    <div className="cards-grid" aria-busy="true">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="skel-card">
+          <div className="skel skel-line" style={{ width: "70%", height: 16, marginBottom: 10 }} />
+          <div className="skel skel-line" style={{ width: "45%", marginBottom: 14 }} />
+          <div className="skel skel-line" style={{ width: "60%" }} />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <V1Shell>
@@ -157,6 +235,8 @@ export default function DashboardPage() {
           {tab === "calendar" && (
             <div>
               <h1 className="dash-h">Calendar</h1>
+              {dataError ? sectionError : dataLoading ? skelPanel : (
+              <>
               <div className="cal-wrap">
                 <div className="cal-hdr">
                   <span className="cal-title">{now.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</span>
@@ -181,13 +261,15 @@ export default function DashboardPage() {
                 </div>
               </div>
               {eventDays.size === 0 && <p className="progress-label" style={{ marginTop: 12 }}>No signups this month — <Link href="/discover">find an opportunity</Link>.</p>}
+              </>
+              )}
             </div>
           )}
 
           {tab === "history" && (
             <div>
               <h1 className="dash-h">Hours History</h1>
-              {hours.length === 0 ? (
+              {dataError ? sectionError : dataLoading ? skelPanel : hours.length === 0 ? (
                 <div className="empty"><div className="empty-icon">📋</div>No hours logged yet — they log automatically once an event passes.</div>
               ) : (
                 <table className="tbl">
@@ -212,7 +294,7 @@ export default function DashboardPage() {
           {tab === "log" && (
             <div>
               <h1 className="dash-h">Log Hours</h1>
-              {oppOptions.length === 0 ? (
+              {dataError ? sectionError : dataLoading ? skelPanel : oppOptions.length === 0 ? (
                 <div className="empty"><div className="empty-icon">➕</div>Apply to an opportunity first, then log or check in here.</div>
               ) : (
                 <>
@@ -251,7 +333,7 @@ export default function DashboardPage() {
           {tab === "saved" && (
             <div>
               <h1 className="dash-h">Saved</h1>
-              {saved.length === 0 ? (
+              {dataError ? sectionError : dataLoading ? skelGrid : saved.length === 0 ? (
                 <div className="empty"><div className="empty-icon">🔖</div>No bookmarks yet — tap the heart on any opportunity.</div>
               ) : (
                 <div className="cards-grid">
@@ -270,6 +352,8 @@ export default function DashboardPage() {
           {tab === "awards" && (
             <div>
               <h1 className="dash-h">Awards — {awards?.verified_hours ?? 0} verified hours</h1>
+              {dataError ? sectionError : dataLoading ? skelPanel : (
+              <>
               {(awards?.earned ?? []).map((a) => (
                 <div key={a.id} className="award-card">
                   <div className="award-icon award-achieved">🏆</div>
@@ -293,17 +377,21 @@ export default function DashboardPage() {
               {(awards?.earned.length ?? 0) === 0 && !awards?.next && (
                 <div className="empty"><div className="empty-icon">🏆</div>Log verified hours to start earning awards.</div>
               )}
+              </>
+              )}
             </div>
           )}
 
           {tab === "impact" && (
             <div>
               <h1 className="dash-h">Impact</h1>
+              {dataError ? sectionError : dataLoading ? skelPanel : (
               <div className="lb-band">
                 <div className="lb-stat"><div className="lb-stat-num">{stats.verified}</div><div className="lb-stat-label">Verified Hours</div></div>
                 <div className="lb-stat"><div className="lb-stat-num">{apps.length}</div><div className="lb-stat-label">Opportunities</div></div>
                 <div className="lb-stat"><div className="lb-stat-num">{awards?.earned.length ?? 0}</div><div className="lb-stat-label">Awards</div></div>
               </div>
+              )}
             </div>
           )}
 
@@ -314,6 +402,40 @@ export default function DashboardPage() {
                 <div className="ds-stat"><span className="ds-stat-label">Name</span><span className="ds-stat-val">{user.full_name ?? "—"}</span></div>
                 <div className="ds-stat"><span className="ds-stat-label">Email</span><span className="ds-stat-val">{user.email}</span></div>
                 <div className="ds-stat"><span className="ds-stat-label">Role</span><span className="ds-stat-val">Student</span></div>
+              </div>
+            </div>
+          )}
+
+          {tab === "account" && (
+            <div>
+              <h1 className="dash-h">Account</h1>
+              <div className="form-box">
+                <div className="fr"><label>Download my data</label></div>
+                <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 12 }}>Export a copy of your ServeLocal data — profile, applications, hours, messages, reviews, and notifications — as a JSON file.</p>
+                <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}>⬇ Download my data (JSON)</button>
+              </div>
+              <div className="delete-zone">
+                <h4>⚠️ Delete Account</h4>
+                <p>
+                  Your verified hours are kept for the organizations that recorded them, with your name removed.
+                  Everything else — your profile, guardian information, saved items, and notifications — is permanently erased.
+                  <strong> This cannot be undone.</strong>
+                </p>
+                <div className="fr">
+                  <label>Type DELETE to confirm</label>
+                  <input className="fc" value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="DELETE" />
+                </div>
+                <div className="fr">
+                  <label>Current password</label>
+                  <input className="fc" type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
+                </div>
+                {acctError && <div className="ferr" style={{ display: "block" }}>{acctError}</div>}
+                <button
+                  className="btn-s"
+                  style={{ color: "var(--red)", borderColor: "var(--red)", padding: "9px 18px", fontSize: ".83rem" }}
+                  disabled={delConfirm !== "DELETE" || !delPassword || deleting}
+                  onClick={deleteAccount}
+                >{deleting ? "Deleting…" : "Delete my account"}</button>
               </div>
             </div>
           )}

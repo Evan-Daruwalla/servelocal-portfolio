@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * Client auth state. The JWT lives in localStorage under `TOKEN_KEY`; on mount we
+ * hydrate `user` by calling `/auth/me` with it (a stale/invalid token is dropped and
+ * the app renders logged-out). `login`/`register` set the token then fetch the user;
+ * `register` auto-logs-in. Consume via `useAuth()` inside `<AuthProvider>` (mounted in
+ * the root layout). `loading` is true only during the initial hydrate — gate redirects
+ * on it so a page doesn't bounce a logged-in user to /login before hydration finishes.
+ */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { api, ApiError } from "@/lib/api";
