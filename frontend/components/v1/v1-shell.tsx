@@ -59,7 +59,7 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
                 Log In
               </Link>
               <Link className="nav-btn nb-solid" href="/register">
-                Sign Up Free
+                Sign Up Today
               </Link>
             </>
           )}

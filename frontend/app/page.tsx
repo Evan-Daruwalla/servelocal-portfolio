@@ -42,8 +42,8 @@ export default function Home() {
             applications.
           </p>
           <div className="hero-btns">
-            <Link className="btn-p" href="/discover">
-              Browse Opportunities
+            <Link className="btn-p" href="/register">
+              Sign Up Today
             </Link>
             <Link className="btn-s" href="/for-organizations">
               For Organizations
@@ -221,7 +221,7 @@ export default function Home() {
         </p>
         <div className="pledge-btns">
           <Link className="btn-gold" href="/register">
-            Sign Up Free
+            Sign Up Today
           </Link>
           <Link className="btn-ghost" href="/leaderboard">
             Community Impact →

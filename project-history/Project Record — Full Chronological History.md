@@ -1218,6 +1218,7 @@ prod secrets, Resend key, Turnstile keys, legal sign-off). `5b0c5cc` not yet pus
 | 2026-07-16 | v2 | Prelaunch batch: server-side logout + 401 interceptor, pg_dump backup + restore drill, HSTS (211 tests) | `0573d69`, `c78b5aa`, `7f8b2c7` |
 | 2026-07-16 | v2 | Site-wide copy humanization + em-dash removal + truthful org-trust claims + backend email/notification copy; compose build args fixed | `702b139`→`be4b4df` |
 | 2026-07-16 | v2 | Clickwrap ToS/privacy at register (migration 0023, 215 tests) + role-aware /welcome onboarding | `5b0c5cc` |
+| 2026-07-20 | v2 | taste-skill vetted+installed; design pass: emoji→Lucide site-wide (marketing then product UI, shared category map), false org-vetting claim removed, truthful stats, CTA unification | `32793b2`, `032b21e` |
 
 ## What's not in this record (honest gaps)
 
