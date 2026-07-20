@@ -40,7 +40,7 @@ export default function SavedPage() {
 
       {fetching && <p className="empty-state">Loading…</p>}
       {!fetching && opportunities.length === 0 && (
-        <div className="empty-state">No bookmarks yet — tap the star on any opportunity.</div>
+        <div className="empty-state">No bookmarks yet. Tap the heart on any opportunity.</div>
       )}
 
       <div className="flex flex-col gap-4">

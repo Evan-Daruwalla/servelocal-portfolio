@@ -19,7 +19,7 @@ Standards bins (last-updated 2026-07-15; the codebase's committed choices, one h
 - `dependencies.md` — backend/frontend deps + pinned versions + pip-audit + what NOT to add.
 - `ui.md` — UI + UX: editorial language, two visual systems, palette/fonts, emil-design-eng polish; UX flows/states/error-UX.
 - `testing.md` — pytest-on-SQLite, migration up/down/up, browser/CDP verification reality.
-- `data.md` — Alembic migration chain 0001–0022 + rules, schema conventions, API status-code contract.
+- `data.md` — Alembic migration chain 0001–0023 + rules, schema conventions, API status-code contract.
 - `tooling.md` — backend/frontend commands, Docker rebuild flow, config/secrets, record hooks, shell.
 
 Cross-bin invariants (always true):

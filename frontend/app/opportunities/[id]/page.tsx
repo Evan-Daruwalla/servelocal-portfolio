@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarDays, Clock, Globe, MapPin, RefreshCw, Shuffle, Timer, Users } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -86,22 +87,22 @@ export default function OpportunityDetailPage() {
 
               <div style={{ marginBottom: 12 }}>
                 {isRemote ? (
-                  <span className="format-pip remote" style={{ fontSize: ".8rem", padding: "4px 12px" }}>🌐 Remote</span>
+                  <span className="format-pip remote" style={{ fontSize: ".8rem", padding: "4px 12px" }}><Globe size={12} strokeWidth={1.75} aria-hidden />Remote</span>
                 ) : isHybrid ? (
-                  <span className="format-pip hybrid" style={{ fontSize: ".8rem", padding: "4px 12px" }}>🔀 Hybrid</span>
+                  <span className="format-pip hybrid" style={{ fontSize: ".8rem", padding: "4px 12px" }}><Shuffle size={12} strokeWidth={1.75} aria-hidden />Hybrid</span>
                 ) : (
-                  <span className="format-pip inperson" style={{ fontSize: ".8rem", padding: "4px 12px" }}>📍 In-Person</span>
+                  <span className="format-pip inperson" style={{ fontSize: ".8rem", padding: "4px 12px" }}><MapPin size={12} strokeWidth={1.75} aria-hidden />In-Person</span>
                 )}
               </div>
 
               <div className="detail-grid">
-                <div>📍 <strong>Location:</strong> {opp.location}</div>
-                <div>📅 <strong>Start:</strong> {fmtDateTime(opp.start_time)}</div>
-                <div>⏰ <strong>End:</strong> {fmtDateTime(opp.end_time)}</div>
-                <div>⏱ <strong>Duration:</strong> {opp.duration_hours} hours</div>
-                <div>🔄 <strong>Commitment:</strong> {RECURRENCE_LABEL[opp.recurrence]}</div>
+                <div><MapPin size={14} strokeWidth={1.75} aria-hidden /> <strong>Location:</strong> {opp.location}</div>
+                <div><CalendarDays size={14} strokeWidth={1.75} aria-hidden /> <strong>Start:</strong> {fmtDateTime(opp.start_time)}</div>
+                <div><Clock size={14} strokeWidth={1.75} aria-hidden /> <strong>End:</strong> {fmtDateTime(opp.end_time)}</div>
+                <div><Timer size={14} strokeWidth={1.75} aria-hidden /> <strong>Duration:</strong> {opp.duration_hours} hours</div>
+                <div><RefreshCw size={14} strokeWidth={1.75} aria-hidden /> <strong>Commitment:</strong> {RECURRENCE_LABEL[opp.recurrence]}</div>
                 {!isRecurring && (
-                  <div>👥 <strong>Spots:</strong> {opp.spots_remaining}/{opp.spots_available} remaining</div>
+                  <div><Users size={14} strokeWidth={1.75} aria-hidden /> <strong>Spots:</strong> {opp.spots_remaining}/{opp.spots_available} remaining</div>
                 )}
               </div>
 

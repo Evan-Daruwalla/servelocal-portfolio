@@ -17,11 +17,11 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "ServeLocal",
-  description: "Verified community service for students — free forever.",
+  description: "Verified community service for students. Free forever.",
   icons: { icon: "/logo.png" },
   openGraph: {
     title: "ServeLocal",
-    description: "Verified community service for students — free forever.",
+    description: "Verified community service for students. Free forever.",
     siteName: "ServeLocal",
     type: "website",
   },

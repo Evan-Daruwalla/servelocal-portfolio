@@ -471,3 +471,28 @@
   .v1 .dash-sidebar { position: static; border-radius: 14px; }
   .v1 .ds-link.on { box-shadow: none; background: var(--green-pale); }
 }
+
+/* ── ICON PASS (2026-07-20, taste-skill): Lucide replaces emoji on marketing
+   surfaces. One family, strokeWidth 1.75; brand green by default (chips set
+   their own color inline). Emoji still used as DATA (category avatars from the
+   DB) stays — this pass covers decorative UI icons only. */
+.v1 .bi, .v1 .hiw-icon, .v1 .rb-icon { color: var(--green); }
+.v1 .bi svg, .v1 .hiw-icon svg, .v1 .mc-icon svg { display: block; }
+.v1 .rb-icon svg { display: block; margin: 0 auto 2px; }
+.v1 .bento-card.gold .bi { color: var(--amber); }
+/* Gold-tinted bento cell (awards / reviews): brand gold-pale, same treatment
+   family as .featured / .podium surfaces. */
+.v1 .bento-card.gold { background: var(--gold-pale); border-color: #ecd9a0; }
+.v1 .bento-card.gold:hover { border-color: var(--gold); }
+
+/* Icon pass, product UI (2026-07-20 cont.): inline Lucide sits on the text
+   baseline; flex/block containers below override as needed. */
+.v1 svg.lucide { vertical-align: -0.18em; }
+.v1 .ds-link { display: flex; align-items: center; gap: 8px; }
+.v1 .empty-icon { color: var(--green-mid); }
+.v1 .empty-icon svg { display: block; margin: 0 auto; }
+.v1 .oc-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.v1 .oc-avatar svg { display: block; }
+.v1 .award-icon svg { display: block; }
+.v1 .award-achieved svg { color: var(--amber); }
+.v1 .award-locked svg { color: var(--muted); }

@@ -1,5 +1,6 @@
 "use client";
 
+import { BadgeCheck, Flag, Landmark } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
@@ -33,7 +34,7 @@ export default function AdminPage() {
 
         {/* Honest banner: v2 has no admin moderation backend yet. */}
         <div className="ferr" style={{ display: "block", background: "#fff8e1", borderColor: "#ffc107", color: "#795548", marginBottom: 24 }}>
-          Moderation tools (org approval, reports, audit log) are not yet ported to the v2 backend — this
+          Moderation tools (org approval, reports, audit log) are not yet ported to the v2 backend. This
           screen mirrors v1&apos;s admin layout and shows the read-only platform snapshot below.
         </div>
 
@@ -52,13 +53,13 @@ export default function AdminPage() {
 
         <div className="tab-panel on">
           {tab === "pending" && (
-            <div className="empty"><div className="empty-icon">✅</div>Org approval queue requires the v2 admin backend (org review status + approve/reject endpoints) — not yet built.</div>
+            <div className="empty"><div className="empty-icon"><BadgeCheck size={40} strokeWidth={1.75} aria-hidden /></div>Org approval queue requires the v2 admin backend (org review status + approve/reject endpoints). Not yet built.</div>
           )}
           {tab === "all-orgs" && (
-            <div className="empty"><div className="empty-icon">🏛️</div>The full organization directory requires an admin-scoped listing endpoint in v2 — not yet built.</div>
+            <div className="empty"><div className="empty-icon"><Landmark size={40} strokeWidth={1.75} aria-hidden /></div>The full organization directory requires an admin-scoped listing endpoint in v2. Not yet built.</div>
           )}
           {tab === "reports" && (
-            <div className="empty"><div className="empty-icon">🚩</div>User reports &amp; the tamper-evident audit log require the v2 admin backend — not yet built.</div>
+            <div className="empty"><div className="empty-icon"><Flag size={40} strokeWidth={1.75} aria-hidden /></div>User reports &amp; the tamper-evident audit log require the v2 admin backend. Not yet built.</div>
           )}
         </div>
       </div>

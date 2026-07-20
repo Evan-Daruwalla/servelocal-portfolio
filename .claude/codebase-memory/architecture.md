@@ -42,7 +42,7 @@ Tailwind 3 + shadcn/ui.
 - NEXT_PUBLIC_API_URL (default `http://localhost:8000/api/v1`) is where the client hits the backend.
 
 ## Migrations
-**Migration chain 0001–0022, Alembic rules, and schema conventions → `data.md`**
+**Migration chain 0001–0023, Alembic rules, and schema conventions → `data.md`**
 (canonical).
 
 ## Deploy shape (M10 COMPLETE — `docker compose up` verified by Evan 2026-07-12)

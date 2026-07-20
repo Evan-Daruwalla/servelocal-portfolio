@@ -1,35 +1,29 @@
 "use client";
 
+import { Archive, BadgeCheck, CalendarDays, ClipboardList, Clock, Download, Globe, Landmark, LogOut, MapPin, MessageCircle, RefreshCw, Shuffle, Star, TrendingUp, TriangleAlert, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { CategoryIcon, getCategoryMeta } from "@/components/v1/category-icon";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import type { ApplicationWithOpportunity, HoursWithOpportunity, Opportunity } from "@/lib/types";
 
-const CAT_EMOJI: Record<string, string> = {
-  Education: "📚", Environment: "🌱", Health: "🏥", Animals: "🐾",
-  "Food & Hunger": "🍎", "Arts & Culture": "🎨", Community: "🤝", STEM: "🔬", Agriculture: "🌾",
-};
-const CAT_BG: Record<string, string> = {
-  Education: "#eef4ff", Environment: "#e8f5ef", Health: "#fdecef", Animals: "#fef3e0",
-  "Food & Hunger": "#fef2f2", "Arts & Culture": "#f5edff", Community: "#e8f5ef", STEM: "#fdf5e0", Agriculture: "#eef7e6",
-};
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type Tab = "listings" | "analytics" | "calendar" | "applicants" | "hours" | "history" | "profile";
 type Audience = "all" | "approved" | "pending";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "listings", label: "📋 My Listings" },
-  { id: "analytics", label: "📈 Analytics" },
-  { id: "calendar", label: "📅 Calendar" },
-  { id: "applicants", label: "👥 Applicants" },
-  { id: "hours", label: "✅ Verify Hours" },
-  { id: "history", label: "🗂️ Listing History" },
-  { id: "profile", label: "🏛️ Org Profile" },
+const TABS: { id: Tab; label: string; Icon: LucideIcon }[] = [
+  { id: "listings", label: "My Listings", Icon: ClipboardList },
+  { id: "analytics", label: "Analytics", Icon: TrendingUp },
+  { id: "calendar", label: "Calendar", Icon: CalendarDays },
+  { id: "applicants", label: "Applicants", Icon: Users },
+  { id: "hours", label: "Verify Hours", Icon: BadgeCheck },
+  { id: "history", label: "Listing History", Icon: Archive },
+  { id: "profile", label: "Org Profile", Icon: Landmark },
 ];
 
 function fmtDate(iso: string): string {
@@ -236,30 +230,31 @@ export default function OrgDashboardPage() {
   function listingCard(o: Opportunity, inHistory: boolean) {
     const loc = (o.location || "").toLowerCase();
     const fmt = (o.format || "").toLowerCase();
+    const meta = getCategoryMeta(o.category);
     const pip = fmt === "remote" || loc.includes("remote")
-      ? <span className="format-pip remote">🌐 Remote</span>
+      ? <span className="format-pip remote"><Globe size={12} strokeWidth={1.75} aria-hidden />Remote</span>
       : fmt === "hybrid" || loc.includes("hybrid")
-        ? <span className="format-pip hybrid">🔀 Hybrid</span>
-        : <span className="format-pip inperson">📍 In-Person</span>;
+        ? <span className="format-pip hybrid"><Shuffle size={12} strokeWidth={1.75} aria-hidden />Hybrid</span>
+        : <span className="format-pip inperson"><MapPin size={12} strokeWidth={1.75} aria-hidden />In-Person</span>;
     const appCount = apps.filter((a) => a.opportunity_id === o.id).length;
     return (
       <div key={o.id} className={`opp-card${o.featured ? " featured" : ""}`}>
         <div className="oc-top">
-          <div className="oc-avatar" style={{ background: CAT_BG[o.category] || "#e8f5ef" }}>{CAT_EMOJI[o.category] || "🏛️"}</div>
+          <div className="oc-avatar" style={{ background: meta.bg, color: meta.fg }}><CategoryIcon category={o.category} size={20} /></div>
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
             {o.featured && <span className="badge badge-featured">★ Featured</span>}
             {inHistory
               ? <span className="badge badge-denied" style={{ opacity: 0.7 }}>Expired</span>
               : <span className={`badge ${o.active ? "badge-verified" : "badge-denied"}`}>{o.active ? "Active" : "Inactive"}</span>}
-            {isRecurring(o) && <span className="badge badge-skill" style={{ fontSize: ".65rem" }}>🔄 {o.recurrence === "weekly" ? "Weekly" : "Monthly"}</span>}
+            {isRecurring(o) && <span className="badge badge-skill" style={{ fontSize: ".65rem" }}><RefreshCw size={12} strokeWidth={1.75} aria-hidden /> {o.recurrence === "weekly" ? "Weekly" : "Monthly"}</span>}
           </div>
         </div>
         <Link href={`/opportunities/${o.id}`} className="oc-title">{o.title}</Link>
         <div style={{ marginBottom: 6 }}>{pip}</div>
         <div className="oc-meta" style={{ marginTop: 4 }}>
-          <span>📅 {fmtDate(o.start_time)}</span>
-          <span>⏱ {o.duration_hours} hrs</span>
-          <span>👥 {o.spots_remaining}/{o.spots_available}</span>
+          <span><CalendarDays size={13} strokeWidth={1.75} aria-hidden />{fmtDate(o.start_time)}</span>
+          <span><Clock size={13} strokeWidth={1.75} aria-hidden />{o.duration_hours} hrs</span>
+          <span><Users size={13} strokeWidth={1.75} aria-hidden />{o.spots_remaining}/{o.spots_available}</span>
         </div>
         <div className="oc-footer">
           <span style={{ fontSize: ".73rem", color: "var(--muted)" }}>{appCount} volunteers</span>
@@ -270,7 +265,7 @@ export default function OrgDashboardPage() {
                   className="btn-s"
                   style={{ padding: "6px 12px", fontSize: ".75rem" }}
                   onClick={() => { setTab("applicants"); setMsgOpp(o.id); }}
-                >💬 Message</button>
+                ><MessageCircle size={14} strokeWidth={1.75} aria-hidden /> Message</button>
                 {user!.plan === "pro" ? (
                   <button
                     className="btn-s"
@@ -309,9 +304,9 @@ export default function OrgDashboardPage() {
             <hr className="ds-divider" />
             <div className="ds-nav">
               {TABS.map((t) => (
-                <button key={t.id} className={`ds-link${tab === t.id ? " on" : ""}`} onClick={() => setTab(t.id)}>{t.label}</button>
+                <button key={t.id} className={`ds-link${tab === t.id ? " on" : ""}`} onClick={() => setTab(t.id)}><t.Icon size={15} strokeWidth={1.75} aria-hidden />{t.label}</button>
               ))}
-              <button className="ds-link" onClick={logout}>↪ Log Out</button>
+              <button className="ds-link" onClick={logout}><LogOut size={15} strokeWidth={1.75} aria-hidden />Log Out</button>
             </div>
           </div>
         </div>
@@ -328,7 +323,7 @@ export default function OrgDashboardPage() {
               </div>
               <div className="cards-grid">
                 {activeOpps.length ? activeOpps.map((o) => listingCard(o, false)) : (
-                  <div className="empty"><div className="empty-icon">📋</div>No listings yet. Click ＋ Add Listing to get started.</div>
+                  <div className="empty"><div className="empty-icon"><ClipboardList size={40} strokeWidth={1.75} aria-hidden /></div>No listings yet. Hit ＋ Add Listing to post your first.</div>
                 )}
               </div>
             </div>
@@ -337,7 +332,7 @@ export default function OrgDashboardPage() {
           {tab === "analytics" && (
             <div className="tab-panel on">
               <h1 className="dash-h" style={{ marginBottom: 6 }}>Analytics</h1>
-              <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>How your listings are performing — applications and fill rates across your active opportunities.</p>
+              <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>Applications and fill rates for each of your active listings.</p>
               {activeOpps.length ? (
                 <table className="tbl">
                   <thead><tr><th>Listing</th><th>Applicants</th><th>Spots filled</th></tr></thead>
@@ -352,10 +347,10 @@ export default function OrgDashboardPage() {
                   </tbody>
                 </table>
               ) : (
-                <div className="empty"><div className="empty-icon">📈</div>Post a listing to start collecting analytics.</div>
+                <div className="empty"><div className="empty-icon"><TrendingUp size={40} strokeWidth={1.75} aria-hidden /></div>Post a listing to start collecting analytics.</div>
               )}
               <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--gold-pale, #fdf7e3)", border: "1px solid var(--gold)", borderRadius: 8, fontSize: ".83rem", color: "var(--dark)" }}>
-                ⭐ <strong>Go further with Pro:</strong> unlimited listings, featured placement at the top of search, and volunteer roster exports.
+                <Star size={14} strokeWidth={1.75} aria-hidden /> <strong>Pro adds:</strong> unlimited listings, featured placement at the top of search, and volunteer roster exports.
               </div>
             </div>
           )}
@@ -434,7 +429,7 @@ export default function OrgDashboardPage() {
                   </tbody>
                 </table>
               ) : (
-                <div className="empty"><div className="empty-icon">👥</div>No applicants yet.</div>
+                <div className="empty"><div className="empty-icon"><Users size={40} strokeWidth={1.75} aria-hidden /></div>No applicants yet.</div>
               )}
             </div>
           )}
@@ -444,7 +439,7 @@ export default function OrgDashboardPage() {
               <h1 className="dash-h" style={{ marginBottom: 6 }}>Verify Hours</h1>
               <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 14 }}>Review and approve or deny volunteer hour requests.</p>
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".82rem" }} onClick={exportRoster}>⬇ Export Volunteer Roster (CSV)</button>
+                <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".82rem" }} onClick={exportRoster}><Download size={15} strokeWidth={1.75} aria-hidden /> Export Volunteer Roster (CSV)</button>
               </div>
               {hours.length ? (
                 <table className="tbl">
@@ -471,7 +466,7 @@ export default function OrgDashboardPage() {
                   </tbody>
                 </table>
               ) : (
-                <div className="empty"><div className="empty-icon">✅</div>No pending hour requests.</div>
+                <div className="empty"><div className="empty-icon"><BadgeCheck size={40} strokeWidth={1.75} aria-hidden /></div>No pending hour requests.</div>
               )}
             </div>
           )}
@@ -482,7 +477,7 @@ export default function OrgDashboardPage() {
               <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>One-time listings whose end date has passed. Recurring listings always stay in My Listings.</p>
               <div className="cards-grid">
                 {historyOpps.length ? historyOpps.map((o) => listingCard(o, true)) : (
-                  <div className="empty"><div className="empty-icon">🗂️</div>No expired listings yet.</div>
+                  <div className="empty"><div className="empty-icon"><Archive size={40} strokeWidth={1.75} aria-hidden /></div>No expired listings yet.</div>
                 )}
               </div>
             </div>
@@ -504,13 +499,13 @@ export default function OrgDashboardPage() {
                 {savedProfile && <span style={{ marginLeft: 12, fontSize: ".82rem", color: "var(--green)" }}>Saved ✓</span>}
                 <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <Link className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} href="/billing">Manage Billing</Link>
-                  <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}>⬇ Download my data (JSON)</button>
+                  <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}><Download size={15} strokeWidth={1.75} aria-hidden /> Download my data (JSON)</button>
                 </div>
                 <div className="delete-zone" style={{ maxWidth: 580 }}>
-                  <h4>⚠️ Delete Account</h4>
+                  <h4><TriangleAlert size={16} strokeWidth={1.75} aria-hidden /> Delete Account</h4>
                   <p>
                     Your past listings and the hours you verified are kept so your volunteers’ records stay intact.
-                    Your account — profile, login, messages you sent, and notifications — is permanently erased.
+                    Your account (profile, login, messages you sent, and notifications) is permanently erased.
                     You must deactivate all active listings first. <strong>This cannot be undone.</strong>
                   </p>
                   <div className="fr">

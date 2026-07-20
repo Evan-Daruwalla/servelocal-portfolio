@@ -134,6 +134,15 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
   how to obtain). No real values; those live in gitignored `.env`. The "what Evan must provide" list.
 
 ## BLOCKED-ON-EVAN (as of 2026-07-16 — the complete launch list)
+**⚠️ Product gap found 2026-07-16 (backend copy pass) — decide before launch:** a guardian's
+**decline permanently bricks a minor's account with zero recourse.** On decline the consent token is
+cleared, no manage token is issued (approve-only), the student can't resend (declined is terminal by
+v1 spec §4's no-auto-retry rule), and there are no admin moderation endpoints. The notification even
+says "Contact support if this was a mistake" — but support can't fix it (no mechanism) and no support
+address exists yet. At soft-launch scale you can flip the DB row by hand; past that it needs a real
+path (guardian re-invite, or an admin action). Copy left as-is: it's the right instruction once a
+contact email exists.
+
 **Decisions:**
 - ADR 0001 sign-off (token storage: keep localStorage-JWT) + the TTL choice (currently 7 days;
   ADR recommends tightening — pick the number). Its follow-ups #2 (server-side logout) and
@@ -142,6 +151,10 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
   Pro upgrade surface (currently would 503 without keys — "coming soon" state vs leave).
 - Terms refund-policy default (drafted: cancel anytime, end-of-period, no proration).
 - Analytics decision (deferred 2026-07-15): must be cookieless/consent-aware — minors platform.
+- ~~Org-vetting claims~~ — RESOLVED 2026-07-16 (Evan picked "soften"): all six claims rewritten to
+  what's true (public student reviews + org-verified hours); the pricing FAQ's fabricated vetting
+  mechanism removed. OPEN REVERSAL PATH: if Evan later adopts manual org review as documented
+  policy, the copy can strengthen back — that's a product decision, note it here when made.
 - M13.6 DECIDE: SWR/React Query client caching (new dependency).
 **Values/accounts (all prepared up to the blocked step):**
 - Legal placeholders in the Terms/Privacy DRAFTS: [CONTACT EMAIL], [GOVERNING STATE],

@@ -54,7 +54,7 @@ export default function MyApplicationsPage() {
 
       {fetching && <p className="empty-state">Loading…</p>}
       {!fetching && applications.length === 0 && (
-        <div className="empty-state">You haven&apos;t applied to anything yet.</div>
+        <div className="empty-state">Nothing here yet. Once you apply to an opportunity, it shows up here.</div>
       )}
 
       <div className="flex flex-col gap-4">

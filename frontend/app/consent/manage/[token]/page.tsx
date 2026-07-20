@@ -53,8 +53,8 @@ export default function ConsentManagePage() {
                 <span className="font-medium">
                   {ctx.student_first_name} {ctx.student_last_initial}
                   {ctx.student_last_initial ? "." : ""}
-                </span>{" "}
-                — current status: <span className="font-medium">{ctx.status}</span>.
+                </span>
+                . Current status: <span className="font-medium">{ctx.status}</span>.
               </p>
               {error && <p className="text-sm text-destructive">{error}</p>}
               {ctx.status === "revoked" ? (

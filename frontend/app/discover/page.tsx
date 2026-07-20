@@ -1,22 +1,16 @@
 "use client";
 
+import { Clock, Globe, MapPin, RefreshCw, Search, Shuffle, TriangleAlert, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { CategoryIcon, getCategoryMeta } from "@/components/v1/category-icon";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import type { Opportunity } from "@/lib/types";
 
 const CATEGORIES = ["Education", "Environment", "Health", "Animals", "Food & Hunger", "Arts & Culture", "Community", "STEM", "Agriculture"];
-const CAT_EMOJI: Record<string, string> = {
-  Education: "📚", Environment: "🌱", Health: "🏥", Animals: "🐾",
-  "Food & Hunger": "🍎", "Arts & Culture": "🎨", Community: "🤝", STEM: "🔬", Agriculture: "🌾",
-};
-const CAT_BG: Record<string, string> = {
-  Education: "#eef4ff", Environment: "#e8f5ef", Health: "#fdecef", Animals: "#fef3e0",
-  "Food & Hunger": "#fef2f2", "Arts & Culture": "#f5edff", Community: "#e8f5ef", STEM: "#fdf5e0", Agriculture: "#eef7e6",
-};
 const COMMITMENT: Record<string, string> = { one_time: "One-time", weekly: "Weekly", monthly: "Monthly" };
 
 function relDate(iso: string): string {
@@ -81,8 +75,8 @@ export default function DiscoverPage() {
   }
 
   const chips: { cls: string; label: string; clear: () => void }[] = [];
-  if (q) chips.push({ cls: "", label: `🔍 "${q}"`, clear: () => setQ("") });
-  if (category) chips.push({ cls: "fc-cat", label: `📂 ${category}`, clear: () => setCategory("") });
+  if (q) chips.push({ cls: "", label: `"${q}"`, clear: () => setQ("") });
+  if (category) chips.push({ cls: "fc-cat", label: category, clear: () => setCategory("") });
 
   return (
     <V1Shell>
@@ -90,12 +84,12 @@ export default function DiscoverPage() {
         <div style={{ marginBottom: 28 }}>
           <div className="sec-tag">Volunteer Opportunities</div>
           <h2 className="sec-title">Find your next opportunity</h2>
-          <p className="sec-sub">Browse verified organizations near you. Filter by skill, category, date, or commitment.</p>
+          <p className="sec-sub">Browse local organizations and their open opportunities. Filter by category, commitment, and format to find something that fits.</p>
         </div>
 
         {/* ZIP / DISTANCE FILTER (visual — v2 has no geolocation yet) */}
         <div className="zip-filter-wrap">
-          <label>📍 Near ZIP code:</label>
+          <label><MapPin size={13} strokeWidth={1.75} aria-hidden /> Near ZIP code:</label>
           <input className="zip-input" maxLength={5} placeholder="e.g. 60601" />
           <select className="fsel" style={{ padding: "6px 10px", fontSize: ".82rem" }} defaultValue="15">
             <option value="5">Within 5 mi</option>
@@ -105,7 +99,7 @@ export default function DiscoverPage() {
             <option value="50">Within 50 mi</option>
           </select>
           <button className="zip-btn">Apply</button>
-          <span className="zip-status">Searches default to 15 mi. Enter a ZIP or use your location to filter by distance.</span>
+          <span className="zip-status">Searches cover 15 miles by default. Add a ZIP to narrow it down.</span>
         </div>
 
         {/* SEARCH + FILTERS */}
@@ -174,7 +168,7 @@ export default function DiscoverPage() {
           </div>
         ) : error ? (
           <div className="load-error">
-            <div className="empty-icon">⚠️</div>
+            <div className="empty-icon"><TriangleAlert size={40} strokeWidth={1.75} aria-hidden /></div>
             <div className="ferr">Couldn&apos;t load opportunities. Check your connection and try again.</div>
             <div>
               <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={loadOpps}>
@@ -184,8 +178,8 @@ export default function DiscoverPage() {
           </div>
         ) : shown.length === 0 ? (
           <div className="empty">
-            <div className="empty-icon">🔍</div>
-            No opportunities found. Try adjusting your filters.
+            <div className="empty-icon"><Search size={40} strokeWidth={1.75} aria-hidden /></div>
+            Nothing matches those filters yet. Try widening the search.
           </div>
         ) : (
           <div className="cards-grid">
@@ -195,6 +189,7 @@ export default function DiscoverPage() {
               const isRemote = fmt === "remote" || loc.includes("remote");
               const isHybrid = fmt === "hybrid" || loc.includes("hybrid");
               const fmtCls = isRemote ? "format-remote" : isHybrid ? "format-hybrid" : "";
+              const meta = getCategoryMeta(o.category);
               return (
                 <Link
                   key={o.id}
@@ -202,8 +197,8 @@ export default function DiscoverPage() {
                   className={`opp-card ${fmtCls}${o.featured ? " featured" : ""}`}
                 >
                   <div className="oc-top">
-                    <div className="oc-avatar" style={{ background: CAT_BG[o.category] || "#e8f5ef" }}>
-                      {CAT_EMOJI[o.category] || "🏛️"}
+                    <div className="oc-avatar" style={{ background: meta.bg, color: meta.fg }}>
+                      <CategoryIcon category={o.category} size={20} />
                     </div>
                     <div className="badges-row">
                       {o.featured && <span className="badge badge-featured">★ Featured</span>}
@@ -220,18 +215,18 @@ export default function DiscoverPage() {
                     ))}
                   </div>
                   <div className="oc-meta">
-                    <span>📍 {o.location || "TBD"}</span>
-                    <span>⏱ {o.duration_hours} hrs</span>
-                    <span>🔄 {COMMITMENT[o.recurrence] || "One-time"}</span>
-                    <span>👥 {o.spots_remaining ?? 0}/{o.spots_available ?? 0} spots</span>
+                    <span><MapPin size={13} strokeWidth={1.75} aria-hidden />{o.location || "TBD"}</span>
+                    <span><Clock size={13} strokeWidth={1.75} aria-hidden />{o.duration_hours} hrs</span>
+                    <span><RefreshCw size={13} strokeWidth={1.75} aria-hidden />{COMMITMENT[o.recurrence] || "One-time"}</span>
+                    <span><Users size={13} strokeWidth={1.75} aria-hidden />{o.spots_remaining ?? 0}/{o.spots_available ?? 0} spots</span>
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     {isRemote ? (
-                      <span className="format-pip remote">🌐 Remote</span>
+                      <span className="format-pip remote"><Globe size={12} strokeWidth={1.75} aria-hidden />Remote</span>
                     ) : isHybrid ? (
-                      <span className="format-pip hybrid">🔀 Hybrid</span>
+                      <span className="format-pip hybrid"><Shuffle size={12} strokeWidth={1.75} aria-hidden />Hybrid</span>
                     ) : (
-                      <span className="format-pip inperson">📍 In-Person</span>
+                      <span className="format-pip inperson"><MapPin size={12} strokeWidth={1.75} aria-hidden />In-Person</span>
                     )}
                   </div>
                   <div className="oc-footer">

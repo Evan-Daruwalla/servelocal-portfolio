@@ -1,5 +1,6 @@
 "use client";
 
+import { Medal, Rocket, School, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -8,7 +9,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { LeaderboardEntry } from "@/lib/types";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDAL_COLORS = ["var(--gold)", "#9ca3af", "#b45309"];
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
@@ -52,25 +53,25 @@ export default function LeaderboardPage() {
 
             <div className="lb-cols">
               <div>
-                <h3 style={{ color: "var(--dark)", marginBottom: 14 }}>🏆 Top Volunteers</h3>
+                <h3 style={{ color: "var(--dark)", marginBottom: 14 }}><Trophy size={18} strokeWidth={1.75} aria-hidden /> Top Volunteers</h3>
                 {entries.length ? (
                   entries.map((v, i) => (
                     <div key={v.rank} className={`lb-row${i < 3 ? " podium" : ""}`}>
-                      <div className="lb-rank">{MEDALS[i] || "#" + (i + 1)}</div>
+                      <div className="lb-rank">{i < 3 ? <Medal size={16} strokeWidth={1.75} aria-hidden style={{ color: MEDAL_COLORS[i] }} /> : "#" + (i + 1)}</div>
                       <div><div className="lb-name">{v.name}</div></div>
                       <div className="lb-hours"><b>{v.hours}</b><small>hrs verified</small></div>
                     </div>
                   ))
                 ) : (
-                  <div className="empty"><div className="empty-icon">🚀</div>No verified hours yet — be the first on the board!</div>
+                  <div className="empty"><div className="empty-icon"><Rocket size={40} strokeWidth={1.75} aria-hidden /></div>No verified hours yet. Be the first on the board.</div>
                 )}
               </div>
               <div>
-                <h3 style={{ color: "var(--dark)", marginBottom: 14 }}>🏫 Top Schools</h3>
-                <div className="empty">Add your school to your profile to put it on the board!</div>
+                <h3 style={{ color: "var(--dark)", marginBottom: 14 }}><School size={18} strokeWidth={1.75} aria-hidden /> Top Schools</h3>
+                <div className="empty">Add your school to your profile to put it on the board.</div>
                 {!user && (
                   <div style={{ marginTop: 18, textAlign: "center" }}>
-                    <Link className="btn-p" href="/register">Join the board — sign up free</Link>
+                    <Link className="btn-p" href="/register">Sign up free to join the board</Link>
                   </div>
                 )}
               </div>

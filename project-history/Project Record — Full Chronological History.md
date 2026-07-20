@@ -98,6 +98,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.18 — v1 exact-copy complete: all 13 v1 screens rebuilt in v2 with a scoped .v1 architecture (2026-07-13)](#ii18--v1-exact-copy-complete-all-13-v1-screens-rebuilt-in-v2-with-a-scoped-v1-architecture-2026-07-13)
 - [II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)](#ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13)
 - [II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)](#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15)
+- [II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)](#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -1129,6 +1130,44 @@ copy fixed to match behavior. **M11 is now the only open milestone.**
 
 ---
 
+## II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)
+
+*(Written 2026-07-16 ~18:40 CST, cadence catch-up — covers the day's three work blocks.)*
+
+**Prelaunch batch (`0573d69`, `c78b5aa`, `7f8b2c7`, `84be1a4`, `57ca9b0`).** The three
+model-doable items left on the launch list after M11 prep: **server-side logout** (`POST
+/auth/logout` bumps `token_version`, closing ADR-0001's "client-only logout" residual) plus a
+frontend **401 interceptor** that clears the stored token; **backup tooling**
+(`scripts/backup_db.py`: env-only `DATABASE_URL`, `pg_dump -Fc`, `--restore-drill` restores into a
+scratch DB and drops it in a `finally`); **HSTS** header (inert on http, live behind prod TLS, no
+preload). `docs/adr` added to the portfolio-mirror manifest. Tests 209 → 211.
+
+**Copy humanization (`702b139`, `9c64ece`, `7da48b4`, `be4b4df`).** Evan: humanize all site text
+via the-humanizer (Step 6 auto-improvement loop skipped per standing order). All UI surfaces except
+legal pages rewritten; then prose em dashes removed site-wide; then backend-visible copy
+(notification titles, email bodies, error details) humanized too. Two review catches worth
+recording: a worker edited the excluded `privacy/page.tsx` without reporting (reverted), and the
+sweep surfaced **unsubstantiated org-vetting claims** — no vetting flow exists — escalated to Evan,
+who chose soften; copy now cites what's real (public reviews, org-verified hours). Docker compose
+gained the missing `NEXT_PUBLIC_*` build args + Turnstile secret passthrough.
+
+**Clickwrap ToS + onboarding (`5b0c5cc`).** Evan's ask, after auditing the opus-workers loop
+(finding: review is real — evidenced by the catches above — but the redo-round mechanism never
+fired; every defect was small enough to patch inline). Registration now requires an explicit
+`accepted_terms` (missing → 422, false → 400; `users.terms_accepted_at` stamped, migration
+**0023**, up/down/up verified); frontend replaces the passive terms line with an
+unchecked-by-default checkbox gating submit. New role-aware **`/welcome` onboarding** (minor:
+"Approval on the way"; adult: Browse→Apply→Log hours; org: Post→Review→Verify). Tests 211 →
+**215**; E2E on the rebuilt Docker stack: 422/400/201 curl matrix, real-form registration → adult
+and minor `/welcome` variants, zero console errors. Migration-chain bins synced 0022 → 0023.
+Notably the first worker round needing **zero** review patches — both prompts shared an explicit
+API contract.
+
+**STATUS:** M11 remains the only open milestone; everything on it is BLOCKED-ON-EVAN (host, DNS,
+prod secrets, Resend key, Turnstile keys, legal sign-off). `5b0c5cc` not yet pushed.
+
+---
+
 ## Summary timeline
 
 | Date | Era | Event | Evidence |
@@ -1176,6 +1215,9 @@ copy fixed to match behavior. **M11 is now the only open milestone.**
 | 2026-07-15 | v2 | 33-item launch checklist reviewed → PRD M13 hardening plan (CSP, deletion/export, SEO meta, resilience UX) | PRD `§6 M13`, HANDOFF 2026-07-15 |
 | 2026-07-16 | v2 | M13 executed via Opus workers + orchestrator review: CSP, GDPR deletion/export (E2E-verified, 200 tests), sitemap/OG, skeletons+retry | `e5aa990`→`dcf87cc` |
 | 2026-07-16 | v2 | M11 model-doable prep complete (same pattern): ADR 0001 token-storage, Turnstile off-by-default (209 tests), Terms/Privacy drafts, Railway config + runbook (found the migrations-not-in-image bug), ADR 0002 billing. All remaining M11 steps BLOCKED-ON-EVAN | `1c81dc5`→`9009382` |
+| 2026-07-16 | v2 | Prelaunch batch: server-side logout + 401 interceptor, pg_dump backup + restore drill, HSTS (211 tests) | `0573d69`, `c78b5aa`, `7f8b2c7` |
+| 2026-07-16 | v2 | Site-wide copy humanization + em-dash removal + truthful org-trust claims + backend email/notification copy; compose build args fixed | `702b139`→`be4b4df` |
+| 2026-07-16 | v2 | Clickwrap ToS/privacy at register (migration 0023, 215 tests) + role-aware /welcome onboarding | `5b0c5cc` |
 
 ## What's not in this record (honest gaps)
 

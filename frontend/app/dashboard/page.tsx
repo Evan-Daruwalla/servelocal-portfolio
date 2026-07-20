@@ -1,5 +1,6 @@
 "use client";
 
+import { Bookmark, CalendarDays, ChartColumn, ClipboardList, Clock, Download, Lock, MapPin, Plus, Settings, TriangleAlert, Trophy, User, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -10,15 +11,15 @@ import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import type { ApplicationWithOpportunity, HoursWithOpportunity, MyAwards, Opportunity } from "@/lib/types";
 
 type Tab = "calendar" | "history" | "log" | "saved" | "awards" | "impact" | "profile" | "account";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "calendar", label: "📅 Calendar" },
-  { id: "history", label: "📋 Hours History" },
-  { id: "log", label: "➕ Log Hours" },
-  { id: "saved", label: "🔖 Saved" },
-  { id: "awards", label: "🏆 Awards" },
-  { id: "impact", label: "📊 Impact" },
-  { id: "profile", label: "👤 Profile" },
-  { id: "account", label: "⚙️ Account" },
+const TABS: { id: Tab; label: string; Icon: LucideIcon }[] = [
+  { id: "calendar", label: "Calendar", Icon: CalendarDays },
+  { id: "history", label: "Hours History", Icon: ClipboardList },
+  { id: "log", label: "Log Hours", Icon: Plus },
+  { id: "saved", label: "Saved", Icon: Bookmark },
+  { id: "awards", label: "Awards", Icon: Trophy },
+  { id: "impact", label: "Impact", Icon: ChartColumn },
+  { id: "profile", label: "Profile", Icon: User },
+  { id: "account", label: "Account", Icon: Settings },
 ];
 const HOURS_STATUS: Record<string, [string, string]> = {
   pending: ["sp-pending", "Pending"],
@@ -103,7 +104,7 @@ export default function DashboardPage() {
     try {
       await api.redeemCheckin(ciOpp, ciCode.trim().toUpperCase(), token);
       setCiCode("");
-      setMsg("Checked in — hours verified!");
+      setMsg("Checked in. Hours verified!");
       refresh();
     } catch (err) {
       setMsg(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -168,7 +169,7 @@ export default function DashboardPage() {
   // skeleton-while-loading + inline error+Retry covers every data tab.
   const sectionError = (
     <div className="load-error">
-      <div className="empty-icon">⚠️</div>
+      <div className="empty-icon"><TriangleAlert size={40} strokeWidth={1.75} aria-hidden /></div>
       <div className="ferr">Couldn&apos;t load your data. Check your connection and try again.</div>
       <div>
         <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={refresh}>
@@ -223,7 +224,7 @@ export default function DashboardPage() {
             <div className="ds-nav">
               {TABS.map((t) => (
                 <button key={t.id} className={`ds-link${tab === t.id ? " on" : ""}`} onClick={() => setTab(t.id)}>
-                  {t.label}
+                  <t.Icon size={15} strokeWidth={1.75} aria-hidden />{t.label}
                 </button>
               ))}
             </div>
@@ -260,7 +261,7 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
-              {eventDays.size === 0 && <p className="progress-label" style={{ marginTop: 12 }}>No signups this month — <Link href="/discover">find an opportunity</Link>.</p>}
+              {eventDays.size === 0 && <p className="progress-label" style={{ marginTop: 12 }}>No signups this month: <Link href="/discover">find an opportunity</Link>.</p>}
               </>
               )}
             </div>
@@ -270,7 +271,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="dash-h">Hours History</h1>
               {dataError ? sectionError : dataLoading ? skelPanel : hours.length === 0 ? (
-                <div className="empty"><div className="empty-icon">📋</div>No hours logged yet — they log automatically once an event passes.</div>
+                <div className="empty"><div className="empty-icon"><ClipboardList size={40} strokeWidth={1.75} aria-hidden /></div>No hours logged yet. They log automatically once an event passes.</div>
               ) : (
                 <table className="tbl">
                   <thead>
@@ -295,7 +296,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="dash-h">Log Hours</h1>
               {dataError ? sectionError : dataLoading ? skelPanel : oppOptions.length === 0 ? (
-                <div className="empty"><div className="empty-icon">➕</div>Apply to an opportunity first, then log or check in here.</div>
+                <div className="empty"><div className="empty-icon"><Plus size={40} strokeWidth={1.75} aria-hidden /></div>Apply to an opportunity first, then log or check in here.</div>
               ) : (
                 <>
                   <div className="form-box">
@@ -334,14 +335,14 @@ export default function DashboardPage() {
             <div>
               <h1 className="dash-h">Saved</h1>
               {dataError ? sectionError : dataLoading ? skelGrid : saved.length === 0 ? (
-                <div className="empty"><div className="empty-icon">🔖</div>No bookmarks yet — tap the heart on any opportunity.</div>
+                <div className="empty"><div className="empty-icon"><Bookmark size={40} strokeWidth={1.75} aria-hidden /></div>No bookmarks yet. Tap the heart on any opportunity.</div>
               ) : (
                 <div className="cards-grid">
                   {saved.map((o) => (
                     <Link key={o.id} href={`/opportunities/${o.id}`} className="opp-card">
                       <div className="oc-title">{o.title}</div>
                       <div className="oc-org">{o.org_name}</div>
-                      <div className="oc-meta"><span>📍 {o.location}</span><span>⏱ {o.duration_hours} hrs</span></div>
+                      <div className="oc-meta"><span><MapPin size={13} strokeWidth={1.75} aria-hidden />{o.location}</span><span><Clock size={13} strokeWidth={1.75} aria-hidden />{o.duration_hours} hrs</span></div>
                     </Link>
                   ))}
                 </div>
@@ -351,12 +352,12 @@ export default function DashboardPage() {
 
           {tab === "awards" && (
             <div>
-              <h1 className="dash-h">Awards — {awards?.verified_hours ?? 0} verified hours</h1>
+              <h1 className="dash-h">Awards: {awards?.verified_hours ?? 0} verified hours</h1>
               {dataError ? sectionError : dataLoading ? skelPanel : (
               <>
               {(awards?.earned ?? []).map((a) => (
                 <div key={a.id} className="award-card">
-                  <div className="award-icon award-achieved">🏆</div>
+                  <div className="award-icon award-achieved"><Trophy size={24} strokeWidth={1.75} aria-hidden /></div>
                   <div className="award-info">
                     <div className="award-name">{a.name}</div>
                     <div className="award-desc">Achieved</div>
@@ -366,7 +367,7 @@ export default function DashboardPage() {
               ))}
               {awards?.next && (
                 <div className="award-card">
-                  <div className="award-icon award-locked">🔒</div>
+                  <div className="award-icon award-locked"><Lock size={24} strokeWidth={1.75} aria-hidden /></div>
                   <div className="award-info">
                     <div className="award-name">{awards.next.name}</div>
                     <div className="award-desc">{awards.next.hours - awards.verified_hours}h to go ({awards.next.hours}h)</div>
@@ -375,7 +376,7 @@ export default function DashboardPage() {
                 </div>
               )}
               {(awards?.earned.length ?? 0) === 0 && !awards?.next && (
-                <div className="empty"><div className="empty-icon">🏆</div>Log verified hours to start earning awards.</div>
+                <div className="empty"><div className="empty-icon"><Trophy size={40} strokeWidth={1.75} aria-hidden /></div>Log verified hours to start earning awards.</div>
               )}
               </>
               )}
@@ -411,14 +412,14 @@ export default function DashboardPage() {
               <h1 className="dash-h">Account</h1>
               <div className="form-box">
                 <div className="fr"><label>Download my data</label></div>
-                <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 12 }}>Export a copy of your ServeLocal data — profile, applications, hours, messages, reviews, and notifications — as a JSON file.</p>
-                <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}>⬇ Download my data (JSON)</button>
+                <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 12 }}>Download everything ServeLocal has on you as one JSON file: profile, applications, hours, messages, reviews, and notifications.</p>
+                <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}><Download size={15} strokeWidth={1.75} aria-hidden /> Download my data (JSON)</button>
               </div>
               <div className="delete-zone">
-                <h4>⚠️ Delete Account</h4>
+                <h4><TriangleAlert size={16} strokeWidth={1.75} aria-hidden /> Delete Account</h4>
                 <p>
                   Your verified hours are kept for the organizations that recorded them, with your name removed.
-                  Everything else — your profile, guardian information, saved items, and notifications — is permanently erased.
+                  Everything else (your profile, guardian information, saved items, and notifications) is permanently erased.
                   <strong> This cannot be undone.</strong>
                 </p>
                 <div className="fr">

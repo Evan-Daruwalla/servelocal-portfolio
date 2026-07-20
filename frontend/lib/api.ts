@@ -90,6 +90,7 @@ export const api = {
     guardian_name?: string;
     guardian_email?: string;
     turnstile_token?: string;
+    accepted_terms?: boolean;
   }) => request<User>("/auth/register", { method: "POST", body: JSON.stringify(input) }),
 
   login: (input: { email: string; password: string }) =>

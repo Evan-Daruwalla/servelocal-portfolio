@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,7 +44,7 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
               {/* Notifications + inbox lived only in the suppressed shadcn header,
                   orphaning both features on v1 screens (audit 2026-07-13 #3). */}
               <Link className="nl" href="/notifications" aria-label="Notifications" title="Notifications">
-                🔔
+                <Bell size={17} strokeWidth={1.75} aria-hidden />
               </Link>
               <Link className="nl" href="/inbox">
                 Inbox
@@ -73,7 +74,7 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
             <span className="nav-wordmark">
               Serve<span>Local</span>
             </span>
-            <p>Verified community service for students — free forever.</p>
+            <p>Verified community service for students. Free forever.</p>
           </div>
           <div className="footer-links">
             <Link href="/discover">Find Opportunities</Link>

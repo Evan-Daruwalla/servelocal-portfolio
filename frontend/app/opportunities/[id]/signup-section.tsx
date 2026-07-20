@@ -9,8 +9,8 @@ import type { Opportunity } from "@/lib/types";
 
 const STATUS_MESSAGE: Record<string, string> = {
   approved: "You're signed up!",
-  pending: "Application submitted — pending approval.",
-  waitlisted: "You're on the waitlist — we'll sign you up if a spot frees.",
+  pending: "Application submitted. Pending approval.",
+  waitlisted: "You're on the waitlist. We'll sign you up if a spot frees.",
 };
 
 export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: () => void }) {

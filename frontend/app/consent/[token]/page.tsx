@@ -54,8 +54,8 @@ export default function ConsentDecisionPage() {
                   {ctx.student_first_name} {ctx.student_last_initial}
                   {ctx.student_last_initial ? "." : ""}
                 </span>{" "}
-                listed you as their parent or guardian. They need your approval before they can sign
-                up for any opportunity. You can revoke this at any time.
+                listed you as their parent or guardian. They can&apos;t sign up for any volunteer
+                opportunity until you approve. You can revoke your approval anytime.
               </p>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-3">

@@ -1,5 +1,6 @@
 "use client";
 
+import { GraduationCap, Landmark } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -30,6 +31,7 @@ export default function RegisterPage() {
   const [guardianName, setGuardianName] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,8 +51,9 @@ export default function RegisterPage() {
         ...(role === "student" ? { dob } : {}),
         ...(isMinor ? { guardian_name: guardianName, guardian_email: guardianEmail } : {}),
         ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+        accepted_terms: true,
       });
-      router.push("/");
+      router.push("/welcome");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {
@@ -64,18 +67,18 @@ export default function RegisterPage() {
         <div className="modal-card">
           <div className="mhdr">
             <div className="mtitle">Welcome to ServeLocal</div>
-            <div className="msub">Connecting students with meaningful service</div>
+            <div className="msub">Find community service and track your hours</div>
           </div>
           <div className="mbody">
             <p style={{ fontSize: ".85rem", color: "var(--muted)", marginBottom: 16 }}>I am signing up as a…</p>
             <div className="auth-role-btns">
               <div className={`role-btn${role === "student" ? " on" : ""}`} onClick={() => setRole("student")}>
-                <div className="rb-icon">🎓</div>
+                <div className="rb-icon"><GraduationCap size={28} strokeWidth={1.75} aria-hidden /></div>
                 <div className="rb-label">Student</div>
                 <div className="rb-sub">Find volunteer opportunities</div>
               </div>
               <div className={`role-btn${role === "org" ? " on" : ""}`} onClick={() => setRole("org")}>
-                <div className="rb-icon">🏛️</div>
+                <div className="rb-icon"><Landmark size={28} strokeWidth={1.75} aria-hidden /></div>
                 <div className="rb-label">Organization</div>
                 <div className="rb-sub">Post opportunities &amp; verify hours</div>
               </div>
@@ -116,15 +119,25 @@ export default function RegisterPage() {
                 </div>
               )}
               <TurnstileWidget onToken={setTurnstileToken} />
-              <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting}>
+              <div className="fr" style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 4 }}>
+                <input
+                  id="accept-terms"
+                  type="checkbox"
+                  required
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: "pointer" }}
+                />
+                <label htmlFor="accept-terms" style={{ display: "block", textTransform: "none", fontWeight: 400, letterSpacing: "normal", fontSize: ".8rem", lineHeight: 1.5, color: "var(--muted)", marginBottom: 0, cursor: "pointer" }}>
+                  I have read and agree to the{" "}
+                  <Link href="/terms" target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--green)", fontWeight: 600 }}>Terms of Service</Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--green)", fontWeight: 600 }}>Privacy Policy</Link>.
+                </label>
+              </div>
+              <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting || !acceptedTerms}>
                 {submitting ? "Creating account…" : role === "org" ? "Register Organization" : "Create Student Account"}
               </button>
-              <p style={{ fontSize: ".76rem", color: "var(--muted)", textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
-                By signing up you agree to our{" "}
-                <Link href="/terms" style={{ color: "var(--green)", fontWeight: 600 }}>Terms of Service</Link>{" "}
-                and{" "}
-                <Link href="/privacy" style={{ color: "var(--green)", fontWeight: 600 }}>Privacy Policy</Link>.
-              </p>
             </form>
             <p style={{ fontSize: ".8rem", color: "var(--muted)", textAlign: "center", marginTop: 14 }}>
               Already have an account?{" "}

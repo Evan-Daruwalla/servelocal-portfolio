@@ -52,7 +52,7 @@ export function ConsentBanner() {
             {busy ? "Sending…" : "Resend approval email"}
           </Button>
           <Button variant="outline" onClick={refresh}>
-            I&apos;ve been approved — refresh
+            I&apos;ve been approved. Refresh
           </Button>
         </div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { GraduationCap, Star } from "lucide-react";
 import Link from "next/link";
 
 import { V1Shell } from "@/components/v1/v1-shell";
@@ -7,7 +8,7 @@ import { V1Shell } from "@/components/v1/v1-shell";
 const FAQ = [
   {
     q: "Why isn’t ServeLocal free for organizations too?",
-    a: "The Community plan is free and always will be — most small organizations never need more. Pro subscriptions from larger organizations are what fund hosting, vetting, and verification so students never pay a cent.",
+    a: "The Community plan is free and always will be, and most small organizations never need more. Pro subscriptions from larger organizations fund hosting and verification, which is how students stay free.",
   },
   {
     q: "What does “Featured” actually do?",
@@ -15,11 +16,11 @@ const FAQ = [
   },
   {
     q: "Can I cancel Pro anytime?",
-    a: "Yes — downgrade with one click. Your existing listings stay live; you just can’t add new ones beyond the Community limit, and featured pins are released.",
+    a: "Yes. Downgrade with one click. Your existing listings stay live; you just can’t add new ones beyond the Community limit, and featured pins are released.",
   },
   {
-    q: "How are organizations vetted?",
-    a: "Orgs register with an official email domain (or submit proof for manual review), and a ServeLocal admin approves every organization before its listings go live.",
+    q: "How do I know an organization is legit?",
+    a: "Students rate and review organizations publicly, and every hour you log has to be verified by the organization before it counts. Nothing on a transcript comes from an unconfirmed source.",
   },
 ];
 
@@ -32,7 +33,7 @@ export default function PricingPage() {
           Free for students. <em style={{ color: "var(--green-l)", fontStyle: "italic" }}>Fair</em> for organizations.
         </h2>
         <p className="sec-sub" style={{ margin: "0 auto" }}>
-          Start free, upgrade when you’re ready to grow. Plans fund the platform so students never pay a cent.
+          Start free, upgrade when you’re ready to grow. Org plans fund the platform so students never have to pay.
         </p>
 
         <div className="price-grid">
@@ -52,13 +53,13 @@ export default function PricingPage() {
           </div>
           <div className="price-card pro">
             <div className="pc-flag">Most Popular</div>
-            <div className="pc-name">Pro ⭐</div>
+            <div className="pc-name">Pro <Star size={16} strokeWidth={1.75} aria-hidden style={{ color: "var(--gold)" }} /></div>
             <div className="pc-price">$19<span> / month</span></div>
             <div className="pc-blurb">For organizations that run many programs and want to grow faster.</div>
             <ul className="pc-list">
               <li>Everything in Community</li>
               <li className="pc-star">Unlimited active listings</li>
-              <li className="pc-star">3 Featured listings — pinned to the top of search</li>
+              <li className="pc-star">3 Featured listings, pinned to the top of search</li>
               <li className="pc-star">Analytics dashboard: views, fill rates, retention</li>
               <li className="pc-star">Volunteer roster CSV export</li>
               <li className="pc-star">Priority support</li>
@@ -68,10 +69,10 @@ export default function PricingPage() {
         </div>
 
         <div className="student-free-note">
-          🎓 <strong>Students never pay. Ever.</strong> Browsing, signing up, hour verification, awards, portfolios, and transcripts are free forever — that’s the whole point of ServeLocal.
+          <GraduationCap size={16} strokeWidth={1.75} aria-hidden /> <strong>Students never pay. Ever.</strong> Browsing, signing up, hour verification, awards, portfolios, and transcripts are free forever. That’s the whole point of ServeLocal.
         </div>
         <p style={{ fontSize: ".76rem", color: "var(--muted)", marginTop: 14 }}>
-          Checkout is currently in demo mode — no payment is collected. Stripe goes live with deployment.
+          Checkout is in demo mode right now, so no payment is collected. Stripe goes live with deployment.
         </p>
 
         <div className="faq-wrap">

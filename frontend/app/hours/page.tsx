@@ -94,7 +94,7 @@ export default function MyHoursPage() {
     try {
       await api.redeemCheckin(ciOpp, ciCode.trim().toUpperCase(), token);
       setCiCode("");
-      setFormMsg("Checked in — hours verified!");
+      setFormMsg("Checked in. Hours verified!");
       refresh();
     } catch (err) {
       setFormMsg(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -122,7 +122,7 @@ export default function MyHoursPage() {
       {awards && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Awards — {awards.verified_hours} verified hours</CardTitle>
+            <CardTitle className="text-lg">Awards: {awards.verified_hours} verified hours</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1 text-sm">
             {awards.earned.length > 0 ? (
@@ -212,7 +212,7 @@ export default function MyHoursPage() {
 
       {fetching && <p className="empty-state">Loading…</p>}
       {!fetching && entries.length === 0 && (
-        <div className="empty-state">No hours logged yet — they log automatically once an event passes.</div>
+        <div className="empty-state">No hours logged yet. They log automatically once an event passes.</div>
       )}
 
       <div className="flex flex-col gap-4">

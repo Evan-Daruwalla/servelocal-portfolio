@@ -56,7 +56,7 @@ export function MessagesSection({ opportunityId }: { opportunityId: string }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {messages && messages.length === 0 && (
-          <p className="text-sm text-muted-foreground">No messages yet — start the conversation.</p>
+          <p className="text-sm text-muted-foreground">No messages yet. Start the conversation.</p>
         )}
         {messages?.map((m) => (
           <div key={m.id} className="text-sm">

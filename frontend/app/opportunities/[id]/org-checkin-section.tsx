@@ -55,7 +55,7 @@ export function OrgCheckinSection({ opp }: { opp: Opportunity }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <p className="text-sm text-muted-foreground">
-          Generate a code and share it at the event — signed-up volunteers redeem it for instantly-verified hours.
+          Generate a code and share it at the event. Signed-up volunteers redeem it for instantly-verified hours.
         </p>
         <div className="flex gap-2">
           <select

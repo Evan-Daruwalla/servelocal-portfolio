@@ -1,5 +1,6 @@
 "use client";
 
+import { Link2, Lock, Printer, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -47,7 +48,7 @@ export default function PortfolioPage() {
       <V1Shell>
         <div className="section" style={{ maxWidth: 620, textAlign: "center" }}>
           <div className="empty">
-            <div className="empty-icon">🔒</div>
+            <div className="empty-icon"><Lock size={40} strokeWidth={1.75} aria-hidden /></div>
             Your verified-service transcript lives here. <Link href="/login">Log in</Link> as a student to view it.
           </div>
         </div>
@@ -73,7 +74,7 @@ export default function PortfolioPage() {
     <V1Shell>
       <div className="section" style={{ maxWidth: 680 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.6rem", color: "var(--dark)", marginBottom: 4 }}>{user.full_name || "Your"} — Verified Service Transcript</h2>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.6rem", color: "var(--dark)", marginBottom: 4 }}>{user.full_name || "Your"}: Verified Service Transcript</h2>
           <p style={{ color: "var(--muted)", fontSize: ".88rem" }}>Every hour below was verified by the hosting organization.</p>
         </div>
 
@@ -100,19 +101,19 @@ export default function PortfolioPage() {
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <h4 style={{ fontSize: ".92rem", color: "var(--dark)", marginBottom: 10 }}>🏆 Awards</h4>
+          <h4 style={{ fontSize: ".92rem", color: "var(--dark)", marginBottom: 10 }}><Trophy size={16} strokeWidth={1.75} aria-hidden /> Awards</h4>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {earned.length ? earned.map((a) => (
-              <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "var(--green-pale)", border: "1px solid var(--green-mid)", padding: "6px 12px", borderRadius: 100, fontSize: ".78rem", fontWeight: 600, color: "var(--green)" }}>🏆 {a.name}</span>
+              <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "var(--green-pale)", border: "1px solid var(--green-mid)", padding: "6px 12px", borderRadius: 100, fontSize: ".78rem", fontWeight: 600, color: "var(--green)" }}><Trophy size={13} strokeWidth={1.75} aria-hidden />{a.name}</span>
             )) : (
-              <span style={{ color: "var(--muted)", fontSize: ".83rem" }}>No awards yet — they unlock automatically as verified hours add up.</span>
+              <span style={{ color: "var(--muted)", fontSize: ".83rem" }}>No awards yet. They show up on their own as your verified hours add up.</span>
             )}
           </div>
         </div>
 
         <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 20, flexWrap: "wrap" }}>
-          <button className="btn-s" style={{ padding: "10px 20px" }} onClick={() => window.print()}>🖨 Print</button>
-          {isPublic && <button className="btn-s" style={{ padding: "10px 20px" }} onClick={copyLink}>{copied ? "Copied ✓" : "🔗 Copy Public Link"}</button>}
+          <button className="btn-s" style={{ padding: "10px 20px" }} onClick={() => window.print()}><Printer size={15} strokeWidth={1.75} aria-hidden /> Print</button>
+          {isPublic && <button className="btn-s" style={{ padding: "10px 20px" }} onClick={copyLink}>{copied ? "Copied ✓" : <><Link2 size={15} strokeWidth={1.75} aria-hidden /> Copy Public Link</>}</button>}
         </div>
 
         <div className="form-box" style={{ maxWidth: 520, margin: "22px auto 0" }}>
@@ -120,7 +121,7 @@ export default function PortfolioPage() {
             <input type="checkbox" checked={isPublic} onChange={(e) => togglepublic(e.target.checked)} style={{ width: 15, height: 15, marginTop: 3, accentColor: "var(--green)" }} />
             <span style={{ fontSize: ".85rem", color: "var(--text)" }}>
               <strong>Make my transcript public.</strong> Anyone with the link can view your verified hours,
-              organizations, and awards — good for college and scholarship applications. Off by default.
+              organizations, and awards (good for college and scholarship applications). Off by default.
             </span>
           </label>
         </div>

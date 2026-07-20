@@ -133,7 +133,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii17--m10-verified-m12-v1-visual-parity-record-html-twin-auto-synced-by-a-git-hook-2026-07-12">II.17 — M10 verified; M12 v1 visual parity; record HTML twin auto-synced by a git hook (2026-07-12)</a><br />
 - <a href="#ii18--v1-exact-copy-complete-all-13-v1-screens-rebuilt-in-v2-with-a-scoped-v1-architecture-2026-07-13">II.18 — v1 exact-copy complete: all 13 v1 screens rebuilt in v2 with a scoped .v1 architecture (2026-07-13)</a><br />
 - <a href="#ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13">II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)</a><br />
-- <a href="#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15">II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)</a></p>
+- <a href="#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15">II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)</a><br />
+- <a href="#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -1022,6 +1023,37 @@ recording: OG wordmark corrected to v1's dark-band treatment (spec itself had sa
 delete-copy overpromised name removal (backend keeps <code>org_name</code> so student transcripts survive) —<br />
 copy fixed to match behavior. <strong>M11 is now the only open milestone.</strong></p>
 <hr />
+<h2 id="ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</h2>
+<p><em>(Written 2026-07-16 ~18:40 CST, cadence catch-up — covers the day's three work blocks.)</em></p>
+<p><strong>Prelaunch batch (<code>0573d69</code>, <code>c78b5aa</code>, <code>7f8b2c7</code>, <code>84be1a4</code>, <code>57ca9b0</code>).</strong> The three<br />
+model-doable items left on the launch list after M11 prep: <strong>server-side logout</strong> (<code>POST
+/auth/logout</code> bumps <code>token_version</code>, closing ADR-0001's "client-only logout" residual) plus a<br />
+frontend <strong>401 interceptor</strong> that clears the stored token; <strong>backup tooling</strong><br />
+(<code>scripts/backup_db.py</code>: env-only <code>DATABASE_URL</code>, <code>pg_dump -Fc</code>, <code>--restore-drill</code> restores into a<br />
+scratch DB and drops it in a <code>finally</code>); <strong>HSTS</strong> header (inert on http, live behind prod TLS, no<br />
+preload). <code>docs/adr</code> added to the portfolio-mirror manifest. Tests 209 → 211.</p>
+<p><strong>Copy humanization (<code>702b139</code>, <code>9c64ece</code>, <code>7da48b4</code>, <code>be4b4df</code>).</strong> Evan: humanize all site text<br />
+via the-humanizer (Step 6 auto-improvement loop skipped per standing order). All UI surfaces except<br />
+legal pages rewritten; then prose em dashes removed site-wide; then backend-visible copy<br />
+(notification titles, email bodies, error details) humanized too. Two review catches worth<br />
+recording: a worker edited the excluded <code>privacy/page.tsx</code> without reporting (reverted), and the<br />
+sweep surfaced <strong>unsubstantiated org-vetting claims</strong> — no vetting flow exists — escalated to Evan,<br />
+who chose soften; copy now cites what's real (public reviews, org-verified hours). Docker compose<br />
+gained the missing <code>NEXT_PUBLIC_*</code> build args + Turnstile secret passthrough.</p>
+<p><strong>Clickwrap ToS + onboarding (<code>5b0c5cc</code>).</strong> Evan's ask, after auditing the opus-workers loop<br />
+(finding: review is real — evidenced by the catches above — but the redo-round mechanism never<br />
+fired; every defect was small enough to patch inline). Registration now requires an explicit<br />
+<code>accepted_terms</code> (missing → 422, false → 400; <code>users.terms_accepted_at</code> stamped, migration<br />
+<strong>0023</strong>, up/down/up verified); frontend replaces the passive terms line with an<br />
+unchecked-by-default checkbox gating submit. New role-aware <strong><code>/welcome</code> onboarding</strong> (minor:<br />
+"Approval on the way"; adult: Browse→Apply→Log hours; org: Post→Review→Verify). Tests 211 →<br />
+<strong>215</strong>; E2E on the rebuilt Docker stack: 422/400/201 curl matrix, real-form registration → adult<br />
+and minor <code>/welcome</code> variants, zero console errors. Migration-chain bins synced 0022 → 0023.<br />
+Notably the first worker round needing <strong>zero</strong> review patches — both prompts shared an explicit<br />
+API contract.</p>
+<p><strong>STATUS:</strong> M11 remains the only open milestone; everything on it is BLOCKED-ON-EVAN (host, DNS,<br />
+prod secrets, Resend key, Turnstile keys, legal sign-off). <code>5b0c5cc</code> not yet pushed.</p>
+<hr />
 <h2 id="summary-timeline">Summary timeline</h2>
 <table>
 <thead>
@@ -1290,6 +1322,24 @@ copy fixed to match behavior. <strong>M11 is now the only open milestone.</stron
 <td>v2</td>
 <td>M11 model-doable prep complete (same pattern): ADR 0001 token-storage, Turnstile off-by-default (209 tests), Terms/Privacy drafts, Railway config + runbook (found the migrations-not-in-image bug), ADR 0002 billing. All remaining M11 steps BLOCKED-ON-EVAN</td>
 <td><code>1c81dc5</code>→<code>9009382</code></td>
+</tr>
+<tr>
+<td>2026-07-16</td>
+<td>v2</td>
+<td>Prelaunch batch: server-side logout + 401 interceptor, pg_dump backup + restore drill, HSTS (211 tests)</td>
+<td><code>0573d69</code>, <code>c78b5aa</code>, <code>7f8b2c7</code></td>
+</tr>
+<tr>
+<td>2026-07-16</td>
+<td>v2</td>
+<td>Site-wide copy humanization + em-dash removal + truthful org-trust claims + backend email/notification copy; compose build args fixed</td>
+<td><code>702b139</code>→<code>be4b4df</code></td>
+</tr>
+<tr>
+<td>2026-07-16</td>
+<td>v2</td>
+<td>Clickwrap ToS/privacy at register (migration 0023, 215 tests) + role-aware /welcome onboarding</td>
+<td><code>5b0c5cc</code></td>
 </tr>
 </tbody>
 </table>

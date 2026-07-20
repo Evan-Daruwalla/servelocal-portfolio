@@ -47,7 +47,7 @@ function BillingInner() {
       </div>
 
       {status === "success" && (
-        <p className="text-sm text-primary">Payment received — your plan updates once Stripe confirms.</p>
+        <p className="text-sm text-primary">Payment received. Your plan flips to Pro once Stripe confirms it.</p>
       )}
       {status === "cancelled" && <p className="text-sm text-muted-foreground">Checkout cancelled.</p>}
 
@@ -67,7 +67,7 @@ function BillingInner() {
           </p>
           {isPro ? (
             <p className="text-muted-foreground">
-              Manage or cancel from your Stripe receipt email — cancelling downgrades you to Free.
+              Cancel any time from your Stripe receipt email. Cancelling drops you back to Free.
             </p>
           ) : (
             <Button disabled={busy} onClick={upgrade} className="self-start">
