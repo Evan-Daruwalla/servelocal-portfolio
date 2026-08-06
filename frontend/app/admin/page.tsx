@@ -1,10 +1,12 @@
 "use client";
 
 import { BadgeCheck, Flag, Landmark } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 type Tab = "pending" | "all-orgs" | "reports";
 
@@ -15,16 +17,29 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export default function AdminPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("pending");
   const [stats, setStats] = useState({ opps: 0, orgs: 0, students: 0 });
 
+  // This page had NO gate: any visitor got an "Admin — ServeLocal Dashboard" with
+  // platform-wide counts (audit 2026-08-05). The real authorization is server-side
+  // on every admin route (is_platform_admin); this just stops rendering an
+  // operator surface to the public.
   useEffect(() => {
+    if (!loading && !user?.is_admin) router.replace("/");
+  }, [loading, user, router]);
+
+  useEffect(() => {
+    if (!user?.is_admin) return;
     Promise.all([api.listOpportunities({}), api.leaderboard()])
       .then(([opps, board]) => {
         setStats({ opps: opps.length, orgs: new Set(opps.map((o) => o.org_id)).size, students: board.length });
       })
       .catch(() => {});
-  }, []);
+  }, [user]);
+
+  if (loading || !user?.is_admin) return null;
 
   return (
     <V1Shell>

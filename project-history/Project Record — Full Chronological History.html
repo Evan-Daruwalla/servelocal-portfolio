@@ -134,7 +134,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii18--v1-exact-copy-complete-all-13-v1-screens-rebuilt-in-v2-with-a-scoped-v1-architecture-2026-07-13">II.18 — v1 exact-copy complete: all 13 v1 screens rebuilt in v2 with a scoped .v1 architecture (2026-07-13)</a><br />
 - <a href="#ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13">II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)</a><br />
 - <a href="#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15">II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)</a><br />
-- <a href="#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</a></p>
+- <a href="#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</a><br />
+- <a href="#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05">II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -1054,6 +1055,86 @@ API contract.</p>
 <p><strong>STATUS:</strong> M11 remains the only open milestone; everything on it is BLOCKED-ON-EVAN (host, DNS,<br />
 prod secrets, Resend key, Turnstile keys, legal sign-off). <code>5b0c5cc</code> not yet pushed.</p>
 <hr />
+<h2 id="ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05">II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)</h2>
+<p><strong>WHAT.</strong> Ran <code>/audit</code> twice. Pass 1 established the tooling baseline. Pass 2 was two cold agents<br />
+in parallel with disjoint scopes: a <strong>live-stack</strong> auditor owning the containers (M8 data-at-rest,<br />
+live-endpoint M6, G1/G2 executed against real HTTP) and a <strong>static</strong> auditor barred from Docker<br />
+(frontend surface, M2 call-site contracts, M1 invariants, M3 error exit-gates, M4, M7, G3/G4).<br />
+Docker had been down for weeks and came back mid-session, which is the only reason M8 and live-M6<br />
+were reachable at all — pass 1 had to mark them <code>not swept</code>. Evan then approved fixing everything<br />
+through P2.</p>
+<p><strong>THE CRIT — M5 guardian consent, the documented hard launch gate, did not function end to end.</strong><br />
+<code>ConsentBanner</code> was the only caller of <code>POST /consent/request</code>, which is the only path that emails<br />
+a guardian — and the component was never mounted on any page (<code>grep</code> returned exactly one hit: its<br />
+own definition, cross-checked with two tools). <code>register</code> set <code>pending</code> and sent nothing;<br />
+<code>auth.py:114-115</code> said so in a comment. So <strong>every minor who ever registered landed in a permanent<br />
+gate no guardian was ever told about</strong>, while three UI surfaces told the student an email had been<br />
+sent. All 215 tests were green the entire time, because every one of them calls the API directly<br />
+and never exercises a React component. This is the single most important finding in the project's<br />
+history to date: the milestone Evan designated "the hard launch gate: no public launch with minors<br />
+before it is live" was shipped, marked complete, and did not work.</p>
+<p>Fixed at the chokepoint rather than the symptom: extracted <code>services/consent_invite.py</code> and fired<br />
+it server-side at the end of <code>register</code>, so the gate no longer depends on any UI being mounted.<br />
+The banner was mounted too and restyled from shadcn/Tailwind to the v1 <code>.consent-zone</code> editorial<br />
+language. The three "we emailed your guardian" strings became true, so no copy change was needed.</p>
+<p><strong>OTHER FIXES (22 total).</strong> Production config guard failed OPEN — an exact <code>!= "production"</code> test<br />
+let <code>prod</code>, <code>Production</code>, <code>live</code> and <code>staging</code> boot on the dev <code>SECRET_KEY</code>, which forges any<br />
+user's JWT; now an explicit fail-closed allowlist, plus <code>RESEND_API_KEY</code>/<code>TURNSTILE_SECRET_KEY</code>/<br />
+32-byte-key checks. <code>role:"admin"</code> was self-registerable, skipping dob, <code>MINIMUM_AGE</code> and consent<br />
+entirely. Self-report hours had no dedupe: 8 concurrent submits produced 8 rows that an org<br />
+verified into <strong>11.0 hours and an unearned National Honor Society award</strong>. <code>require_consent</code> added<br />
+to auto-log/self-report/appeal/exclude-date (a guardian's <em>revocation</em> did not stop hours logging).<br />
+Idempotent re-verify; <code>IntegrityError</code>→409 on concurrent apply; <code>/health</code> 503 when the DB is down<br />
+(Railway routes on status code); <code>consent_blocks</code> fails closed on null dob; consent audit rows now<br />
+name the guardian rather than the student and carry IP/UA; audit rows on both hours-minting paths;<br />
+rate-limit key sweep; JWT lifetime 7d→24h.</p>
+<p><strong>DECISIONS (Evan, 2026-08-05).</strong> (1) Minimum age stays <strong>12</strong> — the PRD was the sole outlier,<br />
+<code>core/consent.py</code> and both legal drafts have always said 12; PRD struck in place with a dated<br />
+reason, no code changed. (2) The org-deactivate endpoint was added: <code>Opportunity.active</code> had four<br />
+readers and <strong>zero writers</strong>, so <code>delete_me</code> 409'd telling orgs to do something no API call could<br />
+do — org account deletion had been permanently unreachable. (3) Declined/revoked consent stays<br />
+terminal <strong>for the student</strong>, per v1 ADR-0010's "no auto-retry loop" (a minor must not be able to<br />
+spam past a guardian's refusal); the missing half was that same spec's "until support/admin<br />
+intervenes", so a new admin-only <code>POST /consent/admin/{user_id}/reopen</code> supplies it.</p>
+<p><strong>HOW / corrections to the auditors.</strong> Their proposed hours fix — a partial unique index on<br />
+<code>(opportunity_id, user_id) WHERE occurrence_date IS NULL</code> — was NOT implemented: it would<br />
+permanently block a second self-report for the same opportunity, breaking recurring commitments.<br />
+Deduped on the still-unreviewed row instead. Their "the unique constraint is a 100% no-op" was<br />
+overstated: check-in and auto-log both set <code>occurrence_date</code> and both already dedupe; self-reports<br />
+are null by design. The live auditor called the dev Postgres "the production DB" — it is not; the<br />
+site is unlaunched. And their <code>E7</code> fix (delete the key when empty) would not have worked, since<br />
+that key is repopulated on the same request; a periodic sweep was needed.</p>
+<p><strong>VERIFICATION — every fix fed its own trigger, not read.</strong> 8 concurrent <code>POST /hours</code>: 8×201 →<br />
+11.0h before, <code>201 + 7×409</code> and 3.0h after. Revoked minor logging hours: 201 → 403. 8 concurrent<br />
+apply: a 500 → none. Consent token minted at registration confirmed in the live DB (probe minors<br />
+created <em>before</em> the fix show <code>has_token = f</code>, after shows <code>t</code>). Org deletion: 409 → deactivate →<br />
+204. Browser-verified the banner's computed v1 styles, resend round-trip, self-hiding for<br />
+non-gated users, and the new <code>/admin</code> gate redirecting a non-admin. <strong>256 pytest green</strong> (from<br />
+215, +41), now under <strong>warnings-as-errors</strong> — a bare <code>-W error</code> had previously collapsed<br />
+collection to 0 tests. <code>ruff</code> finally wired into CI: its rules were declared in <code>pyproject.toml</code><br />
+since M1 but ruff was never installed and CI never ran it, so the project's own Python gate had<br />
+always been dead. First real run found 398 violations; 103 were a B008 false positive on FastAPI's<br />
+<code>Depends()</code> idiom (fixed by config), 72 auto-fixed, 3 real ones fixed by hand, and 242 <code>E501</code><br />
+line-length were deferred in writing rather than silently ignored.</p>
+<p><strong>Two mistakes made and corrected during the fix pass, both caught by running things rather than<br />
+reading them.</strong> The first <code>ENVIRONMENT</code> fix only normalized case and whitespace, so <code>prod</code> still<br />
+booted on the dev key — the trigger script caught it and it became a fail-closed allowlist. And<br />
+the invite service was written to charge the resend throttle, which 429'd a student's very first<br />
+retry, exactly when a guardian email lands in spam; seven tests failed and the design choice was<br />
+reverted rather than editing the tests around it.</p>
+<p><strong>HONEST OPEN ITEMS (not fixed).</strong> The test suite still runs on in-memory SQLite and never<br />
+Postgres — which is precisely why the NULL-unique semantics behind the hours bug went uncaught for<br />
+weeks. Recurrence DST/midnight/month-boundary logic in <code>occurrences.py</code> was never live-exercised<br />
+(every seeded opportunity is <code>one_time</code>). <code>httpOnly</code>-cookie migration for the JWT is sized large<br />
+and not done. <code>send_email</code>'s return is still discarded at several call sites. The decline<br />
+notification still says "contact support" with no support address behind it (BLOCKED-ON-EVAN).<br />
+Screenshot capture remained unavailable all session (the browser pane does not composite frames),<br />
+so UI verification was DOM plus computed-style throughout. All ~17 probe accounts created during<br />
+the audit were removed afterward, restoring the DB to its exact documented pre-audit row counts.</p>
+<p><strong>STATUS:</strong> M11 is still the only open milestone and still BLOCKED-ON-EVAN, but <strong>M5 now needs<br />
+re-validation before M11 ships</strong> — it was believed complete since 2026-07-08 and was not.<br />
+Committed as <code>b1d7e71</code> plus a follow-up batch.</p>
+<hr />
 <h2 id="summary-timeline">Summary timeline</h2>
 <table>
 <thead>
@@ -1346,6 +1427,18 @@ prod secrets, Resend key, Turnstile keys, legal sign-off). <code>5b0c5cc</code> 
 <td>v2</td>
 <td>taste-skill vetted+installed; design pass: emoji→Lucide site-wide (marketing then product UI, shared category map), false org-vetting claim removed, truthful stats, CTA unification</td>
 <td><code>32793b2</code>, <code>032b21e</code></td>
+</tr>
+<tr>
+<td>2026-07-22</td>
+<td>v2</td>
+<td>PRD gains a required GOAL block at the top (skeleton sync)</td>
+<td><code>588a7c0</code></td>
+</tr>
+<tr>
+<td>2026-08-05</td>
+<td>v2</td>
+<td>Two-pass cold audit: <strong>M5 consent gate was never wired up</strong> (banner never mounted, register sent nothing) + 21 other P1/P2 fixes; prod guard failed open on <code>ENVIRONMENT=prod</code>; hours double-submit minted an unearned award; org deletion was unreachable. 215→256 tests, warnings-as-errors, ruff finally live in CI</td>
+<td><code>b1d7e71</code></td>
 </tr>
 </tbody>
 </table>

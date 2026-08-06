@@ -1,8 +1,8 @@
 "use client";
 
+import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 
@@ -38,25 +38,31 @@ export function ConsentBanner() {
         ? "Your parent/guardian declined approval"
         : "Your parent/guardian's approval was revoked";
 
+  // v1 editorial styling (.consent-zone), not shadcn/Tailwind: this renders inside
+  // the .v1 dashboard shell, where a generic amber utility box reads as foreign.
+  const btn = { padding: "9px 18px", fontSize: ".83rem" } as const;
   return (
-    <div className="w-full max-w-xl rounded-md border border-amber-500/50 bg-amber-500/10 p-4 text-left">
-      <p className="text-sm font-medium">{heading}</p>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <div className="consent-zone">
+      <h4>
+        <TriangleAlert size={16} strokeWidth={1.75} aria-hidden />
+        {heading}
+      </h4>
+      <p>
         You can browse opportunities, but you can&apos;t sign up until a parent or guardian approves
         your account.
         {status === "pending" ? " We emailed them a link." : " Contact support if this was a mistake."}
       </p>
       {status === "pending" && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button onClick={resend} disabled={busy}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <button className="btn-p" style={btn} onClick={resend} disabled={busy}>
             {busy ? "Sending…" : "Resend approval email"}
-          </Button>
-          <Button variant="outline" onClick={refresh}>
+          </button>
+          <button className="btn-s" style={btn} onClick={refresh}>
             I&apos;ve been approved. Refresh
-          </Button>
+          </button>
         </div>
       )}
-      {message && <p className="mt-2 text-sm text-muted-foreground">{message}</p>}
+      {message && <p style={{ marginTop: 10, marginBottom: 0 }}>{message}</p>}
     </div>
   );
 }

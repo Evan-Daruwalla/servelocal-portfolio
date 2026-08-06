@@ -3,6 +3,15 @@
 **Written 2026-07-07 by the planning session (Fable 5). Standing document — the executing model
 works through TASK BREAKDOWN top to bottom, one task at a time, and checks off SUCCESS CRITERIA.**
 
+**GOAL:** When this roadmap is complete, ServeLocal v2 is a real, publicly launched
+student-volunteering platform on the FastAPI + Next.js stack: students discover community-service
+opportunities, apply, and log hours that organizations verify into an exportable portfolio;
+organizations post listings and manage rosters; and every under-18 account is gated behind
+verified guardian consent. It is free forever for students, funded only by organization Pro plans
+and donations. The one sentence a fresh session should stay squarely on: get this platform safely
+into real users' hands at a public URL (milestone M11), with M5 guardian consent as the
+non-negotiable launch gate.
+
 **Updated 2026-07-08 (Fable 5, decided by Evan): the finish line is a REAL PUBLIC LAUNCH, not
 launch-readiness. M11 added; M10 remains "everything works locally in containers", M11 takes it
 live. M5 guardian consent stays the hard gate — no public launch with minors before it.**
@@ -434,7 +443,11 @@ must do. Nothing in this milestone is guessed, faked, or worked around.
    pytest green, signup rejects missing/invalid CAPTCHA tokens when enabled by env.
 2. **Legal pages.** `app/terms/page.tsx` + `app/privacy/page.tsx`, linked from footer and
    register. Drafted for a platform whose users include minors: data collected, guardian-consent
-   flow, revocation, data deletion contact, no-under-13 policy (the register flow must enforce
+   flow, revocation, data deletion contact, ~~no-under-13 policy~~ **no-under-12 policy
+   (corrected 2026-08-05 by Evan: the floor is 12, not 13.** The 2026-08-05 audit found this
+   line was the only place claiming 13 — `app/core/consent.py` has always shipped
+   `MINIMUM_AGE = 12` and both legal drafts say 12, so the PRD was the outlier, not the code.
+   Nothing was changed in the code or the drafts.**)** (the register flow must enforce
    the minimum age the policy states). Mark the drafts DRAFT — final review/signoff is
    BLOCKED-ON-EVAN (and a guardian/adult — Evan is a minor operating a service for minors; that
    review is not optional). Done: pages render, linked, drafts flagged for review in HANDOFF.

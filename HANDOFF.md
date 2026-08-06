@@ -16,7 +16,28 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 
 ## Current state — M1–M10 + M12 + M13 + v1 EXACT-COPY + portfolio + audits COMPLETE; frontier = M11 launch (BLOCKED-ON-EVAN)
 
-**Last updated: 2026-07-16.** **M13 launch-checklist hardening is COMPLETE** (5 commits
+**Last updated: 2026-08-05.**
+
+> **2026-08-05 — two-pass cold audit + P1/P2 fix batch (record entry of the same date).**
+> **The M5 guardian-consent gate was NOT functioning end to end and nobody knew.**
+> `ConsentBanner` was the only caller of the only guardian-email path and was never mounted
+> anywhere; `register` recorded `pending` and sent nothing. Every minor landed in a permanent
+> gate no guardian was ever told about, while three UI surfaces claimed an email had gone out.
+> All 215 tests were green throughout — they call the API directly. Fixed at the chokepoint
+> (`services/consent_invite.py`, fired server-side in `register`), so the launch gate no longer
+> depends on any UI being mounted. **M5 must be re-validated against this before M11 ships.**
+> 22+ other P1/P2 findings fixed in the same batch (production config guard failed OPEN on
+> `ENVIRONMENT=prod`; `role:"admin"` self-registerable; hours double-submit inflating verified
+> hours into an unearned award; org account deletion permanently unreachable). **256 pytest
+> green** (from 215), now under warnings-as-errors, and `ruff` is finally wired into CI — its
+> rules had been declared since M1 but were never installed or run.
+> Three decisions Evan made 2026-08-05: minimum age stays **12** (the PRD was the outlier, code
+> and both legal drafts always said 12 — PRD corrected in place); org-deactivate endpoint added;
+> declined/revoked consent stays terminal for the STUDENT per v1 ADR-0010, with a new
+> admin-only `POST /consent/admin/{user_id}/reopen` as the "until support/admin intervenes"
+> escape hatch that spec always assumed.
+
+**M13 launch-checklist hardening is COMPLETE** (5 commits
 `e5aa990`→`dcf87cc`, executed by Opus workers with orchestrator review — see the workstream row and
 record entries of 2026-07-15/16): production CSP restored (v1 ADR-0014 parity), GDPR/CCPA account
 deletion + data export live on both dashboards (E2E browser-verified incl. wrong-password 403 and

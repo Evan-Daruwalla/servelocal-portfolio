@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
+import { ConsentBanner } from "@/components/consent-banner";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
@@ -233,6 +234,11 @@ export default function DashboardPage() {
 
         {/* MAIN */}
         <div className="dash-main">
+          {/* M5: the only surface where a gated student can resend the guardian
+              email or re-check status. It existed but was never mounted anywhere,
+              so the whole consent flow was unreachable from the UI (audit
+              2026-08-05). Self-hides for adults and consent-cleared students. */}
+          <ConsentBanner />
           {tab === "calendar" && (
             <div>
               <h1 className="dash-h">Calendar</h1>

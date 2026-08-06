@@ -16,6 +16,7 @@ export interface User {
   role: Role;
   full_name: string | null;
   is_active: boolean;
+  is_admin: boolean;
   email_notifications: boolean;
   portfolio_public: boolean;
   plan: "free" | "pro";

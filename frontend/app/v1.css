@@ -322,6 +322,13 @@
 .v1 .delete-zone::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #dc2626; }
 .v1 .delete-zone h4 { color: #b91c1c; margin-bottom: 8px; font-size: .95rem; }
 .v1 .delete-zone p { font-size: .82rem; color: #7f1d1d; line-height: 1.6; margin-bottom: 14px; }
+/* Guardian-consent notice (M5) — same shape as .delete-zone, amber not red: it
+   blocks the student but nothing is being destroyed. */
+.v1 .consent-zone { background: var(--gold-pale); border: 1px solid #ecd9a0; border-radius: 8px; padding: 22px; margin-bottom: 28px; position: relative; overflow: hidden; }
+.v1 .consent-zone::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--amber); }
+.v1 .consent-zone h4 { color: #8a6d1d; margin-bottom: 8px; font-size: .95rem; display: flex; align-items: center; gap: 7px; }
+.v1 .consent-zone p { font-size: .82rem; color: #6b5518; line-height: 1.6; margin-bottom: 14px; }
+.v1 .consent-zone p:last-child { margin-bottom: 0; }
 
 /* LEADERBOARD / COMMUNITY */
 .v1 .lb-band { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 36px; }
