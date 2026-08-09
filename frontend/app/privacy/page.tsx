@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { V1Shell } from "@/components/v1/v1-shell";
+import { SupportEmail } from "@/components/support-email";
 
 export const metadata = { title: "Privacy Policy — ServeLocal" };
 
@@ -64,7 +65,7 @@ export default function PrivacyPage() {
           </ul>
 
           <h3>Guardian rights</h3>
-          <p>When a student under 18 signs up, we email the listed guardian a link to <strong>approve or decline</strong> the account. If approved, the guardian receives a separate long-lived link that lets them <strong>revoke consent at any time</strong>; revoking immediately re-blocks the student from applying, messaging, checking in, or making a portfolio public. Guardians who have questions or want a student&rsquo;s data removed can contact us at <a href="mailto:[CONTACT EMAIL — Evan]">[CONTACT EMAIL — Evan]</a>.</p>
+          <p>When a student under 18 signs up, we email the listed guardian a link to <strong>approve or decline</strong> the account. If approved, the guardian receives a separate long-lived link that lets them <strong>revoke consent at any time</strong>; revoking immediately re-blocks the student from applying, messaging, checking in, or making a portfolio public. Guardians who have questions or want a student&rsquo;s data removed can contact us at <SupportEmail />.</p>
 
           <h3>Your rights &amp; choices</h3>
           <ul>
@@ -80,13 +81,13 @@ export default function PrivacyPage() {
           <p>We keep your data while your account is active and remove personal data when you delete your account, subject to the anonymized-service-record caveat above. Passwords are stored using a strong one-way hash (Argon2), never in plain text, and traffic is encrypted in transit (HTTPS). No system is perfectly secure, but we follow industry practices to protect your information.</p>
 
           <h3>Children&rsquo;s privacy</h3>
-          <p>ServeLocal is used by students who may be minors, and we build for that. Students under <strong>12</strong> are not permitted to register. Students aged 12&ndash;17 may create an account, but a <strong>parent or guardian must verify consent before the student takes any real-world-contact action</strong>: applying, messaging, checking in, or making a portfolio public. We collect only what&rsquo;s needed for volunteer matching and hour tracking, and we minimize minors&rsquo; names on all public surfaces. If you believe a child under our minimum age has provided information, or a minor is using the service without appropriate guardian consent, contact us at <a href="mailto:[CONTACT EMAIL — Evan]">[CONTACT EMAIL — Evan]</a> and we will address it.</p>
+          <p>ServeLocal is used by students who may be minors, and we build for that. Students under <strong>12</strong> are not permitted to register. Students aged 12&ndash;17 may create an account, but a <strong>parent or guardian must verify consent before the student takes any real-world-contact action</strong>: applying, messaging, checking in, or making a portfolio public. We collect only what&rsquo;s needed for volunteer matching and hour tracking, and we minimize minors&rsquo; names on all public surfaces. If you believe a child under our minimum age has provided information, or a minor is using the service without appropriate guardian consent, contact us at <SupportEmail /> and we will address it.</p>
 
           <h3>Your regional rights (CCPA / GDPR)</h3>
-          <p>Depending on where you live, you may have rights to <strong>access</strong> the personal data we hold about you, request its <strong>deletion</strong>, and obtain a <strong>portable copy</strong>. ServeLocal supports all three directly: access and portability through the data export, and deletion through account deletion, both in your dashboard&rsquo;s Account section. We do not sell personal information or use it for targeted advertising. To exercise a right you can&rsquo;t complete in-app, or to ask a question, contact us at <a href="mailto:[CONTACT EMAIL — Evan]">[CONTACT EMAIL — Evan]</a>.</p>
+          <p>Depending on where you live, you may have rights to <strong>access</strong> the personal data we hold about you, request its <strong>deletion</strong>, and obtain a <strong>portable copy</strong>. ServeLocal supports all three directly: access and portability through the data export, and deletion through account deletion, both in your dashboard&rsquo;s Account section. We do not sell personal information or use it for targeted advertising. To exercise a right you can&rsquo;t complete in-app, or to ask a question, contact us at <SupportEmail />.</p>
 
           <h3>Changes &amp; contact</h3>
-          <p>We may update this policy; material changes will be reflected by the date at the top. Questions or requests: <a href="mailto:[CONTACT EMAIL — Evan]">[CONTACT EMAIL — Evan]</a>. See also our <Link href="/terms">Terms of Service</Link>.</p>
+          <p>We may update this policy; material changes will be reflected by the date at the top. Questions or requests: <SupportEmail />. See also our <Link href="/terms">Terms of Service</Link>.</p>
         </div>
       </div>
     </V1Shell>

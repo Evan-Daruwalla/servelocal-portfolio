@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { V1Shell } from "@/components/v1/v1-shell";
+import { SupportEmail } from "@/components/support-email";
 
 export const metadata = { title: "Terms of Service — ServeLocal" };
 
@@ -59,7 +60,7 @@ export default function TermsPage() {
           <p>You keep ownership of the content you submit: your profile, listings, reviews, endorsements, and messages. By submitting content you grant ServeLocal a non-exclusive, worldwide, royalty-free license to host, store, reproduce, and display that content <strong>solely to operate and provide the service</strong> (for example, showing your review on an organization&rsquo;s page or your name on the public leaderboard). This license ends when you delete the content or your account, except for content already shared with others or retained in anonymized form as described in the Privacy Policy, and except as needed for backups, legal compliance, or an organization&rsquo;s record of verified service. ServeLocal&rsquo;s own name, logo, and software remain ours. We may remove content that violates these Terms.</p>
 
           <h3>Copyright &amp; other IP complaints</h3>
-          <p>We respect intellectual-property rights and expect users to do the same. If you believe content on ServeLocal infringes your copyright or other IP rights, send a notice to <a href="mailto:[CONTACT EMAIL — Evan]">[CONTACT EMAIL — Evan]</a> that includes: (1) your contact information; (2) identification of the work you claim is infringed; (3) identification of the material you want removed and where it appears on the service; (4) a statement that you have a good-faith belief the use is not authorized; and (5) a statement, under penalty of perjury, that the notice is accurate and that you are the rights-holder or authorized to act for them. We will review and remove or disable access to infringing material in appropriate cases, and we may terminate the accounts of repeat infringers. If your content was removed and you believe that was a mistake, you may send a counter-notice to the same address.</p>
+          <p>We respect intellectual-property rights and expect users to do the same. If you believe content on ServeLocal infringes your copyright or other IP rights, send a notice to <SupportEmail /> that includes: (1) your contact information; (2) identification of the work you claim is infringed; (3) identification of the material you want removed and where it appears on the service; (4) a statement that you have a good-faith belief the use is not authorized; and (5) a statement, under penalty of perjury, that the notice is accurate and that you are the rights-holder or authorized to act for them. We will review and remove or disable access to infringing material in appropriate cases, and we may terminate the accounts of repeat infringers. If your content was removed and you believe that was a mistake, you may send a counter-notice to the same address.</p>
 
           <h3>Organization subscriptions &amp; billing</h3>
           <p><strong>Students never pay.</strong> Paid plans apply only to organizations. Organizations may use ServeLocal on the free Community plan or subscribe to a paid <strong>Pro</strong> plan; current plan features and prices are listed on the <Link href="/pricing">Pricing</Link> page. Pro is billed as a recurring <strong>monthly</strong> subscription through our payment processor, Stripe, and renews automatically each month until cancelled.</p>
@@ -85,7 +86,7 @@ export default function TermsPage() {
           <p>These Terms are governed by the laws of the State of [GOVERNING STATE — Evan], without regard to its conflict-of-laws rules, and you agree to the exclusive jurisdiction of the state and federal courts located there for any dispute that isn&rsquo;t subject to another agreed process. ServeLocal is operated by [LEGAL ENTITY NAME — Evan].</p>
 
           <h3>Contact</h3>
-          <p>Questions about these Terms: <a href="mailto:[CONTACT EMAIL — Evan]">[CONTACT EMAIL — Evan]</a>. See also our <Link href="/privacy">Privacy Policy</Link>.</p>
+          <p>Questions about these Terms: <SupportEmail />. See also our <Link href="/privacy">Privacy Policy</Link>.</p>
         </div>
       </div>
     </V1Shell>

@@ -16,7 +16,32 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 
 ## Current state — M1–M10 + M12 + M13 + v1 EXACT-COPY + portfolio + audits COMPLETE; frontier = M11 launch (BLOCKED-ON-EVAN)
 
-**Last updated: 2026-08-05.**
+**Last updated: 2026-08-07.**
+
+> **2026-08-07 — Next 16 + nonce CSP, then the live M6/M8 audit (record entry of the same date).**
+> **The M5 launch gate has now been driven end to end on real Postgres, in both directions** —
+> the re-validation the 2026-08-05 block below demanded. A fresh minor lands in `pending` and
+> gets 403 `GUARDIAN_CONSENT_REQUIRED` on apply/check-in/auto-log/self-report and is absent
+> from the public leaderboard; after a real guardian approval through `POST /consent/{token}`
+> the same calls return 201/200. An adult on the identical endpoint returned 409 "Already
+> applied" — the control proving those 403s were the gate, not a broken route. Spent tokens
+> replay to 404; the guardian-facing context leaks only first name + last initial.
+> **Next 15.5.20 → 16.3.0** takes `npm audit` from 5 advisories to **0** (the `next` range
+> covered every 15.x, so there was no patch short of the major). It removes `next lint`, which
+> WAS the CI lint gate — `npm run lint` is now `eslint .` over a flat `eslint.config.mjs`.
+> **`script-src` no longer carries `'unsafe-inline'`**: `frontend/proxy.ts` mints a per-request
+> nonce, which cost `dynamic = "force-dynamic"` in the root layout (28 routes went from static
+> prerender to per-request render — a nonce cannot exist in build-time HTML). Verified in a
+> production build and through the standalone Docker image: an injected inline script is
+> refused by the browser. `style-src` KEEPS `'unsafe-inline'` deliberately — React's
+> `style={{...}}` prop compiles to a `style="..."` attribute, which no nonce can cover.
+> **Live M8 + M6 found no new code defects** (60+ checks; all six apparent failures were wrong
+> assumptions in my own probes). The bin sweep did find one that mattered:
+> **`backend/.env.example` still told operators `ADMIN_EMAILS` granted audit-log access.** It
+> grants nothing since 2026-08-06 — someone provisioning production would have listed their
+> address and believed they had admin. `security.md` was contradicting itself on the same
+> point, section to section. Both fixed.
+> **277 pytest green**; ruff/eslint/tsc/build clean; dev DB restored to its documented baseline.
 
 > **2026-08-05 — two-pass cold audit + P1/P2 fix batch (record entry of the same date).**
 > **The M5 guardian-consent gate was NOT functioning end to end and nobody knew.**

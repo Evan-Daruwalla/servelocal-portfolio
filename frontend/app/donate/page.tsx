@@ -36,15 +36,15 @@ export default function DonatePage() {
               ServeLocal will never charge students. Not for tracking, not for transcripts, not for anything. Supporters cover hosting and verification so it stays that way.
             </p>
             <div className="form-box">
-              <label style={{ fontSize: ".75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--text)" }}>Choose an amount</label>
+              <label htmlFor="donate-custom-amount" style={{ fontSize: ".75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--text)" }}>Choose an amount</label>
               <div className="don-amounts">
                 {PRESETS.map((v) => (
                   <button key={v} className={`don-amt${!custom && amount === v ? " on" : ""}`} onClick={() => { setAmount(v); setCustom(""); }}>${v}</button>
                 ))}
-                <input className="fc" type="number" min={1} max={10000} placeholder="Custom $" style={{ width: 110 }} value={custom} onChange={(e) => setCustom(e.target.value)} />
+                <input id="donate-custom-amount" className="fc" type="number" min={1} max={10000} placeholder="Custom $" style={{ width: 110 }} value={custom} onChange={(e) => setCustom(e.target.value)} />
               </div>
-              <div className="fr"><label>Display Name <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label><input className="fc" value={name} onChange={(e) => setName(e.target.value)} placeholder="Anonymous" /></div>
-              <div className="fr"><label>Message <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label><input className="fc" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Why you support student volunteering…" /></div>
+              <div className="fr"><label htmlFor="donate-display-name">Display Name <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label><input id="donate-display-name" className="fc" value={name} onChange={(e) => setName(e.target.value)} placeholder="Anonymous" /></div>
+              <div className="fr"><label htmlFor="donate-message">Message <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label><input id="donate-message" className="fc" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Why you support student volunteering…" /></div>
               {thanks && <div style={{ background: "var(--green-pale)", border: "1px solid var(--green-mid)", borderRadius: 9, padding: "11px 14px", fontSize: ".83rem", color: "var(--green)", marginBottom: 14 }}><Heart size={14} strokeWidth={1.75} aria-hidden /> Thank you! (Demo mode, no payment was collected.)</div>}
               <button className="fsubmit" style={{ width: "100%" }} disabled={!effective || effective < 1} onClick={submit}><Heart size={15} strokeWidth={1.75} aria-hidden /> Donate {effective ? `$${effective}` : "…"}</button>
               <p style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 10, textAlign: "center" }}>Demo mode, no payment is collected yet. Stripe goes live with deployment.</p>

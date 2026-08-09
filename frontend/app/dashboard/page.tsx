@@ -307,9 +307,9 @@ export default function DashboardPage() {
                 <>
                   <div className="form-box">
                     <form onSubmit={submitCheckin}>
-                      <div className="fr"><label>Check in with a code</label></div>
+                      <div className="fr"><label htmlFor="dashboard-checkin-opportunity">Check in with a code</label></div>
                       <div className="checkin-bar">
-                        <select className="fsel" value={ciOpp} onChange={(e) => setCiOpp(e.target.value)}>
+                        <select id="dashboard-checkin-opportunity" className="fsel" value={ciOpp} onChange={(e) => setCiOpp(e.target.value)}>
                           <option value="">Opportunity…</option>
                           {oppOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
                         </select>
@@ -320,9 +320,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="form-box">
                     <form onSubmit={submitSelfReport}>
-                      <div className="fr"><label>Self-report hours</label></div>
+                      <div className="fr"><label htmlFor="dashboard-selfreport-opportunity">Self-report hours</label></div>
                       <div className="checkin-bar">
-                        <select className="fsel" value={srOpp} onChange={(e) => setSrOpp(e.target.value)}>
+                        <select id="dashboard-selfreport-opportunity" className="fsel" value={srOpp} onChange={(e) => setSrOpp(e.target.value)}>
                           <option value="">Opportunity…</option>
                           {oppOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
                         </select>
@@ -417,9 +417,9 @@ export default function DashboardPage() {
             <div>
               <h1 className="dash-h">Account</h1>
               <div className="form-box">
-                <div className="fr"><label>Download my data</label></div>
+                <div className="fr"><label htmlFor="dashboard-download-data">Download my data</label></div>
                 <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 12 }}>Download everything ServeLocal has on you as one JSON file: profile, applications, hours, messages, reviews, and notifications.</p>
-                <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}><Download size={15} strokeWidth={1.75} aria-hidden /> Download my data (JSON)</button>
+                <button id="dashboard-download-data" className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={downloadExport}><Download size={15} strokeWidth={1.75} aria-hidden /> Download my data (JSON)</button>
               </div>
               <div className="delete-zone">
                 <h4><TriangleAlert size={16} strokeWidth={1.75} aria-hidden /> Delete Account</h4>
@@ -429,12 +429,12 @@ export default function DashboardPage() {
                   <strong> This cannot be undone.</strong>
                 </p>
                 <div className="fr">
-                  <label>Type DELETE to confirm</label>
-                  <input className="fc" value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="DELETE" />
+                  <label htmlFor="dashboard-delete-confirm">Type DELETE to confirm</label>
+                  <input id="dashboard-delete-confirm" className="fc" value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="DELETE" />
                 </div>
                 <div className="fr">
-                  <label>Current password</label>
-                  <input className="fc" type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
+                  <label htmlFor="dashboard-delete-password">Current password</label>
+                  <input id="dashboard-delete-password" className="fc" type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
                 </div>
                 {acctError && <div className="ferr" style={{ display: "block" }}>{acctError}</div>}
                 <button

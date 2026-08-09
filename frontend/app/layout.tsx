@@ -14,6 +14,15 @@ const fraunces = Fraunces({
   style: ["normal", "italic"],
 });
 
+// A nonce is minted per request, so a page prerendered at build time would ship
+// inline scripts stamped with a nonce that no longer matches the header — the
+// browser would block Next's own bootstrap and the app would not hydrate at all.
+// Inheriting down from the root layout opts every route into per-request
+// rendering, which is what makes the strict `script-src` in `proxy.ts` viable
+// (2026-08-07). Cheap here: every page is a client shell that fetches from the
+// API in the browser, so there was no server-side data work being cached.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "ServeLocal",

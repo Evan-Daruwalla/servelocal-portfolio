@@ -46,8 +46,8 @@ export default function ForgotPasswordPage() {
                   Enter your account email and we&apos;ll send you a reset link (valid for 1 hour).
                 </p>
                 <div className="fr">
-                  <label>Email</label>
-                  <input className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                  <label htmlFor="forgot-email">Email</label>
+                  <input id="forgot-email" className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                 </div>
                 <TurnstileWidget onToken={setTurnstileToken} />
                 <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting}>

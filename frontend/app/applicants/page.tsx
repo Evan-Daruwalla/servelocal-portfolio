@@ -385,8 +385,8 @@ export default function OrgDashboardPage() {
               {/* Broadcast composer (v2 messaging) */}
               <div className="form-box" style={{ marginBottom: 18 }}>
                 <div className="fr">
-                  <label>Message a listing’s applicants</label>
-                  <select className="fc" value={msgOpp} onChange={(e) => setMsgOpp(e.target.value)}>
+                  <label htmlFor="applicants-broadcast-opportunity">Message a listing’s applicants</label>
+                  <select id="applicants-broadcast-opportunity" className="fc" value={msgOpp} onChange={(e) => setMsgOpp(e.target.value)}>
                     <option value="">Select a listing…</option>
                     {activeOpps.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
                   </select>
@@ -487,8 +487,17 @@ export default function OrgDashboardPage() {
             <div className="tab-panel on">
               <h1 className="dash-h">Organization Profile</h1>
               <div className="form-box" style={{ maxWidth: 580 }}>
-                <div className="fr"><label>Organization Name</label><input className="fc" defaultValue={user.full_name || ""} /></div>
-                <div className="fr"><label>Email</label><input className="fc" defaultValue={user.email} disabled /></div>
+                {/* Disabled because nothing saves it. `saveProfile` sends only
+                    email_notifications and `api.updateMe` accepts only
+                    email_notifications/portfolio_public — so an org could edit this,
+                    press Save Changes, see "Saved ✓" and lose the value silently
+                    (audit 2026-08-06). Re-enable when a backend field exists. */}
+                <div className="fr">
+                  <label htmlFor="applicants-org-name">Organization Name</label>
+                  <input id="applicants-org-name" className="fc" defaultValue={user.full_name || ""} disabled />
+                  <div className="fhint">Contact support to change your organization name.</div>
+                </div>
+                <div className="fr"><label htmlFor="applicants-org-email">Email</label><input id="applicants-org-email" className="fc" defaultValue={user.email} disabled /></div>
                 <div className="fr">
                   <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
                     <input type="checkbox" checked={emailNotifs} onChange={(e) => setEmailNotifs(e.target.checked)} style={{ width: 15, height: 15, accentColor: "var(--green)" }} />
@@ -509,12 +518,12 @@ export default function OrgDashboardPage() {
                     You must deactivate all active listings first. <strong>This cannot be undone.</strong>
                   </p>
                   <div className="fr">
-                    <label>Type DELETE to confirm</label>
-                    <input className="fc" value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="DELETE" />
+                    <label htmlFor="applicants-delete-confirm">Type DELETE to confirm</label>
+                    <input id="applicants-delete-confirm" className="fc" value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="DELETE" />
                   </div>
                   <div className="fr">
-                    <label>Current password</label>
-                    <input className="fc" type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
+                    <label htmlFor="applicants-delete-password">Current password</label>
+                    <input id="applicants-delete-password" className="fc" type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
                   </div>
                   {deleteError && <div className="ferr" style={{ display: "block" }}>{deleteError}</div>}
                   <button

@@ -135,7 +135,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii19--post-copy-public-portfolio-slice-audit-fixes-ui-polish-2026-07-13">II.19 — post-copy: public-portfolio slice, /audit fixes, UI polish (2026-07-13)</a><br />
 - <a href="#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15">II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)</a><br />
 - <a href="#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</a><br />
-- <a href="#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05">II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)</a></p>
+- <a href="#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05">II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)</a><br />
+- <a href="#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07">II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -1135,6 +1136,90 @@ the audit were removed afterward, restoring the DB to its exact documented pre-a
 re-validation before M11 ships</strong> — it was believed complete since 2026-07-08 and was not.<br />
 Committed as <code>b1d7e71</code> plus a follow-up batch.</p>
 <hr />
+<h2 id="ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07">II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)</h2>
+<p><strong>Covers two days.</strong> The 2026-08-06 work was recorded in v2's own record but never<br />
+reached this whole-project file; it is folded in here rather than left as a hole.</p>
+<p><strong>The second cold audit (2026-08-06) found that the previous day's fixes were<br />
+partly wrong.</strong> Two cold auditors on disjoint scopes, both weighted toward the<br />
+2026-08-05 fix batch — the highest-churn, least-reviewed code in the repo. That<br />
+targeting paid for itself:</p>
+<ul>
+<li><strong>The hours dedupe was keyed on the hours VALUE</strong>, so a "genuinely different<br />
+  entry" passed. Submitting <code>3.01</code> instead of <code>3.0</code> minted a fresh row —<br />
+  reproduced at 11 pending rows for one 3-hour shift, verifying to 33.55 hours<br />
+  and an unearned NHS award. <strong>The test written the day before encoded the<br />
+  bypass</strong>, which is exactly why the suite stayed green over it.</li>
+<li><strong><code>set_active</code>, added the day before, made a dormant hole reachable.</strong><br />
+<code>redeem_checkin</code> never checked <code>opp.active</code>, and check-in mints VERIFIED hours<br />
+  with no org review — so a student could credit themselves for a cancelled event.</li>
+<li><strong>The <code>ENVIRONMENT</code> fail-closed fix only covered values you SET.</strong> The default<br />
+  was still <code>"development"</code>, so omitting the variable skipped the entire guard and<br />
+  booted on the dev <code>SECRET_KEY</code>.</li>
+</ul>
+<p>Plus a separate <strong>CRIT: admin escalation.</strong> <code>is_platform_admin</code> granted admin to<br />
+any account whose email appeared in <code>ADMIN_EMAILS</code>, and registration seeded<br />
+<code>is_admin</code> from the same list — with <strong>no email verification anywhere in the app</strong>.<br />
+Whoever registered a listed address first became a platform admin, with the audit<br />
+log (every user's security events, minors included) and consent-reopen. The runbook<br />
+told Evan to set <code>ADMIN_EMAILS</code> before any account existed — precisely that window.<br />
+Admin is now the <code>is_admin</code> column only, granted by explicit SQL.</p>
+<p>A <strong>graphify refresh</strong> (1594 nodes, 2937 edges, 159 communities) then caught five<br />
+codebase-memory bins contradicting each other — three of them freshly created by<br />
+the audit fixes, where <code>security.md</code> was updated and its siblings were not.</p>
+<p><strong>2026-08-07 — the two "sized large" items, then the audit methods that needed a<br />
+running stack.</strong></p>
+<p><strong>Next 15.5.20 → 16.3.0</strong> took <code>npm audit</code> from 5 advisories to <strong>0</strong>. The <code>next</code><br />
+vulnerable range covered every 15.x, so the 8 Next advisories had no patch short of<br />
+the major. Next 16 removes <code>next lint</code>, which WAS the CI lint gate — <code>npm run lint</code><br />
+is now <code>eslint .</code> over a flat <code>eslint.config.mjs</code>. The bump also brought React<br />
+Compiler lint rules that flag 12 pre-existing sites; those were set to <code>warn</code> with<br />
+written reasoning rather than mechanically "fixed", because the main rule is largely<br />
+a false positive for an app that keeps its JWT in localStorage: localStorage cannot<br />
+be read during render without breaking SSR hydration, so complying literally in<br />
+<code>auth-context.tsx</code> would have introduced a bug.</p>
+<p><strong><code>script-src</code> no longer carries <code>'unsafe-inline'</code>.</strong> A new <code>frontend/proxy.ts</code><br />
+mints a per-request nonce; the static CSP was removed from <code>next.config.mjs</code>,<br />
+because two <code>Content-Security-Policy</code> headers are intersected by the browser rather<br />
+than overridden. This closes the gap ADR-0001 named as the price of localStorage<br />
+tokens — that decision leaned on "no XSS sink exists today", an argument about the<br />
+present that one future mistake invalidates. The cost is real and recorded:<br />
+<code>dynamic = "force-dynamic"</code> in the root layout, moving 28 routes from static<br />
+prerender to per-request render, because a nonce cannot exist in build-time HTML.<br />
+<code>style-src</code> deliberately keeps <code>'unsafe-inline'</code> — a nonce covers <code>&lt;style&gt;</code> elements<br />
+but never <code>style="..."</code> attributes, which is what React's <code>style={{...}}</code> prop<br />
+compiles to.</p>
+<p><strong>M8 (data at rest) and live M6 (endpoint probing) finally ran, and the M5 launch<br />
+gate was driven end to end on real Postgres for the first time, in both<br />
+directions.</strong> A fresh minor lands in <code>pending</code> and is refused on apply, check-in,<br />
+auto-log and self-report, and is absent from the public leaderboard; after a real<br />
+guardian approval through <code>POST /consent/{token}</code> the same calls succeed. An adult<br />
+student on the identical endpoint returned 409 "Already applied" — the control<br />
+proving those refusals were the gate and not a broken route. That is the<br />
+re-validation the 2026-08-05 crit demanded, and it is the first time the gate has<br />
+been shown working against a real database rather than inferred from unit tests.</p>
+<p><strong>No new code defects were found.</strong> All six apparent probe failures were wrong<br />
+assumptions in the probes themselves — guessed route paths, wrong HTTP method,<br />
+wrong field names, and a test address on the reserved <code>.invalid</code> TLD that looked<br />
+like user enumeration until retried. Recorded because a probe that fails for a dumb<br />
+reason and then gets quietly adjusted is how a real finding gets talked away.</p>
+<p><strong>The bin sweep found the day's most operator-dangerous item, and it was<br />
+documentation, not code.</strong> <code>backend/.env.example</code> still described <code>ADMIN_EMAILS</code> as<br />
+the "comma-separated emails allowed to read GET /audit-log". It grants nothing —<br />
+someone provisioning production would have listed their address and believed they<br />
+had admin. <code>security.md</code> was contradicting <em>itself</em> on the same point, one section<br />
+saying admin came from <code>ADMIN_EMAILS</code> and another saying that path was closed.</p>
+<p><strong>Two process failures worth keeping.</strong> First, <code>gotchas.md</code> had documented since<br />
+2026-07-13 that a React re-render after <code>el.click()</code> is async and must be read in a<br />
+separate call; I read it in the same call, concluded the page had not hydrated, and<br />
+briefly believed the new CSP had broken the app. The bin was right and unread.<br />
+Second, I ran <code>date</code>, the session then sat idle about seven hours, and I carried the<br />
+old stamp forward — dating a commit and six code comments 2026-08-06 when the work<br />
+happened on 2026-08-07. Caught only because a database row appeared to be<br />
+timestamped in the future.</p>
+<p><strong>VERIFY.</strong> 277 pytest green; ruff check + format clean; eslint exit 0; <code>tsc
+--noEmit</code> clean; <code>next build</code> clean; <code>npm audit</code> 0 vulnerabilities. Browser-verified<br />
+in production mode, dev mode, and through the <code>output: standalone</code> Docker image.<br />
+Dev DB restored to its documented baseline and verified orphan-free.</p>
 <h2 id="summary-timeline">Summary timeline</h2>
 <table>
 <thead>
@@ -1439,6 +1524,18 @@ Committed as <code>b1d7e71</code> plus a follow-up batch.</p>
 <td>v2</td>
 <td>Two-pass cold audit: <strong>M5 consent gate was never wired up</strong> (banner never mounted, register sent nothing) + 21 other P1/P2 fixes; prod guard failed open on <code>ENVIRONMENT=prod</code>; hours double-submit minted an unearned award; org deletion was unreachable. 215→256 tests, warnings-as-errors, ruff finally live in CI</td>
 <td><code>b1d7e71</code></td>
+</tr>
+<tr>
+<td>2026-08-06</td>
+<td>v2</td>
+<td>Second cold audit: <strong>admin escalation via <code>ADMIN_EMAILS</code></strong> (no email verification anywhere) + the previous day's fixes were partly wrong — hours dedupe keyed on the hours VALUE so <code>3.01</code> bypassed it, <code>redeem_checkin</code> never checked <code>opp.active</code>, <code>ENVIRONMENT</code> still defaulted to development. 277 tests</td>
+<td><code>5d53d42</code>, <code>7aff291</code></td>
+</tr>
+<tr>
+<td>2026-08-07</td>
+<td>v2</td>
+<td>Next 15→16 (<strong>npm audit 5→0</strong>, <code>next lint</code> removed → flat eslint config); <strong><code>script-src</code> drops <code>'unsafe-inline'</code></strong> via a per-request nonce in <code>proxy.ts</code> (cost: 28 routes static→dynamic); live M8 + M6 — <strong>M5 consent gate proven end to end on real Postgres, both directions</strong>; <code>.env.example</code> still claimed <code>ADMIN_EMAILS</code> granted admin</td>
+<td><code>d9b5ccf</code> + this</td>
 </tr>
 </tbody>
 </table>

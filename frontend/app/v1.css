@@ -349,7 +349,12 @@
 
 /* AUTH — role picker, two-up field row, field hint */
 .v1 .auth-role-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-.v1 .role-btn { padding: 20px 16px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; transition: border-color .2s var(--ease), background .2s var(--ease), scale .16s var(--ease-out); background: #fff; position: relative; overflow: hidden; }
+/* These became real <button>s on 2026-08-06 (as <div onClick> they were
+   unreachable by keyboard, locking non-mouse users out of org signup). `width`,
+   `font` and `appearance` neutralise the UA button defaults so the editorial
+   look is byte-identical to the div version. */
+.v1 .role-btn { padding: 20px 16px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; transition: border-color .2s var(--ease), background .2s var(--ease), scale .16s var(--ease-out); background: #fff; position: relative; overflow: hidden; width: 100%; display: block; font: inherit; color: inherit; appearance: none; -webkit-appearance: none; }
+.v1 .role-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .v1 .role-btn:hover, .v1 .role-btn.on { border-color: var(--green); background: var(--green-pale); }
 .v1 .role-btn .rb-icon { font-size: 1.8rem; margin-bottom: 8px; }
 .v1 .role-btn .rb-label { font-size: .85rem; font-weight: 600; color: var(--dark); }

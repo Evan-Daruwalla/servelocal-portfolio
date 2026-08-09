@@ -50,12 +50,12 @@ function ResetForm() {
     <form onSubmit={onSubmit}>
       {error && <div className="ferr" style={{ display: "block" }}>{error}</div>}
       <div className="fr">
-        <label>New password</label>
-        <input className="fc" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+        <label htmlFor="reset-password">New password</label>
+        <input id="reset-password" className="fc" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
       </div>
       <div className="fr">
-        <label>Confirm new password</label>
-        <input className="fc" type="password" required value={password2} onChange={(e) => setPassword2(e.target.value)} placeholder="Repeat it" />
+        <label htmlFor="reset-password-confirm">Confirm new password</label>
+        <input id="reset-password-confirm" className="fc" type="password" required value={password2} onChange={(e) => setPassword2(e.target.value)} placeholder="Repeat it" />
       </div>
       <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting}>
         {submitting ? "Resetting…" : "Set New Password"}

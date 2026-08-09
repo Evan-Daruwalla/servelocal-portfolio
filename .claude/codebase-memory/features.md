@@ -1,14 +1,15 @@
 # features — servelocal-v2
 
-Last updated 2026-07-13.
+Last updated 2026-08-07.
 
 ## Milestone status (PRD M1–M11)
 - **Done:** M1–M9 (see below), **M10 COMPLETE** (`docker compose up --build` verified by Evan
   2026-07-12 — full stack boots, migrations applied on real Postgres), **M12 v1 visual parity**
   (2026-07-12), and two off-roadmap Evan-directed 2026-07-13 blocks: **v1 EXACT-COPY** (all 13
   screens rebuilt in the scoped `.v1` architecture — see architecture.md/conventions.md) and a
-  **public-portfolio slice**. **189 pytest green; migrations 0001–0021. M11 launch = BLOCKED-ON-EVAN
-  (host, domain/DNS, prod secrets, Resend key, legal).**
+  **public-portfolio slice**. **277 pytest green; migrations 0001–0024 (2026-08-06; supersedes the
+  189/0001–0021 figure). M11 launch = BLOCKED-ON-EVAN (host, domain/DNS, prod
+  secrets, Resend key, Turnstile key, SUPPORT_EMAIL, legal).**
 - **Public portfolio (2026-07-13):** `GET /portfolio/{id}` — public verified-service transcript
   (name, verified hours, hours-by-org, awards) for opted-in students only; opt-in via
   `portfolio_public` (migration 0021, minor consent-gated + name-minimized — see security.md).
@@ -25,8 +26,10 @@ Last updated 2026-07-13.
   config `RATE_LIMIT_*`; added before CORS; `reset()` called per test in conftest; SINGLE-PROCESS
   (Redis for multi-proc, M11). (M9.2) `audit_log` table (migration 0020) + `append_audit()` on
   login/password_reset/consent_*/plan_*/hours_* events; admin-only `GET /audit-log`; admin =
-  `User.is_admin` (seeded from `ADMIN_EMAILS` at register) OR email in `ADMIN_EMAILS` at request
-  time. (M9.3) leaderboard already met the no-PII spec; only added a PII-assertion test.
+  the `User.is_admin` column ONLY (2026-08-06; supersedes "seeded from ADMIN_EMAILS at register
+  OR email in ADMIN_EMAILS at request time" — with no email verification anywhere, that handed
+  admin to whoever registered a listed address first). Promotion is explicit SQL against an
+  existing account: `docs/DEPLOY_RAILWAY.md` §Granting platform admin. (M9.3) leaderboard already met the no-PII spec; only added a PII-assertion test.
 - Billing UI (M8.3): `plan` is on `UserRead`. `app/billing/page.tsx` (org-only) shows the plan +
   "Upgrade to Pro" (→ `POST /billing/checkout` → redirect to the Stripe URL). Featured toggle lives
   on the opportunity detail page for the owner (pro → Feature/Unfeature via `PATCH

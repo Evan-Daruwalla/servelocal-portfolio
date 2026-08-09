@@ -1,6 +1,6 @@
 # architecture — servelocal-v2
 
-Last updated 2026-07-13.
+Last updated 2026-08-07.
 
 ## Stack
 **Dependencies + pinned versions → `dependencies.md`** (canonical). In brief:
@@ -30,7 +30,9 @@ Tailwind 3 + shadcn/ui.
 - `app/core/config.py` anchors `.env` via `Path(__file__)`, not cwd — so uvicorn works from any dir.
   Settings incl. RESEND_API_KEY / EMAIL_FROM / APP_BASE_URL / CONSENT_TOKEN_TTL_HOURS /
   STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET / STRIPE_PRO_PRICE_CENTS / RATE_LIMIT_* /
-  ADMIN_EMAILS. `check_production_config` raises on dev defaults in production (M10.2).
+  TURNSTILE_SECRET_KEY / SUPPORT_EMAIL / ADMIN_EMAILS (inert — grants nothing).
+  `check_production_config` raises on dev defaults in production (M10.2) and now fails
+  CLOSED — details in security.md / tooling.md.
 - One table, two shapes (M7): `messages.recipient_id` NULL = shared thread post, set = directed
   (inbox). Templates live in their OWN table (`opportunity_templates`, JSON `data` blob) so they
   never leak into opportunity queries.
@@ -40,16 +42,23 @@ Tailwind 3 + shadcn/ui.
   token in localStorage under exported `TOKEN_KEY`; `login`/`register`/`refresh`/`logout`),
   `lib/types.ts`, `components/ui/` (hand-vendored button/card/input/label).
 - NEXT_PUBLIC_API_URL (default `http://localhost:8000/api/v1`) is where the client hits the backend.
+- **`proxy.ts` at the frontend root** (2026-08-07) runs on every non-static request and builds
+  the per-request nonce CSP. Next 16 deprecated the `middleware.ts` filename in favour of
+  `proxy.ts` — do NOT add a `middleware.ts`. Because a nonce cannot exist in build-time HTML,
+  `app/layout.tsx` sets `dynamic = "force-dynamic"`, so every app route is server-rendered per
+  request; only the 4 metadata routes (icon/OG/robots/sitemap) are still static. Details in
+  security.md §Content-Security-Policy.
 
 ## Migrations
-**Migration chain 0001–0023, Alembic rules, and schema conventions → `data.md`**
+**Migration chain 0001–0024, Alembic rules, and schema conventions → `data.md`**
 (canonical).
 
 ## Deploy shape (M10 COMPLETE — `docker compose up` verified by Evan 2026-07-12)
 - 3 containers: Postgres + API + web (frontend/Dockerfile, multi-stage → Next
   `output: "standalone"`); root `docker-compose.yml`. **NEXT_PUBLIC_* vars are baked into the
   client bundle at BUILD time** — each needs an ARG/ENV pair in frontend/Dockerfile (API_URL,
-  APP_URL, TURNSTILE_SITE_KEY as of 2026-07-16) AND a compose `build.args`/Railway service-var.
+  APP_URL, TURNSTILE_SITE_KEY, and SUPPORT_EMAIL as of 2026-08-06) AND a compose
+  `build.args`/Railway service-var.
 - **Migrations are NOT in the api image** (corrected 2026-07-16; supersedes the "entrypoint runs
   alembic on boot" claim): backend/Dockerfile CMD is uvicorn-only; `alembic upgrade head` runs via
   docker-compose's `command:` override locally, and via `deploy.preDeployCommand` in

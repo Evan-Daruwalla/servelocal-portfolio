@@ -19,6 +19,10 @@ ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
+# Support contact shown on the legal pages. BLOCKED-ON-EVAN — empty until a real
+# address exists, and never guessed; the pages render a visible placeholder.
+ARG NEXT_PUBLIC_SUPPORT_EMAIL=
+ENV NEXT_PUBLIC_SUPPORT_EMAIL=$NEXT_PUBLIC_SUPPORT_EMAIL
 RUN npm run build
 
 FROM node:20-slim AS runner

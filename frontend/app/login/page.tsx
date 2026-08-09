@@ -41,12 +41,12 @@ export default function LoginPage() {
             <form onSubmit={onSubmit}>
               {error && <div className="ferr" style={{ display: "block" }}>{error}</div>}
               <div className="fr">
-                <label>Email</label>
-                <input className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                <label htmlFor="login-email">Email</label>
+                <input id="login-email" className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
               </div>
               <div className="fr">
-                <label>Password</label>
-                <input className="fc" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                <label htmlFor="login-password">Password</label>
+                <input id="login-password" className="fc" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
               </div>
               <button className="fsubmit" style={{ width: "100%" }} type="submit" disabled={submitting}>
                 {submitting ? "Logging in…" : "Log In"}

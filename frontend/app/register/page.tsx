@@ -71,49 +71,64 @@ export default function RegisterPage() {
           </div>
           <div className="mbody">
             <p style={{ fontSize: ".85rem", color: "var(--muted)", marginBottom: 16 }}>I am signing up as a…</p>
-            <div className="auth-role-btns">
-              <div className={`role-btn${role === "student" ? " on" : ""}`} onClick={() => setRole("student")}>
+            {/* Real <button>s, not clickable <div>s. As divs these had no tabIndex,
+                no onKeyDown and no role, so keyboard and screen-reader users could
+                never reach them — and `role` defaults to "student", which locked
+                those users out of creating an ORG account entirely
+                (audit 2026-08-06). `aria-pressed` conveys which is selected. */}
+            <div className="auth-role-btns" role="group" aria-label="Account type">
+              <button
+                type="button"
+                aria-pressed={role === "student"}
+                className={`role-btn${role === "student" ? " on" : ""}`}
+                onClick={() => setRole("student")}
+              >
                 <div className="rb-icon"><GraduationCap size={28} strokeWidth={1.75} aria-hidden /></div>
                 <div className="rb-label">Student</div>
                 <div className="rb-sub">Find volunteer opportunities</div>
-              </div>
-              <div className={`role-btn${role === "org" ? " on" : ""}`} onClick={() => setRole("org")}>
+              </button>
+              <button
+                type="button"
+                aria-pressed={role === "org"}
+                className={`role-btn${role === "org" ? " on" : ""}`}
+                onClick={() => setRole("org")}
+              >
                 <div className="rb-icon"><Landmark size={28} strokeWidth={1.75} aria-hidden /></div>
                 <div className="rb-label">Organization</div>
                 <div className="rb-sub">Post opportunities &amp; verify hours</div>
-              </div>
+              </button>
             </div>
 
             <form onSubmit={onSubmit}>
               {error && <div className="ferr" style={{ display: "block" }}>{error}</div>}
               <div className="fr">
-                <label>{role === "org" ? "Organization Name" : "Full Name (legal)"} <span style={{ color: "var(--red)" }}>*</span></label>
-                <input className="fc" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={role === "org" ? "Green Roots Community Garden" : "Alex Johnson"} />
+                <label htmlFor="register-name">{role === "org" ? "Organization Name" : "Full Name (legal)"} <span style={{ color: "var(--red)" }}>*</span></label>
+                <input id="register-name" className="fc" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={role === "org" ? "Green Roots Community Garden" : "Alex Johnson"} />
               </div>
               <div className="fr">
-                <label>Email <span style={{ color: "var(--red)" }}>*</span></label>
-                <input className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                <label htmlFor="register-email">Email <span style={{ color: "var(--red)" }}>*</span></label>
+                <input id="register-email" className="fc" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
               </div>
               <div className="fr">
-                <label>Password <span style={{ color: "var(--red)" }}>*</span></label>
-                <input className="fc" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+                <label htmlFor="register-password">Password <span style={{ color: "var(--red)" }}>*</span></label>
+                <input id="register-password" className="fc" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
               </div>
               {role === "student" && (
                 <div className="fr">
-                  <label>Date of Birth <span style={{ color: "var(--red)" }}>*</span></label>
-                  <input className="fc" type="date" required value={dob} onChange={(e) => setDob(e.target.value)} />
+                  <label htmlFor="register-dob">Date of Birth <span style={{ color: "var(--red)" }}>*</span></label>
+                  <input id="register-dob" className="fc" type="date" required value={dob} onChange={(e) => setDob(e.target.value)} />
                   <div className="fhint">Must be 12 or older. Required for award tracking.</div>
                 </div>
               )}
               {isMinor && (
                 <div style={{ background: "var(--green-pale)", border: "1px solid var(--green-mid)", borderRadius: 9, padding: 14, marginBottom: 4 }}>
                   <div className="fr">
-                    <label>Parent/Guardian Name <span style={{ color: "var(--red)" }}>*</span></label>
-                    <input className="fc" required value={guardianName} onChange={(e) => setGuardianName(e.target.value)} placeholder="Jamie Johnson" />
+                    <label htmlFor="register-guardian-name">Parent/Guardian Name <span style={{ color: "var(--red)" }}>*</span></label>
+                    <input id="register-guardian-name" className="fc" required value={guardianName} onChange={(e) => setGuardianName(e.target.value)} placeholder="Jamie Johnson" />
                   </div>
                   <div className="fr" style={{ marginBottom: 0 }}>
-                    <label>Parent/Guardian Email <span style={{ color: "var(--red)" }}>*</span></label>
-                    <input className="fc" type="email" required value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} placeholder="parent@example.com" />
+                    <label htmlFor="register-guardian-email">Parent/Guardian Email <span style={{ color: "var(--red)" }}>*</span></label>
+                    <input id="register-guardian-email" className="fc" type="email" required value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} placeholder="parent@example.com" />
                     <div className="fhint">Since you&apos;re under 18, we&apos;ll email your parent/guardian to approve your account before you can sign up for opportunities.</div>
                   </div>
                 </div>

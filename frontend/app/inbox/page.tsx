@@ -78,7 +78,6 @@ export default function InboxPage() {
                 <div className="flex flex-col gap-2">
                   <textarea
                     rows={2}
-                    autoFocus
                     value={replyBody}
                     onChange={(e) => setReplyBody(e.target.value)}
                     placeholder="Write a reply…"

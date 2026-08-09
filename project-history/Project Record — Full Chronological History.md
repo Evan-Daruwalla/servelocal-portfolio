@@ -100,6 +100,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)](#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15)
 - [II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)](#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16)
 - [II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)](#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05)
+- [II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)](#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -1261,6 +1262,102 @@ Committed as `b1d7e71` plus a follow-up batch.
 
 ---
 
+## II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)
+
+**Covers two days.** The 2026-08-06 work was recorded in v2's own record but never
+reached this whole-project file; it is folded in here rather than left as a hole.
+
+**The second cold audit (2026-08-06) found that the previous day's fixes were
+partly wrong.** Two cold auditors on disjoint scopes, both weighted toward the
+2026-08-05 fix batch — the highest-churn, least-reviewed code in the repo. That
+targeting paid for itself:
+
+- **The hours dedupe was keyed on the hours VALUE**, so a "genuinely different
+  entry" passed. Submitting `3.01` instead of `3.0` minted a fresh row —
+  reproduced at 11 pending rows for one 3-hour shift, verifying to 33.55 hours
+  and an unearned NHS award. **The test written the day before encoded the
+  bypass**, which is exactly why the suite stayed green over it.
+- **`set_active`, added the day before, made a dormant hole reachable.**
+  `redeem_checkin` never checked `opp.active`, and check-in mints VERIFIED hours
+  with no org review — so a student could credit themselves for a cancelled event.
+- **The `ENVIRONMENT` fail-closed fix only covered values you SET.** The default
+  was still `"development"`, so omitting the variable skipped the entire guard and
+  booted on the dev `SECRET_KEY`.
+
+Plus a separate **CRIT: admin escalation.** `is_platform_admin` granted admin to
+any account whose email appeared in `ADMIN_EMAILS`, and registration seeded
+`is_admin` from the same list — with **no email verification anywhere in the app**.
+Whoever registered a listed address first became a platform admin, with the audit
+log (every user's security events, minors included) and consent-reopen. The runbook
+told Evan to set `ADMIN_EMAILS` before any account existed — precisely that window.
+Admin is now the `is_admin` column only, granted by explicit SQL.
+
+A **graphify refresh** (1594 nodes, 2937 edges, 159 communities) then caught five
+codebase-memory bins contradicting each other — three of them freshly created by
+the audit fixes, where `security.md` was updated and its siblings were not.
+
+**2026-08-07 — the two "sized large" items, then the audit methods that needed a
+running stack.**
+
+**Next 15.5.20 → 16.3.0** took `npm audit` from 5 advisories to **0**. The `next`
+vulnerable range covered every 15.x, so the 8 Next advisories had no patch short of
+the major. Next 16 removes `next lint`, which WAS the CI lint gate — `npm run lint`
+is now `eslint .` over a flat `eslint.config.mjs`. The bump also brought React
+Compiler lint rules that flag 12 pre-existing sites; those were set to `warn` with
+written reasoning rather than mechanically "fixed", because the main rule is largely
+a false positive for an app that keeps its JWT in localStorage: localStorage cannot
+be read during render without breaking SSR hydration, so complying literally in
+`auth-context.tsx` would have introduced a bug.
+
+**`script-src` no longer carries `'unsafe-inline'`.** A new `frontend/proxy.ts`
+mints a per-request nonce; the static CSP was removed from `next.config.mjs`,
+because two `Content-Security-Policy` headers are intersected by the browser rather
+than overridden. This closes the gap ADR-0001 named as the price of localStorage
+tokens — that decision leaned on "no XSS sink exists today", an argument about the
+present that one future mistake invalidates. The cost is real and recorded:
+`dynamic = "force-dynamic"` in the root layout, moving 28 routes from static
+prerender to per-request render, because a nonce cannot exist in build-time HTML.
+`style-src` deliberately keeps `'unsafe-inline'` — a nonce covers `<style>` elements
+but never `style="..."` attributes, which is what React's `style={{...}}` prop
+compiles to.
+
+**M8 (data at rest) and live M6 (endpoint probing) finally ran, and the M5 launch
+gate was driven end to end on real Postgres for the first time, in both
+directions.** A fresh minor lands in `pending` and is refused on apply, check-in,
+auto-log and self-report, and is absent from the public leaderboard; after a real
+guardian approval through `POST /consent/{token}` the same calls succeed. An adult
+student on the identical endpoint returned 409 "Already applied" — the control
+proving those refusals were the gate and not a broken route. That is the
+re-validation the 2026-08-05 crit demanded, and it is the first time the gate has
+been shown working against a real database rather than inferred from unit tests.
+
+**No new code defects were found.** All six apparent probe failures were wrong
+assumptions in the probes themselves — guessed route paths, wrong HTTP method,
+wrong field names, and a test address on the reserved `.invalid` TLD that looked
+like user enumeration until retried. Recorded because a probe that fails for a dumb
+reason and then gets quietly adjusted is how a real finding gets talked away.
+
+**The bin sweep found the day's most operator-dangerous item, and it was
+documentation, not code.** `backend/.env.example` still described `ADMIN_EMAILS` as
+the "comma-separated emails allowed to read GET /audit-log". It grants nothing —
+someone provisioning production would have listed their address and believed they
+had admin. `security.md` was contradicting *itself* on the same point, one section
+saying admin came from `ADMIN_EMAILS` and another saying that path was closed.
+
+**Two process failures worth keeping.** First, `gotchas.md` had documented since
+2026-07-13 that a React re-render after `el.click()` is async and must be read in a
+separate call; I read it in the same call, concluded the page had not hydrated, and
+briefly believed the new CSP had broken the app. The bin was right and unread.
+Second, I ran `date`, the session then sat idle about seven hours, and I carried the
+old stamp forward — dating a commit and six code comments 2026-08-06 when the work
+happened on 2026-08-07. Caught only because a database row appeared to be
+timestamped in the future.
+
+**VERIFY.** 277 pytest green; ruff check + format clean; eslint exit 0; `tsc
+--noEmit` clean; `next build` clean; `npm audit` 0 vulnerabilities. Browser-verified
+in production mode, dev mode, and through the `output: standalone` Docker image.
+Dev DB restored to its documented baseline and verified orphan-free.
+
 ## Summary timeline
 
 | Date | Era | Event | Evidence |
@@ -1314,6 +1411,8 @@ Committed as `b1d7e71` plus a follow-up batch.
 | 2026-07-20 | v2 | taste-skill vetted+installed; design pass: emoji→Lucide site-wide (marketing then product UI, shared category map), false org-vetting claim removed, truthful stats, CTA unification | `32793b2`, `032b21e` |
 | 2026-07-22 | v2 | PRD gains a required GOAL block at the top (skeleton sync) | `588a7c0` |
 | 2026-08-05 | v2 | Two-pass cold audit: **M5 consent gate was never wired up** (banner never mounted, register sent nothing) + 21 other P1/P2 fixes; prod guard failed open on `ENVIRONMENT=prod`; hours double-submit minted an unearned award; org deletion was unreachable. 215→256 tests, warnings-as-errors, ruff finally live in CI | `b1d7e71` |
+| 2026-08-06 | v2 | Second cold audit: **admin escalation via `ADMIN_EMAILS`** (no email verification anywhere) + the previous day's fixes were partly wrong — hours dedupe keyed on the hours VALUE so `3.01` bypassed it, `redeem_checkin` never checked `opp.active`, `ENVIRONMENT` still defaulted to development. 277 tests | `5d53d42`, `7aff291` |
+| 2026-08-07 | v2 | Next 15→16 (**npm audit 5→0**, `next lint` removed → flat eslint config); **`script-src` drops `'unsafe-inline'`** via a per-request nonce in `proxy.ts` (cost: 28 routes static→dynamic); live M8 + M6 — **M5 consent gate proven end to end on real Postgres, both directions**; `.env.example` still claimed `ADMIN_EMAILS` granted admin | `d9b5ccf` + this |
 
 ## What's not in this record (honest gaps)
 

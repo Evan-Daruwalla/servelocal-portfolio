@@ -65,8 +65,9 @@ export function ReviewsSection({ orgId }: { orgId: string }) {
 
         {user?.role === "student" && (
           <form onSubmit={onSubmit} className="flex flex-col gap-2 border-t pt-4">
-            <label className="text-sm font-medium">Leave a review</label>
+            <label htmlFor="review-rating" className="text-sm font-medium">Leave a review</label>
             <select
+              id="review-rating"
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
               className="h-9 w-28 rounded-md border border-input bg-transparent px-3 text-sm"

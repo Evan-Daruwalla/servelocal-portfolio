@@ -5,6 +5,7 @@
  * below is one method per endpoint, grouped by domain (banners: `── Domain ──`) in
  * roughly the same order as the route modules.
  */
+import { humanizeDetail } from "@/lib/humanize-detail";
 import type {
   Application,
   ApplicationWithOpportunity,
@@ -72,7 +73,7 @@ async function request<T>(
     } catch {
       // response wasn't JSON — fall back to statusText
     }
-    throw new ApiError(res.status, typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw new ApiError(res.status, humanizeDetail(detail));
   }
 
   if (res.status === 204) return undefined as T;

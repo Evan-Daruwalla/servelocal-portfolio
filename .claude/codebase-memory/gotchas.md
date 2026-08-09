@@ -1,6 +1,6 @@
 # gotchas — servelocal-v2
 
-Last updated 2026-07-13.
+Last updated 2026-08-07.
 
 - **Browser-pane tab is `visibility:hidden` → CSS animation/transition clocks freeze at t=0**
   (2026-07-13). Reading computed styles "after" an entrance/stagger shows the FROM-frame (e.g.
@@ -12,6 +12,12 @@ Last updated 2026-07-13.
   to declare it BEFORE `/{opportunity_id}` or "mine" is captured as an id (same rule as consent's
   `/request`). FastAPI matches in declaration order.
 
+- **`next-env.d.ts` flip-flops between `next dev` and `next build`** (2026-08-07, Next 16):
+  Next rewrites its imports to `./.next/dev/types/...` after a dev run and `./.next/types/...`
+  after a build, so the file shows up modified in `git status` depending on which you ran last.
+  It is framework-generated ("should not be edited") — do NOT hand-fix it. The committed
+  version is the BUILD variant, which is what CI produces; if a dev run dirties it, run
+  `npm run build` (or check it out) before committing rather than editing it.
 - **`next dev` and `npm run build` share the `.next/` dir** (2026-07-12): running the production
   build while a `next dev` server is live overwrites the chunks it serves from memory → the running
   app suddenly renders UNSTYLED with 404s on `/_next/static/.../layout.css` + chunk files. Not a

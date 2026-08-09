@@ -177,3 +177,79 @@ this ADR task (backend config is being edited concurrently by another worker).
 5. **Already tracked:** move the single-process rate limiter to a shared store for a
    multi-process deploy (`backend/app/core/rate_limit.py`, flagged for M11) — matters
    for brute-force resistance on `/auth/*` once we scale past one process.
+
+---
+
+## Follow-up status (appended 2026-08-06, verified against the code)
+
+The Follow-ups above were written as "NOT implemented here". Three of them have
+since landed. Recorded because an ADR whose follow-up list is stale is worse than
+none — a launch reader would re-do work, or assume risk that is already closed.
+Each line below was checked against the source, not against HANDOFF.
+
+| # | Follow-up | Status |
+|---|---|---|
+| 1 | Tighten access-token TTL | **DONE** — 7 days → **24h**, `config.py` `ACCESS_TOKEN_EXPIRE_MINUTES = Field(default=60 * 24, ge=1)` (2026-08-05 audit). The `ge=1` bound is new too: a 0/negative value minted already-expired tokens. |
+| 2 | Server-side logout invalidation | **DONE** — `POST /auth/logout` bumps `token_version` (`auth.py:174`), checked in `get_current_user` (`deps.py`). Logging out now genuinely kills the token, which was the shared-machine gap. |
+| 3 | Logout-on-401 interceptor | **DONE** — `frontend/lib/api.ts:65` clears the token and routes to login on a 401 that carried a token. Tokenless 401s (a failed login) correctly clear nothing. |
+| 4 | Refresh-token rotation | **NOT DONE, post-launch by design.** Unchanged. |
+| 5 | Shared-store rate limiter | **NOT DONE.** Still single-process in-memory (`core/rate_limit.py`). A key-eviction sweep was added 2026-08-05 (an IPv6 /64 scan grew `_hits` without bound), but a multi-process deploy still needs Redis. **Relevant to Railway: more than one replica silently multiplies every rate limit by the replica count.** |
+
+**The residual risk this ADR accepted is materially smaller than at signing.** The
+decision paragraph says we ship "a 7-day token, no server-side logout" — both of
+those are now fixed. What remains of Option A's downside is narrower: the token is
+still readable by page script if a stored-XSS hole ever appears, and `script-src`
+still carries `'unsafe-inline'`. The load-bearing invariants remain: **zero
+`dangerouslySetInnerHTML`** (re-verified with two tools in the 2026-08-05 audit) and
+the production CSP's `connect-src` allowlist blocking off-origin exfiltration.
+
+**Status is unchanged: still Proposed.** Evan's sign-off is BLOCKED-ON-EVAN. The
+implementation side of PRD criterion "documented token-storage decision ... implemented
+before launch" is now satisfied; the sign-off side is not.
+
+## CSP gap closed (appended 2026-08-07 ~05:38 CDT)
+
+The paragraph above says `script-src` "still carries `'unsafe-inline'`". **That is
+no longer true**, and the sentence is left in place rather than edited so the
+sequence stays readable.
+
+`frontend/proxy.ts` now mints a per-request nonce and builds the CSP there, so
+`script-src` is `'self' 'nonce-<per-request>' https://challenges.cloudflare.com`
+with **no `'unsafe-inline'`**. The static CSP was removed from `next.config.mjs`
+in the same change — two `Content-Security-Policy` headers are intersected by the
+browser, not overridden, so leaving the old one would have silently broken every
+page.
+
+This directly shrinks the residual risk this ADR accepted. The argument for
+Option A leaned on "the stored-XSS surface itself is minimal" (zero
+`dangerouslySetInnerHTML`, React auto-escaping) — an argument about there being
+no *sink today*, which a single future mistake could invalidate. CSP is now an
+actual backstop rather than a claim: an injected inline `<script>` is refused by
+the browser even if a sink appears.
+
+Verified in a production build (`npm run start`), not just read:
+
+| Control | Result |
+|---|---|
+| Inline `<script>` with no nonce | **blocked** — console: "Executing inline script violates the following Content Security Policy directive"; the injected function never ran |
+| Inline `<script>` carrying the served nonce | ran (this is the path Next's own bootstrap uses) |
+| `https://challenges.cloudflare.com` script tag | loaded — Turnstile still works |
+| Nonce value across two requests | different each time |
+| App hydration + client-side nav | working (role toggle flips state, `/register` → `/login` without a document load) |
+
+Two deliberate limits, so nobody reads this as stronger than it is:
+
+- **`style-src` keeps `'unsafe-inline'`.** A nonce covers `<style>` elements but
+  never `style="..."` attributes, and React's `style={{...}}` prop compiles to
+  exactly that attribute — which the `.v1` pages use throughout. Removing it
+  would break the layout of every screen. CSS-only injection is a much weaker
+  primitive than script execution, but it is not zero.
+- **No `'strict-dynamic'`.** It would make the browser ignore the Turnstile host
+  allowlist, and Turnstile is injected by app code as a plain `<script>` tag.
+
+Cost paid: the nonce cannot exist in HTML generated at build time, so
+`app/layout.tsx` sets `export const dynamic = "force-dynamic"` and 28 routes
+moved from static prerender to per-request render. Cheap for this app — every
+page is a client shell that fetches from the API in the browser, so no
+server-side data work was being cached — but it does mean the HTML is no longer
+CDN-cacheable.

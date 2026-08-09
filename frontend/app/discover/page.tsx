@@ -87,20 +87,16 @@ export default function DiscoverPage() {
           <p className="sec-sub">Browse local organizations and their open opportunities. Filter by category, commitment, and format to find something that fits.</p>
         </div>
 
-        {/* ZIP / DISTANCE FILTER (visual — v2 has no geolocation yet) */}
-        <div className="zip-filter-wrap">
-          <label><MapPin size={13} strokeWidth={1.75} aria-hidden /> Near ZIP code:</label>
-          <input className="zip-input" maxLength={5} placeholder="e.g. 60601" />
-          <select className="fsel" style={{ padding: "6px 10px", fontSize: ".82rem" }} defaultValue="15">
-            <option value="5">Within 5 mi</option>
-            <option value="10">Within 10 mi</option>
-            <option value="15">Within 15 mi</option>
-            <option value="25">Within 25 mi</option>
-            <option value="50">Within 50 mi</option>
-          </select>
-          <button className="zip-btn">Apply</button>
-          <span className="zip-status">Searches cover 15 miles by default. Add a ZIP to narrow it down.</span>
-        </div>
+        {/* ZIP / DISTANCE FILTER — removed 2026-08-06.
+            All three controls were inert: the input had no value/onChange, the
+            select had no onChange, and the Apply button had no handler. The copy
+            beside them asserted "Searches cover 15 miles by default", which was
+            never true — `lat`/`lng` are null on 100% of opportunity rows and no
+            endpoint filters on distance. A control that does nothing while
+            claiming a behaviour is worse than an absent one, so it comes back
+            with geolocation, not before (audit 2026-08-06).
+            Opportunity.lat/lng and the `zip-filter-wrap`/`zip-*` CSS are left in
+            place for that work. */}
 
         {/* SEARCH + FILTERS */}
         <div className="search-bar">
