@@ -1,5 +1,6 @@
 "use client";
 
+import { TriangleAlert } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,11 @@ export default function MyHoursPage() {
   const [awards, setAwards] = useState<MyAwards | null>(null);
   const [apps, setApps] = useState<ApplicationWithOpportunity[]>([]);
   const [fetching, setFetching] = useState(true);
+  // Without this the page fell back to the "No hours logged yet" empty state on a
+  // failed load — telling a student with verified hours that they have none, and
+  // explaining the emptiness away. `dashboard/page.tsx` had the branch; this page
+  // drifted (audit 2026-08-11).
+  const [loadError, setLoadError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // self-report + check-in form state
@@ -51,7 +57,9 @@ export default function MyHoursPage() {
         setEntries(hoursData as HoursWithOpportunity[]);
         setAwards(awardsData);
         setApps(appsData);
+        setLoadError(false);
       })
+      .catch(() => setLoadError(true))
       .finally(() => setFetching(false));
   }
 
@@ -211,7 +219,20 @@ export default function MyHoursPage() {
       )}
 
       {fetching && <p className="empty-state">Loading…</p>}
-      {!fetching && entries.length === 0 && (
+      {!fetching && loadError && (
+        <div className="load-error">
+          <div className="empty-icon"><TriangleAlert size={40} strokeWidth={1.75} aria-hidden /></div>
+          <div className="ferr">Couldn&apos;t load your hours. Check your connection and try again.</div>
+          <div>
+            <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={refresh}>
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+      {/* `!loadError` matters: an empty list and a FAILED load are different
+          things, and this copy actively explains the emptiness away. */}
+      {!fetching && !loadError && entries.length === 0 && (
         <div className="empty-state">No hours logged yet. They log automatically once an event passes.</div>
       )}
 

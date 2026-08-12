@@ -66,7 +66,11 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {children}
+      {/* The `main` landmark for `.v1` routes. It lives HERE rather than in the
+          root layout because this shell owns the nav above and the footer below,
+          so a `main` at layout level would nest both inside it (audit
+          2026-08-11). `PageMain` stands down on these routes for that reason. */}
+      <main>{children}</main>
 
       <footer className="v1-footer">
         <div className="footer-inner">
@@ -84,8 +88,14 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
             <Link href="/donate">Support Us</Link>
             <Link href="/login">Log In</Link>
           </div>
-          <div className="footer-bottom">
-            © 2026 ServeLocal · Free forever for students. · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
+          {/* Year is computed, not hardcoded: it read "© 2026" and would have been
+              wrong on every .v1 page from 2027-01-01 (audit 2026-08-08).
+              suppressHydrationWarning because the server renders this during SSR and
+              the browser re-renders it on hydration — for a few hours each New Year
+              those two sit in different calendar years and would otherwise log a
+              mismatch. The text is cosmetic, so taking the client's value is right. */}
+          <div className="footer-bottom" suppressHydrationWarning>
+            © {new Date().getFullYear()} ServeLocal · Free forever for students. · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
           </div>
         </div>
       </footer>

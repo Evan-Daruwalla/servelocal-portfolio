@@ -48,6 +48,12 @@ export default function RootLayout({
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
             <SiteHeader />
+            {/* Deliberately NOT <main>. Every non-`.v1` page already renders its
+                own <main> (all 10 of them, verified 2026-08-11), and on a `.v1`
+                route V1Shell owns the landmark — putting one here would produce
+                two per document, and on `.v1` routes it would additionally wrap
+                that shell's nav and footer. The `.v1` routes were the ones
+                genuinely missing a landmark; V1Shell is where that was fixed. */}
             <div className="flex-1">{children}</div>
             <SiteFooter />
           </div>

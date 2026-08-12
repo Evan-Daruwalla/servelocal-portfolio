@@ -30,7 +30,15 @@ export default function DiscoverPage() {
   const [opps, setOpps] = useState<Opportunity[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [category, setCategory] = useState("");
+  // These two shipped as `defaultValue`-only <select>s — no state, no handler —
+  // so both filters were decorative while the section copy promised they worked
+  // (audit 2026-08-11). Filtered client-side rather than server-side because the
+  // list endpoint only accepts `category`/`query`, and the page already holds the
+  // full result set.
+  const [commitment, setCommitment] = useState("");
+  const [format, setFormat] = useState("");
   const [q, setQ] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -53,30 +61,46 @@ export default function DiscoverPage() {
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return opps;
-    return opps.filter((o) => `${o.title} ${o.org_name} ${o.skills.join(" ")}`.toLowerCase().includes(needle));
-  }, [opps, q]);
+    return opps.filter((o) => {
+      if (commitment && o.commitment !== commitment) return false;
+      if (format && o.format !== format) return false;
+      if (!needle) return true;
+      return `${o.title} ${o.org_name} ${o.skills.join(" ")}`.toLowerCase().includes(needle);
+    });
+  }, [opps, q, commitment, format]);
 
   function toggleSave(e: React.MouseEvent, id: string) {
     e.preventDefault();
     e.stopPropagation();
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
+    // Optimistic, but REVERTED on failure. Both catches used to swallow the error
+    // outright, so a failed save left the heart filled while the server recorded
+    // nothing — the bookmark silently vanished on the next reload and the user
+    // could not tell which of N saves had actually taken (audit 2026-08-11).
+    const prev = savedIds;
     const next = new Set(savedIds);
+    const undo = (msg: string) => {
+      setSavedIds(prev);
+      setSaveError(msg);
+    };
+    setSaveError(null);
     if (next.has(id)) {
       next.delete(id);
       setSavedIds(next);
-      api.unsave(id, token).catch(() => undefined);
+      api.unsave(id, token).catch(() => undo("Couldn't remove that bookmark. Try again."));
     } else {
       next.add(id);
       setSavedIds(next);
-      api.save(id, token).catch(() => undefined);
+      api.save(id, token).catch(() => undo("Couldn't save that bookmark. Try again."));
     }
   }
 
   const chips: { cls: string; label: string; clear: () => void }[] = [];
   if (q) chips.push({ cls: "", label: `"${q}"`, clear: () => setQ("") });
   if (category) chips.push({ cls: "fc-cat", label: category, clear: () => setCategory("") });
+  if (commitment) chips.push({ cls: "", label: commitment, clear: () => setCommitment("") });
+  if (format) chips.push({ cls: "", label: format, clear: () => setFormat("") });
 
   return (
     <V1Shell>
@@ -106,30 +130,52 @@ export default function DiscoverPage() {
             </svg>
             <input
               className="si"
+              aria-label="Search opportunities"
               placeholder="Search by role, skill, or organization…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-          <select className="fsel" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <select
+            className="fsel"
+            aria-label="Filter by category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
             <option value="">All Categories</option>
             {CATEGORIES.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
-          <select className="fsel" defaultValue="">
+          <select
+            className="fsel"
+            aria-label="Filter by commitment"
+            value={commitment}
+            onChange={(e) => setCommitment(e.target.value)}
+          >
             <option value="">Any Commitment</option>
             <option>One-time</option>
             <option>Weekly</option>
             <option>Monthly</option>
           </select>
-          <select className="fsel" defaultValue="">
+          <select
+            className="fsel"
+            aria-label="Filter by format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+          >
             <option value="">In-Person or Remote</option>
             <option value="Remote">Remote</option>
             <option value="In-Person">In-Person</option>
             <option value="Hybrid">Hybrid</option>
           </select>
         </div>
+
+        {saveError && (
+          <div className="ferr" style={{ display: "block", marginTop: 12 }} role="status">
+            {saveError}
+          </div>
+        )}
 
         {/* ACTIVE FILTER CHIPS */}
         {chips.length > 0 && (

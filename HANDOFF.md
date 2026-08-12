@@ -111,7 +111,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | Awards (thresholds from verified hours) | pre-M1 | **Done** | `94c185e`; `tests/test_awards.py` |
 | Bookmarks (saved opportunities) | M1 | **Done** | `94c185e`; route `/saved` (PRD suggested `/saved-opps`) |
 | Doc system bootstrap | M1.1 | **Done** | This file + record + state, 2026-07-07 |
-| CI workflow | M1.5 | **Done** | `.github/workflows/ci.yml` — backend pytest + frontend lint/build; validated locally, first run on next push |
+| CI workflow | M1.5 | **Done** | `.github/workflows/ci.yml` — **3 jobs**: backend (ruff check + format, pip-audit, pytest on SQLite), backend-postgres (same suite on real Postgres, added 2026-08-06), frontend (eslint, npm audit, build). **Every step is blocking as of 2026-08-08** — the two dependency-CVE scans were `continue-on-error` until both trees were confirmed at 0; escape hatches documented inline in the workflow |
 | Recurring events + waitlist | M2 | **Done** | Weekly/monthly recurrence, subscribe-all/single-date + exclude-date, one-time FIFO waitlist, recurring hours auto-log. 86 tests. 2026-07-08 |
 | Hours parity (self-report, appeals, check-in codes) | M3 | **Done** | Self-report + one-time appeals + per-date check-in codes (throttled). 100 tests. 2026-07-08 |
 | Email infra + password reset | M4 | **Done** | Resend stub (logged no-op without key) + enumeration-safe reset with `token_version` session invalidation. 107 tests. Live end-to-end verified. 2026-07-08 |
