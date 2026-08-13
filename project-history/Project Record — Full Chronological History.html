@@ -137,7 +137,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</a><br />
 - <a href="#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05">II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)</a><br />
 - <a href="#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07">II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)</a><br />
-- <a href="#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12">II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)</a></p>
+- <a href="#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12">II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)</a><br />
+- <a href="#ii25--the-rate-limiter-was-counting-the-proxy-and-a-docstring-was-describing-the-opposite-of-what-shipped-2026-08-12">II.25 — the rate limiter was counting the proxy, and a docstring was describing the opposite of what shipped (2026-08-12)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -1274,6 +1275,44 @@ Both corrected.</p>
 <p>Backend tests went 277 → 306 across the batch; the frontend still has no test<br />
 runner at all, which is now stated plainly in the testing bin rather than implied<br />
 away.</p>
+<h2 id="ii25--the-rate-limiter-was-counting-the-proxy-and-a-docstring-was-describing-the-opposite-of-what-shipped-2026-08-12">II.25 — the rate limiter was counting the proxy, and a docstring was describing the opposite of what shipped (2026-08-12)</h2>
+<p><strong>The rate limiter had been decorative in every deployment shape the project is<br />
+actually headed for.</strong> It keyed on <code>request.client.host</code>, which behind a reverse<br />
+proxy is the proxy — so all traffic shared one bucket, the auth cap of 30/min was<br />
+a GLOBAL cap, and one abusive client could lock out the entire user base while the<br />
+per-client limit did nothing. It has been that way since M9 shipped it<br />
+(2026-07-09) and passed every test, because tests connect directly.</p>
+<p><strong>The obvious fix was worse than the bug, and that shaped the design.</strong><br />
+<code>X-Forwarded-For</code> is attacker-supplied: read it unconditionally and any client can<br />
+vary the header per request, mint a fresh bucket each time, and bypass the limiter<br />
+completely — trading a shared-bucket DoS for no limiter at all. So the header is<br />
+believed only when the deploy states its topology, through a new<br />
+<code>TRUSTED_PROXY_HOPS</code> (default <strong>0</strong>, trust nothing). Each proxy appends the address<br />
+it received from, so with N declared hops the client is the Nth entry from the<br />
+right; anything that can't be justified — hops unset, header absent, chain shorter<br />
+than declared, an unparseable entry — falls back to the socket address. Five tests,<br />
+all red first, the load-bearing one asserting the header is IGNORED by default,<br />
+which is the property a careless implementation destroys. 306 → 311 (<code>92282c6</code>).</p>
+<p>The residual is stated rather than papered over: the limiter is still in-memory<br />
+and single-process, so a multi-replica deploy multiplies every limit by the replica<br />
+count. This change fixed WHO gets counted, not WHERE the count lives.</p>
+<p><strong>Then a doc pass found the day's own feature described backwards.</strong> The<br />
+docstring on <code>_withdraw_from_rosters</code> claimed the <code>withdrawn</code> status removes a<br />
+revoked minor from, among other things, "the org's applicant and hours lists".<br />
+Checking all seven claimed surfaces against the code: five true, one unlisted<br />
+(hours self-report), and those two false — not near-misses but the <strong>opposite</strong> of<br />
+the design shipped hours earlier the same day, where Phase 2 deliberately KEEPS<br />
+the row in the org's list, greyed, because the row is the organization's record.<br />
+<code>security.md</code> carried both statements two bullets apart. Corrected in the three<br />
+live copies; the record entries keep the wrong sentence, because append-only means<br />
+the correction is a new entry, not an edit.</p>
+<p><strong>The registry gap is the one worth remembering.</strong> <code>TRUSTED_PROXY_HOPS</code> had been<br />
+documented in <code>.env.example</code> and both deploy runbooks but not in <code>docs/API_KEYS.md</code>,<br />
+the file that calls itself the single list of everything the operator must supply —<br />
+the third variable to go missing from that table after <code>SUPPORT_EMAIL</code> and<br />
+<code>NEXT_PUBLIC_APP_URL</code>. It is the most dangerous of the three: wrong, it raises no<br />
+error and logs nothing, and the only symptom is a security control quietly not<br />
+working.</p>
 <h2 id="summary-timeline">Summary timeline</h2>
 <table>
 <thead>
@@ -1608,6 +1647,18 @@ away.</p>
 <td>v2</td>
 <td><strong>Guardian revoke made retroactive</strong> in 3 phases — roster withdrawal + spot release, org-side greying that never says why, guardian export/delete on the manage token. A 4th audit found phase 1 left two org-side holes. 306 tests</td>
 <td><code>4ddaaef</code>, <code>5303931</code>, <code>18a0c6c</code></td>
+</tr>
+<tr>
+<td>2026-08-12</td>
+<td>v2</td>
+<td><strong>Rate limiter stopped keying on the proxy</strong> — it had been a single GLOBAL bucket behind any reverse proxy since M9; <code>X-Forwarded-For</code> now believed only when <code>TRUSTED_PROXY_HOPS</code> declares the topology (default 0 = trust nothing). Still in-memory/single-process. 311 tests</td>
+<td><code>92282c6</code></td>
+</tr>
+<tr>
+<td>2026-08-12</td>
+<td>v2</td>
+<td>Doc-drift closeout (audit findings 9/10): <code>_withdraw_from_rosters</code>'s docstring claimed the revoke removes a student from the org's lists — the <strong>opposite</strong> of the Phase 2 design shipped the same day; <code>TRUSTED_PROXY_HOPS</code> was missing from the operator registry</td>
+<td>this entry</td>
 </tr>
 </tbody>
 </table>

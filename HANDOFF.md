@@ -18,14 +18,38 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 
 **Last updated: 2026-08-12.**
 
+> **2026-08-12 — the rate limiter stopped keying on the proxy (`92282c6`), and
+> that hands Evan a REQUIRED production value.**
+> Behind a reverse proxy `request.client.host` is the proxy, so every user shared
+> one bucket: the auth cap was 30/min GLOBALLY and one abusive client could lock
+> out the whole user base. Trusting `X-Forwarded-For` unconditionally would have
+> been worse than the bug — any client can vary the header per request and mint a
+> fresh bucket, i.e. no limiter at all — so the header is ignored unless the
+> deploy declares its topology via **`TRUSTED_PROXY_HOPS` (default 0 = trust
+> nothing)**. `client_ip()` falls back to the socket address whenever the claim
+> can't be justified: hops unset, header absent, chain shorter than declared, or
+> an unparseable entry. **On Railway this must be set to 1 — left at 0 behind a
+> proxy the limiter is decorative and nothing errors** (see BLOCKED-ON-EVAN).
+> Documented in `backend/.env.example`, `docs/DEPLOY.md`, `docs/DEPLOY_RAILWAY.md`.
+> **311 pytest green** (306 → 311, five tests written red first, the load-bearing
+> one asserting the header is IGNORED by default); ruff check + format clean.
+> NOT fixed: the limiter is still in-memory and single-process, so a multi-replica
+> deploy multiplies every limit — **keep the api at one replica until it moves to
+> Redis**. This change fixed WHO gets counted, not WHERE the count lives.
+
 > **2026-08-12 — the guardian kill switch is now retroactive, and guardians have
 > their own surface (three phases; record entries 2026-08-11/12).**
 > Evan's decision: a revoke must undo state, not merely block future actions.
 > **Phase 1** moves the minor's applications to a new **`withdrawn`** status —
-> one field that removes them from check-in, hours auto-log, org lists, thread
-> access, reviews and spot counting at once, because every one of those filters
-> on `status == "approved"` — frees the one-time spot, promotes the waitlist, and
-> stops org broadcast email. **Phase 2** keeps the row visible to the org, greyed,
+> one field that removes them from check-in, hours auto-log and self-report,
+> org-thread access, reviews and per-date spot counting at once, because every
+> one of those filters on `status == "approved"` — frees the one-time spot,
+> promotes the waitlist, and stops org broadcast email. It deliberately does NOT
+> reach the two ORG-FACING lists (`/applications/org` filters on ownership alone;
+> the org branch of `GET /hours` keys on Hours rows, so hours logged before the
+> revoke stay in the verify queue) — this text claimed them until 2026-08-12,
+> contradicting Phase 2 two sentences later.
+> **Phase 2** keeps the row visible to the org, greyed,
 > with "This account has been deactivated or deleted" on hover; `account_inactive()`
 > is ONE predicate covering deleted/deactivated/revoked that deliberately never
 > says WHICH, because an org has no business learning a family revoked consent.
@@ -36,7 +60,8 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 > Alongside: the public portfolio ignored consent at READ time (a revoked minor's
 > transcript stayed served — the third sibling after the leaderboard fix missed
 > it), and `min_age` was stored, displayed and enforced NOWHERE.
-> **306 pytest green**; ruff/eslint/tsc/build clean; dev DB restored to baseline.
+> **306 pytest green at that point** (311 now — see the block above);
+> ruff/eslint/tsc/build clean; dev DB restored to baseline.
 > **A landing-check then found the frontend had no rendering for the new
 > `withdrawn` status at all** — fixed. Applications approved BEFORE the `min_age`
 > guard remain grandfathered: a data question, still open.
@@ -142,7 +167,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | Notifications | M6 | **Done** | In-app create/list/read + email delivery on every event (opt-out via `PATCH /auth/me`, `email_notifications` default true, migration 0015) + paginated list. All trigger sites already routed through `create_notification`, so email added in one helper. 131 tests. Browser-verified. 2026-07-09 |
 | Messaging | M7 | **Done** | Shared thread (v1 parity) PLUS directed messaging: org→applicant broadcast (audience filter), student inbox, reply — via a nullable `recipient_id` on Message (migration 0016). Shift templates as `OpportunityTemplate` (migration 0017). Minor messaging consent-gated (M5 debt closed). Frontend: inbox, Message-applicants, template use/save. 144 tests. Browser-verified. 2026-07-09 |
 | Billing (Stripe test mode) | M8 | **Done** | Plan enforcement (M8.1, migration 0018) + Stripe Checkout/webhook (M8.2, `stripe==11.4.1`, migration 0019) + billing page & featured toggle UI (M8.3). Free = 3-listing cap → 402; pro-only featured. Verified incl. a real test-mode Stripe session. 159 tests, browser-verified. Only remainder: Evan's manual `stripe listen` round-trip for the live webhook (needs `whsec_`). 2026-07-09 |
-| Hardening (rate limit, audit log, leaderboard) | M9 | **Done** | Per-IP rate limiting (M9.1: auth 30/min + write 120/min buckets, 429+Retry-After); append-only audit log (M9.2: migration 0020, admin-only `/audit-log`, events on login/reset/consent/plan/hours); leaderboard reconciled to the no-PII spec (M9.3). 171 tests. Single-process limiter → Redis at M11. 2026-07-09 |
+| Hardening (rate limit, audit log, leaderboard) | M9 | **Done** | Per-IP rate limiting (M9.1: auth 30/min + write 120/min buckets, 429+Retry-After); append-only audit log (M9.2: migration 0020, admin-only `/audit-log`, events on login/reset/consent/plan/hours); leaderboard reconciled to the no-PII spec (M9.3). 171 tests. Single-process limiter → Redis at M11. 2026-07-09. **Amended 2026-08-12 (`92282c6`): the limiter keyed on `request.client.host` — behind a proxy that is the PROXY, so all traffic shared one bucket. Now `client_ip()` + `TRUSTED_PROXY_HOPS` (default 0 = trust nothing; Railway must set 1). Still in-memory/single-process, so keep the api at ONE replica until Redis.** |
 | Deploy readiness | M10 | **Done** | M10.1 `docker compose up --build` VERIFIED by Evan 2026-07-12 — db+api+web all healthy, migrations 0001–0020 applied on real Postgres, uvicorn + Next serving (fixed a missing-`public/` build bug, `bd32540`). M10.2 boot guard + M10.3 runbook (`docs/DEPLOY.md`) + M10.4 docs sync done. Remaining: Evan's browser click-through of localhost:3000. |
 | Public launch | M11 | **Prep COMPLETE — all remaining steps BLOCKED-ON-EVAN** | Model-doable work done 2026-07-16 via opus-workers: M11.1a ADR 0001 token-storage (`1c81dc5`, Proposed — sign-off + TTL choice = Evan) + M11.1b Turnstile bot defense env-gated off-by-default (`83c3a06`, 209 tests; keys = Evan) + M11.2 Terms/Privacy DRAFTS (`ce3569c`; placeholders + legal sign-off = Evan) + M11.3-prep railway.json ×2 + DEPLOY_RAILWAY.md runbook (`b2ebb84`; account/domain/secrets = Evan) + M11.4 ADR 0002 billing free-tier-only (`9009382`, Proposed — decision = Evan). M11.5–.7 need accounts/deployment |
 | v1 visual parity | M12 | **Done** | Added 2026-07-12 (Evan: match v1's look). M12.1 foundation (`1cdeeea`) + M12.2/M12.3 per-page vocabulary (`67266d5`): opp-card accent bars, badge/status pills, section headers, uppercase form labels, form-box — applied across all 20 routes. Detail-page subcomponents inherit tokens but aren't individually v1-classed (minor follow-up) |
@@ -151,7 +176,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | 4-lens audit fixes + repo split | off-roadmap | **Done** | 2026-07-13. Dep bumps (PYSEC clean), gzip, pagination, cache headers, org student identity, name minimization, migration 0022 → 192 tests. v2 → PRIVATE + public `servelocal-portfolio` mirror via `scripts/sync_portfolio.py` |
 | Launch-checklist hardening | M13 | **Done** | 2026-07-16 via opus-workers (3 phases, orchestrator-reviewed). M13.1 CSP/headers (`e5aa990`) + M13.2 deletion/export API (`166fcab`, 200 tests) + M13.3 its UI, E2E-verified (`bd26052`) + M13.4 sitemap/OG (`4879068`) + M13.5 skeletons/retry/tooltips (`dcf87cc`). M13.6 SWR = skipped (Evan 2026-07-15, PRD default) |
 | Reviews (student→org ratings) | out of scope | **Done (bonus)** | `94c185e`; PRD marks reviews out of scope — kept at Evan's direction |
-| Guardian revoke made retroactive (3 phases) | M5 follow-on | **Done** | 2026-08-11/12, Evan-directed. Phase 1 `4ddaaef` roster withdrawal + spot release + broadcast stop; Phase 2 `5303931` org-side greying via `account_inactive()`; Phase 3 `18a0c6c` guardian export/delete on the manage token (anonymize-in-place). `test_consent_gate_coverage.py` now fails any new write route that is neither gated nor consciously allowlisted. 306 tests |
+| Guardian revoke made retroactive (3 phases) | M5 follow-on | **Done** | 2026-08-11/12, Evan-directed. Phase 1 `4ddaaef` roster withdrawal + spot release + broadcast stop; Phase 2 `5303931` org-side greying via `account_inactive()`; Phase 3 `18a0c6c` guardian export/delete on the manage token (anonymize-in-place). `test_consent_gate_coverage.py` now fails any new write route that is neither gated nor consciously allowlisted. Then `a45be67`: a landing-check found the new `withdrawn` status had NO frontend rendering (the type union type-checked while showing a raw word in a "pending"-coloured pill) — status labels/pills/messages added in both CSS systems. 306 tests at that point (311 now) |
 
 ## Design
 - **v1 look ported 2026-07-12** (off-roadmap, Evan-directed: "make the frontend look like v1").
@@ -232,6 +257,11 @@ contact email exists.
 - Turnstile site + secret keys (feature ships off-by-default until set).
 - Railway account, Postgres provisioning, prod secret VALUES (SECRET_KEY, DATABASE_URL,
   RESEND_API_KEY, STRIPE_*, TURNSTILE_*), domain purchase + DNS — runbook: docs/DEPLOY_RAILWAY.md.
+- **`TRUSTED_PROXY_HOPS=1` on the Railway service** (added 2026-08-12). Not a secret and not
+  optional: the default 0 trusts nothing, which is right locally and wrong behind Railway's TLS
+  proxy — leave it and every user shares one rate-limit bucket while NOTHING errors. Also keep the
+  api at **one replica** until the limiter moves to Redis; it is in-memory, so N replicas multiply
+  every limit by N.
 - Sentry/uptime accounts (M11.5) — plus the "Sentry vs host-native error tracking?" pick before
   any code gets wired; soft-launch org outreach (M11.6).
 - Run one real backup restore-drill (`python scripts/backup_db.py`, then `--restore-drill` — see

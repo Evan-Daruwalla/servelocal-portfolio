@@ -102,6 +102,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)](#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05)
 - [II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)](#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07)
 - [II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)](#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12)
+- [II.25 — the rate limiter was counting the proxy, and a docstring was describing the opposite of what shipped (2026-08-12)](#ii25--the-rate-limiter-was-counting-the-proxy-and-a-docstring-was-describing-the-opposite-of-what-shipped-2026-08-12)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -1421,6 +1422,51 @@ runner at all, which is now stated plainly in the testing bin rather than implie
 away.
 
 
+## II.25 — the rate limiter was counting the proxy, and a docstring was describing the opposite of what shipped (2026-08-12)
+
+**The rate limiter had been decorative in every deployment shape the project is
+actually headed for.** It keyed on `request.client.host`, which behind a reverse
+proxy is the proxy — so all traffic shared one bucket, the auth cap of 30/min was
+a GLOBAL cap, and one abusive client could lock out the entire user base while the
+per-client limit did nothing. It has been that way since M9 shipped it
+(2026-07-09) and passed every test, because tests connect directly.
+
+**The obvious fix was worse than the bug, and that shaped the design.**
+`X-Forwarded-For` is attacker-supplied: read it unconditionally and any client can
+vary the header per request, mint a fresh bucket each time, and bypass the limiter
+completely — trading a shared-bucket DoS for no limiter at all. So the header is
+believed only when the deploy states its topology, through a new
+`TRUSTED_PROXY_HOPS` (default **0**, trust nothing). Each proxy appends the address
+it received from, so with N declared hops the client is the Nth entry from the
+right; anything that can't be justified — hops unset, header absent, chain shorter
+than declared, an unparseable entry — falls back to the socket address. Five tests,
+all red first, the load-bearing one asserting the header is IGNORED by default,
+which is the property a careless implementation destroys. 306 → 311 (`92282c6`).
+
+The residual is stated rather than papered over: the limiter is still in-memory
+and single-process, so a multi-replica deploy multiplies every limit by the replica
+count. This change fixed WHO gets counted, not WHERE the count lives.
+
+**Then a doc pass found the day's own feature described backwards.** The
+docstring on `_withdraw_from_rosters` claimed the `withdrawn` status removes a
+revoked minor from, among other things, "the org's applicant and hours lists".
+Checking all seven claimed surfaces against the code: five true, one unlisted
+(hours self-report), and those two false — not near-misses but the **opposite** of
+the design shipped hours earlier the same day, where Phase 2 deliberately KEEPS
+the row in the org's list, greyed, because the row is the organization's record.
+`security.md` carried both statements two bullets apart. Corrected in the three
+live copies; the record entries keep the wrong sentence, because append-only means
+the correction is a new entry, not an edit.
+
+**The registry gap is the one worth remembering.** `TRUSTED_PROXY_HOPS` had been
+documented in `.env.example` and both deploy runbooks but not in `docs/API_KEYS.md`,
+the file that calls itself the single list of everything the operator must supply —
+the third variable to go missing from that table after `SUPPORT_EMAIL` and
+`NEXT_PUBLIC_APP_URL`. It is the most dangerous of the three: wrong, it raises no
+error and logs nothing, and the only symptom is a security control quietly not
+working.
+
+
 ## Summary timeline
 
 | Date | Era | Event | Evidence |
@@ -1479,6 +1525,8 @@ away.
 | 2026-08-08 | v2 | CI had been RED for 3 pushes while "tests green" was reported — a test asserted an env default that the CI job overrides; both dependency-CVE scans made blocking after actually running them | `4967672`, `4238e5b`, `536b795` |
 | 2026-08-11 | v2 | Third cold audit: **revoke left the minor's public transcript served** (portfolio checked consent only at write time) and **`min_age` was enforced nowhere**; consent gate made machine-enforceable after 3 misses | `6762837` |
 | 2026-08-12 | v2 | **Guardian revoke made retroactive** in 3 phases — roster withdrawal + spot release, org-side greying that never says why, guardian export/delete on the manage token. A 4th audit found phase 1 left two org-side holes. 306 tests | `4ddaaef`, `5303931`, `18a0c6c` |
+| 2026-08-12 | v2 | **Rate limiter stopped keying on the proxy** — it had been a single GLOBAL bucket behind any reverse proxy since M9; `X-Forwarded-For` now believed only when `TRUSTED_PROXY_HOPS` declares the topology (default 0 = trust nothing). Still in-memory/single-process. 311 tests | `92282c6` |
+| 2026-08-12 | v2 | Doc-drift closeout (audit findings 9/10): `_withdraw_from_rosters`'s docstring claimed the revoke removes a student from the org's lists — the **opposite** of the Phase 2 design shipped the same day; `TRUSTED_PROXY_HOPS` was missing from the operator registry | this entry |
 
 ## What's not in this record (honest gaps)
 
