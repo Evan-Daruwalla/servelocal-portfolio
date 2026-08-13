@@ -101,6 +101,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)](#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16)
 - [II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)](#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05)
 - [II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)](#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07)
+- [II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)](#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -1357,6 +1358,68 @@ timestamped in the future.
 --noEmit` clean; `next build` clean; `npm audit` 0 vulnerabilities. Browser-verified
 in production mode, dev mode, and through the `output: standalone` Docker image.
 Dev DB restored to its documented baseline and verified orphan-free.
+## II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)
+
+**Three cold audits and a three-phase feature**, spanning the CI-gate work of
+2026-08-08 through the revoke build of 2026-08-12.
+
+**The two crits both concerned minors, and one was a half-finished fix of mine.**
+`GET /portfolio/{id}` gated on `portfolio_public` alone: consent was checked when
+the transcript was PUBLISHED and never again, so a guardian's revoke blocked the
+child's new actions while their name, hours and the organizations they served
+stayed publicly served. The leaderboard had received exactly this fix on
+2026-08-06 — with a comment on it reading "the consent gate covered
+`portfolio_public` but not this board" — and the third sibling, which exposes
+more than either, was never checked. Separately `min_age` was stored, rendered on
+the org's create form, and read by NOTHING: a 12-year-old could join a 16+ build
+day, auto-approve, check in and bank verified hours.
+
+**The gate is now machine-enforced.** That contract had been missed three times —
+hours routes, leaderboard, portfolio — each caught only by a person reading code.
+`test_consent_gate_coverage.py` requires every write route to be either
+consent-gated or explicitly allowlisted with a stated reason; it was proven to
+catch by adding a fake ungated route, and it later caught a real one on its first
+encounter with new work.
+
+**Revoke became retroactive** (Evan's call, three phases). One status change does
+the work: moving an application to `withdrawn` removes the student from check-in,
+hours auto-log, org lists, thread access, reviews and spot counting simultaneously,
+because every one of those filters on `status == "approved"`. The organization
+keeps the row — greyed, with a hover reading "This account has been deactivated or
+deleted" — because that row is their record of who signed up. The marker
+deliberately never says WHY: an org has no business learning a family revoked
+consent. And a guardian can now export and erase the account from the emailed
+manage link, running the existing anonymize-in-place flow so the org's
+verified-service history survives without PII.
+
+**A fourth audit, run by a separate session, found that the first revoke phase had
+left two org-side holes** — an org could click Approve and walk a revoke straight
+back, and `create_notification` consulted the consent guard at exactly one of its
+call sites, so verifying a revoked minor's hours emailed the child.
+
+**Process failures kept, because they are the useful part.** A stale `date` was
+carried across a seven-hour gap and mis-dated a commit by a day. Three "tests
+green" claims were made against a CI that had been red for three pushes, because
+only the local result was ever looked at — the failing test asserted an
+environment default that the CI job itself overrides. A hardcoded date in the
+recurring-signup tests was found **two days** before it would have started
+failing. An auditor's proposed `<main>` landmark fix would have made accessibility
+worse, and was caught only by checking the ten routes it claimed were broken and
+finding all ten already correct. And an extracted service was first written from
+memory with a materially wrong column allowlist, which would have silently changed
+what the student data export contains — caught by diffing against the original
+before wiring it up.
+
+**A landing-check closed the batch** and found the new `withdrawn` status had no
+rendering anywhere in the frontend: a revoked student's own page showed the raw
+word in an amber "pending"-coloured pill. It also found a count in shipped source
+that had been carried over from another session's summary without being verified.
+Both corrected.
+
+Backend tests went 277 → 306 across the batch; the frontend still has no test
+runner at all, which is now stated plainly in the testing bin rather than implied
+away.
+
 
 ## Summary timeline
 
@@ -1413,6 +1476,9 @@ Dev DB restored to its documented baseline and verified orphan-free.
 | 2026-08-05 | v2 | Two-pass cold audit: **M5 consent gate was never wired up** (banner never mounted, register sent nothing) + 21 other P1/P2 fixes; prod guard failed open on `ENVIRONMENT=prod`; hours double-submit minted an unearned award; org deletion was unreachable. 215→256 tests, warnings-as-errors, ruff finally live in CI | `b1d7e71` |
 | 2026-08-06 | v2 | Second cold audit: **admin escalation via `ADMIN_EMAILS`** (no email verification anywhere) + the previous day's fixes were partly wrong — hours dedupe keyed on the hours VALUE so `3.01` bypassed it, `redeem_checkin` never checked `opp.active`, `ENVIRONMENT` still defaulted to development. 277 tests | `5d53d42`, `7aff291` |
 | 2026-08-07 | v2 | Next 15→16 (**npm audit 5→0**, `next lint` removed → flat eslint config); **`script-src` drops `'unsafe-inline'`** via a per-request nonce in `proxy.ts` (cost: 28 routes static→dynamic); live M8 + M6 — **M5 consent gate proven end to end on real Postgres, both directions**; `.env.example` still claimed `ADMIN_EMAILS` granted admin | `d9b5ccf` + this |
+| 2026-08-08 | v2 | CI had been RED for 3 pushes while "tests green" was reported — a test asserted an env default that the CI job overrides; both dependency-CVE scans made blocking after actually running them | `4967672`, `4238e5b`, `536b795` |
+| 2026-08-11 | v2 | Third cold audit: **revoke left the minor's public transcript served** (portfolio checked consent only at write time) and **`min_age` was enforced nowhere**; consent gate made machine-enforceable after 3 misses | `6762837` |
+| 2026-08-12 | v2 | **Guardian revoke made retroactive** in 3 phases — roster withdrawal + spot release, org-side greying that never says why, guardian export/delete on the manage token. A 4th audit found phase 1 left two org-side holes. 306 tests | `4ddaaef`, `5303931`, `18a0c6c` |
 
 ## What's not in this record (honest gaps)
 

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { CategoryIcon, getCategoryMeta } from "@/components/v1/category-icon";
+import { StudentCell } from "@/components/student-cell";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
@@ -412,8 +413,7 @@ export default function OrgDashboardPage() {
                     {apps.map((a) => (
                       <tr key={a.id}>
                         <td>
-                          <strong>{a.student_name || "—"}</strong>
-                          {a.student_email && <><br /><span style={{ fontSize: ".75rem", color: "var(--muted)" }}>{a.student_email}</span></>}
+                          <StudentCell name={a.student_name} email={a.student_email} inactive={a.student_inactive} />
                         </td>
                         <td style={{ fontSize: ".83rem" }}><strong>{a.opportunity.title}</strong></td>
                         <td><span className={`status-pill sp-${a.status}`}>{a.status}</span></td>
@@ -448,8 +448,7 @@ export default function OrgDashboardPage() {
                     {hours.map((h) => (
                       <tr key={h.id}>
                         <td>
-                          <strong>{h.student_name || "—"}</strong>
-                          {h.student_email && <><br /><span style={{ fontSize: ".75rem", color: "var(--muted)" }}>{h.student_email}</span></>}
+                          <StudentCell name={h.student_name} email={h.student_email} inactive={h.student_inactive} />
                         </td>
                         <td style={{ fontSize: ".83rem" }}><strong>{h.opportunity.title}</strong></td>
                         <td style={{ fontSize: ".78rem" }}>{h.occurrence_date ? fmtDate(h.occurrence_date) : "—"}</td>

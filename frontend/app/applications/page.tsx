@@ -12,6 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
   approved: "Approved",
   rejected: "Not accepted",
   waitlisted: "Waitlisted",
+  // Set by a guardian's revoke (M5). Without an entry here the student saw the
+  // raw word "withdrawn" in an amber "pending"-coloured pill, because both maps
+  // fall back (landing-check 2026-08-12). This page is NOT consent-gated — a
+  // revoked student can still sign in and read their own state, which is the
+  // point — so it is a live surface, not a theoretical one.
+  withdrawn: "Withdrawn",
 };
 
 const STATUS_PILL: Record<string, string> = {
@@ -19,6 +25,7 @@ const STATUS_PILL: Record<string, string> = {
   approved: "sp-approved",
   rejected: "sp-rejected",
   waitlisted: "sp-waitlisted",
+  withdrawn: "sp-withdrawn",
 };
 
 export default function MyApplicationsPage() {

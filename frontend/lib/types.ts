@@ -71,7 +71,11 @@ export interface Application {
   id: string;
   opportunity_id: string;
   user_id: string;
-  status: "pending" | "approved" | "rejected" | "waitlisted";
+  // "withdrawn" is set by a guardian's revoke, which takes the student off the
+  // roster while KEEPING the row so the org retains its record (2026-08-11).
+  // Every backend consumer keys on "approved", so this one value removes them
+  // from check-in, auto-log, thread access, reviews and spot counting at once.
+  status: "pending" | "approved" | "rejected" | "waitlisted" | "withdrawn";
   subscription_type: "all_dates" | "single_date";
   single_date: string | null;
   excluded_dates: string[];
@@ -84,6 +88,9 @@ export interface ApplicationWithOpportunity extends Application {
   // Org-facing only (GET /applications/org); null on a student's own list.
   student_name?: string | null;
   student_email?: string | null;
+  // Account deleted/deactivated, or a guardian revoked consent. Deliberately one
+  // flag that does not say which — see INACTIVE_ACCOUNT_HINT.
+  student_inactive?: boolean;
 }
 
 // ── Hours & awards ──
@@ -108,6 +115,8 @@ export interface HoursWithOpportunity extends Hours {
   // Org-facing only (org branch of GET /hours); null on a student's own list.
   student_name?: string | null;
   student_email?: string | null;
+  // See ApplicationWithOpportunity.student_inactive.
+  student_inactive?: boolean;
 }
 
 export interface Award {

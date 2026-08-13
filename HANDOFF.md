@@ -16,7 +16,30 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 
 ## Current state — M1–M10 + M12 + M13 + v1 EXACT-COPY + portfolio + audits COMPLETE; frontier = M11 launch (BLOCKED-ON-EVAN)
 
-**Last updated: 2026-08-07.**
+**Last updated: 2026-08-12.**
+
+> **2026-08-12 — the guardian kill switch is now retroactive, and guardians have
+> their own surface (three phases; record entries 2026-08-11/12).**
+> Evan's decision: a revoke must undo state, not merely block future actions.
+> **Phase 1** moves the minor's applications to a new **`withdrawn`** status —
+> one field that removes them from check-in, hours auto-log, org lists, thread
+> access, reviews and spot counting at once, because every one of those filters
+> on `status == "approved"` — frees the one-time spot, promotes the waitlist, and
+> stops org broadcast email. **Phase 2** keeps the row visible to the org, greyed,
+> with "This account has been deactivated or deleted" on hover; `account_inactive()`
+> is ONE predicate covering deleted/deactivated/revoked that deliberately never
+> says WHICH, because an org has no business learning a family revoked consent.
+> **Phase 3** gives the guardian export + delete on the manage token, running the
+> EXISTING anonymize-in-place flow so the org keeps its verified-service record
+> and the privacy policy needs no rewrite; `_guardian_subject` bounds that token
+> to an active student under 18, since the token never rotates.
+> Alongside: the public portfolio ignored consent at READ time (a revoked minor's
+> transcript stayed served — the third sibling after the leaderboard fix missed
+> it), and `min_age` was stored, displayed and enforced NOWHERE.
+> **306 pytest green**; ruff/eslint/tsc/build clean; dev DB restored to baseline.
+> **A landing-check then found the frontend had no rendering for the new
+> `withdrawn` status at all** — fixed. Applications approved BEFORE the `min_age`
+> guard remain grandfathered: a data question, still open.
 
 > **2026-08-07 — Next 16 + nonce CSP, then the live M6/M8 audit (record entry of the same date).**
 > **The M5 launch gate has now been driven end to end on real Postgres, in both directions** —
@@ -128,6 +151,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | 4-lens audit fixes + repo split | off-roadmap | **Done** | 2026-07-13. Dep bumps (PYSEC clean), gzip, pagination, cache headers, org student identity, name minimization, migration 0022 → 192 tests. v2 → PRIVATE + public `servelocal-portfolio` mirror via `scripts/sync_portfolio.py` |
 | Launch-checklist hardening | M13 | **Done** | 2026-07-16 via opus-workers (3 phases, orchestrator-reviewed). M13.1 CSP/headers (`e5aa990`) + M13.2 deletion/export API (`166fcab`, 200 tests) + M13.3 its UI, E2E-verified (`bd26052`) + M13.4 sitemap/OG (`4879068`) + M13.5 skeletons/retry/tooltips (`dcf87cc`). M13.6 SWR = skipped (Evan 2026-07-15, PRD default) |
 | Reviews (student→org ratings) | out of scope | **Done (bonus)** | `94c185e`; PRD marks reviews out of scope — kept at Evan's direction |
+| Guardian revoke made retroactive (3 phases) | M5 follow-on | **Done** | 2026-08-11/12, Evan-directed. Phase 1 `4ddaaef` roster withdrawal + spot release + broadcast stop; Phase 2 `5303931` org-side greying via `account_inactive()`; Phase 3 `18a0c6c` guardian export/delete on the manage token (anonymize-in-place). `test_consent_gate_coverage.py` now fails any new write route that is neither gated nor consciously allowlisted. 306 tests |
 
 ## Design
 - **v1 look ported 2026-07-12** (off-roadmap, Evan-directed: "make the frontend look like v1").

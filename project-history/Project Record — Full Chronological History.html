@@ -136,7 +136,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii20--audit-hardening-repo-split-m13-plan-2026-07-13-to-2026-07-15">II.20 — audit hardening, repo split, M13 plan (2026-07-13 to 2026-07-15)</a><br />
 - <a href="#ii21--prelaunch-batch-copy-humanization-clickwrap-tos--onboarding-2026-07-16">II.21 — prelaunch batch, copy humanization, clickwrap ToS + onboarding (2026-07-16)</a><br />
 - <a href="#ii22--two-pass-cold-audit-the-m5-launch-gate-was-never-wired-up-2026-08-05">II.22 — two-pass cold audit: the M5 launch gate was never wired up (2026-08-05)</a><br />
-- <a href="#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07">II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)</a></p>
+- <a href="#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07">II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)</a><br />
+- <a href="#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12">II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -1220,6 +1221,59 @@ timestamped in the future.</p>
 --noEmit</code> clean; <code>next build</code> clean; <code>npm audit</code> 0 vulnerabilities. Browser-verified<br />
 in production mode, dev mode, and through the <code>output: standalone</code> Docker image.<br />
 Dev DB restored to its documented baseline and verified orphan-free.</p>
+<h2 id="ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12">II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)</h2>
+<p><strong>Three cold audits and a three-phase feature</strong>, spanning the CI-gate work of<br />
+2026-08-08 through the revoke build of 2026-08-12.</p>
+<p><strong>The two crits both concerned minors, and one was a half-finished fix of mine.</strong><br />
+<code>GET /portfolio/{id}</code> gated on <code>portfolio_public</code> alone: consent was checked when<br />
+the transcript was PUBLISHED and never again, so a guardian's revoke blocked the<br />
+child's new actions while their name, hours and the organizations they served<br />
+stayed publicly served. The leaderboard had received exactly this fix on<br />
+2026-08-06 — with a comment on it reading "the consent gate covered<br />
+<code>portfolio_public</code> but not this board" — and the third sibling, which exposes<br />
+more than either, was never checked. Separately <code>min_age</code> was stored, rendered on<br />
+the org's create form, and read by NOTHING: a 12-year-old could join a 16+ build<br />
+day, auto-approve, check in and bank verified hours.</p>
+<p><strong>The gate is now machine-enforced.</strong> That contract had been missed three times —<br />
+hours routes, leaderboard, portfolio — each caught only by a person reading code.<br />
+<code>test_consent_gate_coverage.py</code> requires every write route to be either<br />
+consent-gated or explicitly allowlisted with a stated reason; it was proven to<br />
+catch by adding a fake ungated route, and it later caught a real one on its first<br />
+encounter with new work.</p>
+<p><strong>Revoke became retroactive</strong> (Evan's call, three phases). One status change does<br />
+the work: moving an application to <code>withdrawn</code> removes the student from check-in,<br />
+hours auto-log, org lists, thread access, reviews and spot counting simultaneously,<br />
+because every one of those filters on <code>status == "approved"</code>. The organization<br />
+keeps the row — greyed, with a hover reading "This account has been deactivated or<br />
+deleted" — because that row is their record of who signed up. The marker<br />
+deliberately never says WHY: an org has no business learning a family revoked<br />
+consent. And a guardian can now export and erase the account from the emailed<br />
+manage link, running the existing anonymize-in-place flow so the org's<br />
+verified-service history survives without PII.</p>
+<p><strong>A fourth audit, run by a separate session, found that the first revoke phase had<br />
+left two org-side holes</strong> — an org could click Approve and walk a revoke straight<br />
+back, and <code>create_notification</code> consulted the consent guard at exactly one of its<br />
+call sites, so verifying a revoked minor's hours emailed the child.</p>
+<p><strong>Process failures kept, because they are the useful part.</strong> A stale <code>date</code> was<br />
+carried across a seven-hour gap and mis-dated a commit by a day. Three "tests<br />
+green" claims were made against a CI that had been red for three pushes, because<br />
+only the local result was ever looked at — the failing test asserted an<br />
+environment default that the CI job itself overrides. A hardcoded date in the<br />
+recurring-signup tests was found <strong>two days</strong> before it would have started<br />
+failing. An auditor's proposed <code>&lt;main&gt;</code> landmark fix would have made accessibility<br />
+worse, and was caught only by checking the ten routes it claimed were broken and<br />
+finding all ten already correct. And an extracted service was first written from<br />
+memory with a materially wrong column allowlist, which would have silently changed<br />
+what the student data export contains — caught by diffing against the original<br />
+before wiring it up.</p>
+<p><strong>A landing-check closed the batch</strong> and found the new <code>withdrawn</code> status had no<br />
+rendering anywhere in the frontend: a revoked student's own page showed the raw<br />
+word in an amber "pending"-coloured pill. It also found a count in shipped source<br />
+that had been carried over from another session's summary without being verified.<br />
+Both corrected.</p>
+<p>Backend tests went 277 → 306 across the batch; the frontend still has no test<br />
+runner at all, which is now stated plainly in the testing bin rather than implied<br />
+away.</p>
 <h2 id="summary-timeline">Summary timeline</h2>
 <table>
 <thead>
@@ -1536,6 +1590,24 @@ Dev DB restored to its documented baseline and verified orphan-free.</p>
 <td>v2</td>
 <td>Next 15→16 (<strong>npm audit 5→0</strong>, <code>next lint</code> removed → flat eslint config); <strong><code>script-src</code> drops <code>'unsafe-inline'</code></strong> via a per-request nonce in <code>proxy.ts</code> (cost: 28 routes static→dynamic); live M8 + M6 — <strong>M5 consent gate proven end to end on real Postgres, both directions</strong>; <code>.env.example</code> still claimed <code>ADMIN_EMAILS</code> granted admin</td>
 <td><code>d9b5ccf</code> + this</td>
+</tr>
+<tr>
+<td>2026-08-08</td>
+<td>v2</td>
+<td>CI had been RED for 3 pushes while "tests green" was reported — a test asserted an env default that the CI job overrides; both dependency-CVE scans made blocking after actually running them</td>
+<td><code>4967672</code>, <code>4238e5b</code>, <code>536b795</code></td>
+</tr>
+<tr>
+<td>2026-08-11</td>
+<td>v2</td>
+<td>Third cold audit: <strong>revoke left the minor's public transcript served</strong> (portfolio checked consent only at write time) and <strong><code>min_age</code> was enforced nowhere</strong>; consent gate made machine-enforceable after 3 misses</td>
+<td><code>6762837</code></td>
+</tr>
+<tr>
+<td>2026-08-12</td>
+<td>v2</td>
+<td><strong>Guardian revoke made retroactive</strong> in 3 phases — roster withdrawal + spot release, org-side greying that never says why, guardian export/delete on the manage token. A 4th audit found phase 1 left two org-side holes. 306 tests</td>
+<td><code>4ddaaef</code>, <code>5303931</code>, <code>18a0c6c</code></td>
 </tr>
 </tbody>
 </table>

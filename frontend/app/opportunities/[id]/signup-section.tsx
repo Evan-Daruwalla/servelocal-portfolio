@@ -11,6 +11,10 @@ const STATUS_MESSAGE: Record<string, string> = {
   approved: "You're signed up!",
   pending: "Application submitted. Pending approval.",
   waitlisted: "You're on the waitlist. We'll sign you up if a spot frees.",
+  // A guardian's revoke withdraws the signup (M5). Says what happened without
+  // pretending it can be undone here — restoring consent is the guardian's
+  // action, and re-signing-up is blocked by `require_consent` until it is.
+  withdrawn: "This signup was withdrawn because guardian approval was removed.",
 };
 
 export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: () => void }) {

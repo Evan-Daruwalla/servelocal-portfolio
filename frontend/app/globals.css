@@ -149,6 +149,9 @@
   .sp-self     { background: #f3e5f5; color: #6a1b9a; }
   .sp-denied, .sp-rejected { background: #fef2f2; color: #b91c1c; }
   .sp-waitlisted { background: #fff3e0; color: #e65100; }
+  /* Guardian revoke (M5). Deliberately neutral grey: it is not an error and not
+     an approval — the signup simply no longer stands. */
+  .sp-withdrawn { background: #f1f5f9; color: #475569; }
 
   /* Category / filter pill buttons (v1 .chip) */
   .pill {
