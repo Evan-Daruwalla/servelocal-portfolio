@@ -17,8 +17,8 @@ published for a platform that serves minors.
 | `HANDOFF.md` | The living project snapshot (status + workstream table) |
 | `PRD_ROADMAP.md` | The standing milestone plan the build executes against (append-mostly: dropped work is struck through with dated reasons, never erased) |
 | `docs/research/` | Sourced research briefs that fed design decisions |
-| `.claude/codebase-memory/` | Binned technical memory (architecture, conventions, gotchas…) — `security.md` intentionally omitted |
-| `frontend/` | The Next.js 15 / React 19 / TypeScript frontend — served to every browser anyway, so public by definition |
+| `.claude/codebase-memory/` | Binned technical memory (architecture, conventions, features, gotchas, performance) — the private tree's other bins, `security.md` among them, are intentionally omitted |
+| `frontend/` | The Next.js 16 / React 19 / TypeScript frontend — served to every browser anyway, so public by definition |
 
 ## Why the process is documented like this
 

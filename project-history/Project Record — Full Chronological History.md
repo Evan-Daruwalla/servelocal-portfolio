@@ -103,6 +103,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.23 — second cold audit, graphify, Next 16 + nonce CSP, and the first live proof of the M5 gate (2026-08-06 to 2026-08-07)](#ii23--second-cold-audit-graphify-next-16--nonce-csp-and-the-first-live-proof-of-the-m5-gate-2026-08-06-to-2026-08-07)
 - [II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)](#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12)
 - [II.25 — the rate limiter was counting the proxy, and a docstring was describing the opposite of what shipped (2026-08-12)](#ii25--the-rate-limiter-was-counting-the-proxy-and-a-docstring-was-describing-the-opposite-of-what-shipped-2026-08-12)
+- [II.26 — a fix that swept only its own call site, and the first retention limit (2026-08-13)](#ii26--a-fix-that-swept-only-its-own-call-site-and-the-first-retention-limit-2026-08-13)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -1467,6 +1468,151 @@ error and logs nothing, and the only symptom is a security control quietly not
 working.
 
 
+## II.26 — a fix that swept only its own call site, and the first retention limit (2026-08-13)
+
+**The previous day's rate-limiter fix was a third of itself, and the missing two
+thirds were the part that mattered most.** `92282c6` introduced `client_ip()` to
+stop keying rate limits on the proxy — and changed the limiter's own call site and
+nothing else. Three other places still read `request.client.host` directly: the
+two writes to `guardian_consent_ip`, and the `remoteip` handed to Cloudflare
+Turnstile.
+
+`guardian_consent_ip` is the evidence that a *specific* guardian approved a
+*specific* child. Behind Railway's proxy it would have recorded the same host
+address for every family on the platform — a parental-consent record that proves
+nothing, with nothing erroring to say so. The Turnstile case inverts the signal
+that parameter exists to carry. All three now route through a small
+`client_ip_or_none()` wrapper, which differs from the limiter's resolver in one
+way: it returns nothing rather than the `"unknown"` sentinel, because a stable
+made-up key is right for a bucket and wrong for a record.
+
+This is the project's recurring failure shape, now on its fifth appearance: a
+correct fix applied at one call site while its siblings keep the old behaviour.
+The consent gate was missed four times that way; `create_notification` consulted
+the consent check at one of thirteen invocations; the leaderboard was fixed and
+the portfolio was not. The standing rule — fix the chokepoint, then grep its other
+callers — was written for exactly this and still had to be applied by hand.
+
+**The audit log got a retention limit, which required admitting the table is not
+purely append-only.** It records security events for every user, minors included,
+and had none: it grew forever and the privacy policy could only say entries are
+"retained". Now `AUDIT_LOG_RETENTION_DAYS` (365, floor 30), a purge that deletes
+**by age only** — there is deliberately no path to remove a particular row, which
+is the property append-only actually protects — and a policy that states 12
+months. Nothing purges automatically: a background job silently deleting
+accountability records is the wrong default, so the monthly cron is a launch item.
+A stated retention limit nobody enforces is worse than stating none.
+
+**The `min_age` grandfathering question was answered by reading the write path
+rather than by writing a backfill.** `min_age` is set at creation and by no other
+route, so an org cannot raise the floor under people who already applied; the only
+affected rows predate the guard and exist solely in the dev database, because
+nothing is deployed. The answer shipped as a test that fails the day a route can
+change it on an existing listing.
+
+**A landing-check on the batch returned FIX FIRST and found six things**, of which
+two were substantive: this record and its HTML twin had not been touched at all,
+and the claim "there is no field-editing route — only `/featured` and `/active`"
+was wrong in three places including the source comment the whole grandfathering
+argument rests on. There is a third PATCH. The conclusion survived; the
+enumeration did not, and it had been written by reading a route list and
+generalising.
+
+323 backend tests, up from 311. Docker was down on the dev box, so nothing was
+browser-verified and the purge CLI was proven end to end against a scratch SQLite
+database instead — stated rather than glossed.
+
+## II.27 — scheduled daily-audit: the retention cron was already correctly deferred, two items stay pending on Evan (2026-08-16)
+
+The `daily-audit` scheduled task ran a cross-project cold audit; Evan replied
+"do all." Three findings, zero code fixes here — this was the one project in
+the batch where checking first found nothing left to do.
+
+**SL-1 (2 unpushed commits, `5c8e36c`/`500a0da`) — unchanged, awaiting Evan.**
+Explicitly flagged in the audit as his call, not covered by "do all": pushing
+is a stronger action than fixing, and global standing order is never push
+without being told. Still pending.
+
+**SL-2 (audit-log retention has no scheduler wiring it up) — checked, already
+correctly handled, no fix applied.** The audit's proposed remediation
+("add a Railway cron") assumed the gap was undocumented. It is not:
+`servelocal-v2/docs/DEPLOY_RAILWAY.md` §Scheduled jobs already states the
+exact command, the recommended `0 4 1 * *` monthly schedule, the `--dry-run`
+check, and labels it `[EVAN] to schedule, [PREPARED] command` — because
+Railway cron is configured per-service in its dashboard, not in a repo file,
+and the service doesn't exist yet (M11 launch is still BLOCKED-ON-EVAN).
+Writing a redundant patch here would have been inventing work against a gap
+that was already honestly labeled. Nothing changed.
+
+**SL-3 (public mirror stops at II.25, private record has II.26 — now II.27) —
+no action needed.** Self-heals on the next `servelocal-portfolio` sync; not a
+defect in either repo.
+
+### Status
+- SL-1: pending, Evan's call.
+- SL-2: verified already correct; withdrawn as a fix target.
+- SL-3: not a defect, self-corrects on next sync.
+
+## II.28 — the mirror did not self-heal, and the secret guard skipped what it could not decode (2026-08-18)
+
+**SL-3 in II.27 was closed as "self-heals on the next sync." It did not, because
+nothing ever runs the sync.** Six days on, `servelocal-portfolio` still stopped at
+II.25. That deferral was reasonable per-finding and wrong as a mechanism: the only
+way to learn the mirror had drifted was to run `sync_portfolio.py`, which also
+*mutates* it — so nobody ran it to ask. A check with a side effect is a check that
+does not get run.
+
+The drift was seven files, and one of them mattered: **`frontend/app/privacy/page.tsx`
+in the public mirror still carried the pre-II.26 privacy policy**, without the
+12-month audit-log retention statement. Out of 101 shared frontend files it was the
+only content divergence — the published policy text for a platform that serves
+minors, one edit behind the policy the code enforces. Nothing is deployed, so this
+was source on GitHub rather than a served page; that is mitigation, not absolution.
+Also stale: `HANDOFF.md`, `docs/record_2026-07-16.md`, both record twins, and two
+codebase-memory bins (`INDEX.md`, `features.md` — neither named by the audit; the
+new check found them).
+
+**`sync_portfolio.py --check` now answers the question without writing.** It runs
+the REAL sync path into a throwaway copy of the mirror and diffs, so the check
+cannot drift from what a sync would actually produce. The comparison is
+CRLF-normalized, and that is load-bearing rather than tidiness: the mirror is
+checked out with CRLF while this tree is LF, so a raw byte diff reports **every**
+shared file as drift — a check that always fires is a check nobody reads. Run
+against the stale mirror it named exactly 7 files and exited 1; after the sync,
+`IN SYNC — 119 files`.
+
+**The secret guard had a fail-open path, in a guard whose entire design is to fail
+closed.** `scrub_and_guard()` caught `UnicodeDecodeError`/`ValueError` and
+`continue`d, commented "binary-ish; not a doc/source leak surface" — so any file
+that is not valid UTF-8 and not in `SKIP_SCAN_SUFFIXES` was **published without
+ever being scanned**. Zero such files existed, so this was constructed rather than
+observed. Proven by trigger: a UTF-16 `docs/research/_utf16_probe.md` carrying a
+live-shaped `sk_live_…` string synced clean before the fix; after it, exit 4 and
+`UNSCANNABLE (not valid UTF-8, and its suffix is not in SKIP_SCAN_SUFFIXES)`. The
+probe was removed. A genuinely binary type now has to be declared by suffix, by
+name, rather than admitted by a decode failure.
+
+**Two README claims were wrong and are outside the sync's reach.** `README.md` is
+not in `MANAGED_DIRS`, so no sync would ever have corrected either: it said
+"Next.js 15" (both trees have been on `^16.3.0` since 2026-08-07) and framed
+`security.md` as the one omitted memory bin when six of twelve are withheld. Fixed
+by hand — and worth noting as a category: the file that describes the mirror is the
+one file the mirror's own tooling does not maintain.
+
+### Verification
+- `python scripts/sync_portfolio.py --check` on the stale mirror: **STALE, 7 files, exit 1**.
+- Post-sync re-run: **`IN SYNC — 119 files`, exit 0**.
+- Post-sync spot checks: `"12 months"` present 3x in the mirror's privacy page (0 before,
+  cross-checked with both `grep` and the Grep tool); record reaches **II.27**; demo password
+  still `«redacted-local-demo-pw»` with 0 raw occurrences; `security.md` still absent.
+- Fail-closed guard fed its own trigger (above), then the probe deleted and `--check` re-run clean.
+- **Not pushed** — Evan authorized the fixes, not a publish. `servelocal-portfolio` is a
+  PUBLIC repo; the mirror is committed locally and awaits his push.
+
+### Status
+- SL-3 (carried from II.27): **closed**, and its "self-heals" premise retired.
+- Mirror in sync as of 2026-08-18 ~09:00 CDT; committed, **not pushed**.
+
 ## Summary timeline
 
 | Date | Era | Event | Evidence |
@@ -1526,7 +1672,10 @@ working.
 | 2026-08-11 | v2 | Third cold audit: **revoke left the minor's public transcript served** (portfolio checked consent only at write time) and **`min_age` was enforced nowhere**; consent gate made machine-enforceable after 3 misses | `6762837` |
 | 2026-08-12 | v2 | **Guardian revoke made retroactive** in 3 phases — roster withdrawal + spot release, org-side greying that never says why, guardian export/delete on the manage token. A 4th audit found phase 1 left two org-side holes. 306 tests | `4ddaaef`, `5303931`, `18a0c6c` |
 | 2026-08-12 | v2 | **Rate limiter stopped keying on the proxy** — it had been a single GLOBAL bucket behind any reverse proxy since M9; `X-Forwarded-For` now believed only when `TRUSTED_PROXY_HOPS` declares the topology (default 0 = trust nothing). Still in-memory/single-process. 311 tests | `92282c6` |
-| 2026-08-12 | v2 | Doc-drift closeout (audit findings 9/10): `_withdraw_from_rosters`'s docstring claimed the revoke removes a student from the org's lists — the **opposite** of the Phase 2 design shipped the same day; `TRUSTED_PROXY_HOPS` was missing from the operator registry | this entry |
+| 2026-08-12 | v2 | Doc-drift closeout (audit findings 9/10): `_withdraw_from_rosters`'s docstring claimed the revoke removes a student from the org's lists — the **opposite** of the Phase 2 design shipped the same day; `TRUSTED_PROXY_HOPS` was missing from the operator registry | `fe06150` |
+| 2026-08-13 | v2 | **The limiter fix had swept only its own call site** — `guardian_consent_ip` (approve + revoke) and Turnstile's `remoteip` still read the proxy, so parental-consent evidence would have been the same address for every family. Fifth appearance of the fix-one-site-miss-the-siblings shape | this entry |
+| 2026-08-13 | v2 | **First retention limit on the audit log** (`AUDIT_LOG_RETENTION_DAYS`, age-only purge, policy states 12 months) + `min_age` grandfathering closed by construction. 323 tests; landing-check returned FIX FIRST and caught a wrong route enumeration in 3 places | this entry |
+| 2026-08-16 | v2 | Scheduled daily-audit: retention-cron finding checked and found already correctly documented as BLOCKED-ON-EVAN (no fix applied); 2 unpushed commits stay pending his go | this entry |
 
 ## What's not in this record (honest gaps)
 

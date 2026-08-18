@@ -16,7 +16,37 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 
 ## Current state — M1–M10 + M12 + M13 + v1 EXACT-COPY + portfolio + audits COMPLETE; frontier = M11 launch (BLOCKED-ON-EVAN)
 
-**Last updated: 2026-08-12.**
+**Last updated: 2026-08-13.**
+
+> **2026-08-13 — the open non-account items closed, and the 2026-08-12 limiter fix
+> turned out to have been only a third of itself.**
+> **(1) `min_age` grandfathering: closed by construction, not by a backfill.**
+> `min_age` is write-once: set at creation and by no other route. The three
+> PATCHes on `/opportunities` are `/featured` and `/active` (single-field toggles)
+> and `/exclude-date`, which writes `Application.excluded_dates` and never touches
+> the listing. So an org cannot raise the floor under people who
+> already applied, and every approved row traces back to a guarded apply. Rows
+> predating the guard exist only in the dev DB — production starts empty.
+> `tests/test_min_age_is_write_once.py` fails the day a route can change it on an
+> existing listing, which is the day existing applicants need re-checking.
+> **(2) Audit-log retention now exists.** `AUDIT_LOG_RETENTION_DAYS` (default 365)
+> + `purge_expired_audit_log` + `python -m scripts.purge_audit_log`, and the
+> privacy policy states **12 months** where it used to say only "retained".
+> Deletes by AGE ONLY — no path to remove a particular row, which is what keeps
+> append-only meaningful. **Nothing runs it automatically: the monthly job is a
+> launch item (see BLOCKED-ON-EVAN), and until it is scheduled the stated period
+> is a promise kept by hand.**
+> **(3) The consent-IP item was not a posture question — the value was wrong.**
+> `guardian_consent_ip` is the evidence a specific guardian decided; it was written
+> from `request.client.host`, which behind a proxy is the PROXY, so on Railway every
+> family would carry the same address and the proof-of-consent record would prove
+> nothing, silently. Same root cause as `92282c6`, which fixed the limiter's own
+> call site and swept no others: **two consent writes and the Turnstile `remoteip`
+> were still reading the socket.** All three now use `client_ip_or_none()`.
+> Proven red pre-fix (stored `'testclient'`, not the forwarded client).
+> **323 pytest green** (311 → 323); ruff/eslint/tsc/build clean. Docker was down
+> this session, so nothing was browser-verified — the privacy-copy change is text
+> only, and the purge CLI was instead run end to end against a scratch SQLite DB.
 
 > **2026-08-12 — the rate limiter stopped keying on the proxy (`92282c6`), and
 > that hands Evan a REQUIRED production value.**
@@ -60,11 +90,12 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 > Alongside: the public portfolio ignored consent at READ time (a revoked minor's
 > transcript stayed served — the third sibling after the leaderboard fix missed
 > it), and `min_age` was stored, displayed and enforced NOWHERE.
-> **306 pytest green at that point** (311 now — see the block above);
+> **306 pytest green at that point** (323 now — see the blocks above);
 > ruff/eslint/tsc/build clean; dev DB restored to baseline.
 > **A landing-check then found the frontend had no rendering for the new
 > `withdrawn` status at all** — fixed. Applications approved BEFORE the `min_age`
-> guard remain grandfathered: a data question, still open.
+> guard remain grandfathered: a data question, still open at the time.
+> **(Closed 2026-08-13 — see the top block.)**
 
 > **2026-08-07 — Next 16 + nonce CSP, then the live M6/M8 audit (record entry of the same date).**
 > **The M5 launch gate has now been driven end to end on real Postgres, in both directions** —
@@ -167,7 +198,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | Notifications | M6 | **Done** | In-app create/list/read + email delivery on every event (opt-out via `PATCH /auth/me`, `email_notifications` default true, migration 0015) + paginated list. All trigger sites already routed through `create_notification`, so email added in one helper. 131 tests. Browser-verified. 2026-07-09 |
 | Messaging | M7 | **Done** | Shared thread (v1 parity) PLUS directed messaging: org→applicant broadcast (audience filter), student inbox, reply — via a nullable `recipient_id` on Message (migration 0016). Shift templates as `OpportunityTemplate` (migration 0017). Minor messaging consent-gated (M5 debt closed). Frontend: inbox, Message-applicants, template use/save. 144 tests. Browser-verified. 2026-07-09 |
 | Billing (Stripe test mode) | M8 | **Done** | Plan enforcement (M8.1, migration 0018) + Stripe Checkout/webhook (M8.2, `stripe==11.4.1`, migration 0019) + billing page & featured toggle UI (M8.3). Free = 3-listing cap → 402; pro-only featured. Verified incl. a real test-mode Stripe session. 159 tests, browser-verified. Only remainder: Evan's manual `stripe listen` round-trip for the live webhook (needs `whsec_`). 2026-07-09 |
-| Hardening (rate limit, audit log, leaderboard) | M9 | **Done** | Per-IP rate limiting (M9.1: auth 30/min + write 120/min buckets, 429+Retry-After); append-only audit log (M9.2: migration 0020, admin-only `/audit-log`, events on login/reset/consent/plan/hours); leaderboard reconciled to the no-PII spec (M9.3). 171 tests. Single-process limiter → Redis at M11. 2026-07-09. **Amended 2026-08-12 (`92282c6`): the limiter keyed on `request.client.host` — behind a proxy that is the PROXY, so all traffic shared one bucket. Now `client_ip()` + `TRUSTED_PROXY_HOPS` (default 0 = trust nothing; Railway must set 1). Still in-memory/single-process, so keep the api at ONE replica until Redis.** |
+| Hardening (rate limit, audit log, leaderboard) | M9 | **Done** | Per-IP rate limiting (M9.1: auth 30/min + write 120/min buckets, 429+Retry-After); append-only audit log (M9.2: migration 0020, admin-only `/audit-log`, events on login/reset/consent/plan/hours); leaderboard reconciled to the no-PII spec (M9.3). 171 tests. Single-process limiter → Redis at M11. 2026-07-09. **Amended 2026-08-12 (`92282c6`): the limiter keyed on `request.client.host` — behind a proxy that is the PROXY, so all traffic shared one bucket. Now `client_ip()` + `TRUSTED_PROXY_HOPS` (default 0 = trust nothing; Railway must set 1). Still in-memory/single-process, so keep the api at ONE replica until Redis.** **2026-08-13: that fix had swept only its own call site — `guardian_consent_ip` (approve + revoke) and Turnstile's `remoteip` still read `request.client.host`; all three now use `client_ip_or_none()`. Also M9.2 gained a retention limit: `AUDIT_LOG_RETENTION_DAYS` + `scripts/purge_audit_log.py`, age-only, scheduled by the operator.** |
 | Deploy readiness | M10 | **Done** | M10.1 `docker compose up --build` VERIFIED by Evan 2026-07-12 — db+api+web all healthy, migrations 0001–0020 applied on real Postgres, uvicorn + Next serving (fixed a missing-`public/` build bug, `bd32540`). M10.2 boot guard + M10.3 runbook (`docs/DEPLOY.md`) + M10.4 docs sync done. Remaining: Evan's browser click-through of localhost:3000. |
 | Public launch | M11 | **Prep COMPLETE — all remaining steps BLOCKED-ON-EVAN** | Model-doable work done 2026-07-16 via opus-workers: M11.1a ADR 0001 token-storage (`1c81dc5`, Proposed — sign-off + TTL choice = Evan) + M11.1b Turnstile bot defense env-gated off-by-default (`83c3a06`, 209 tests; keys = Evan) + M11.2 Terms/Privacy DRAFTS (`ce3569c`; placeholders + legal sign-off = Evan) + M11.3-prep railway.json ×2 + DEPLOY_RAILWAY.md runbook (`b2ebb84`; account/domain/secrets = Evan) + M11.4 ADR 0002 billing free-tier-only (`9009382`, Proposed — decision = Evan). M11.5–.7 need accounts/deployment |
 | v1 visual parity | M12 | **Done** | Added 2026-07-12 (Evan: match v1's look). M12.1 foundation (`1cdeeea`) + M12.2/M12.3 per-page vocabulary (`67266d5`): opp-card accent bars, badge/status pills, section headers, uppercase form labels, form-box — applied across all 20 routes. Detail-page subcomponents inherit tokens but aren't individually v1-classed (minor follow-up) |
@@ -176,7 +207,7 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | 4-lens audit fixes + repo split | off-roadmap | **Done** | 2026-07-13. Dep bumps (PYSEC clean), gzip, pagination, cache headers, org student identity, name minimization, migration 0022 → 192 tests. v2 → PRIVATE + public `servelocal-portfolio` mirror via `scripts/sync_portfolio.py` |
 | Launch-checklist hardening | M13 | **Done** | 2026-07-16 via opus-workers (3 phases, orchestrator-reviewed). M13.1 CSP/headers (`e5aa990`) + M13.2 deletion/export API (`166fcab`, 200 tests) + M13.3 its UI, E2E-verified (`bd26052`) + M13.4 sitemap/OG (`4879068`) + M13.5 skeletons/retry/tooltips (`dcf87cc`). M13.6 SWR = skipped (Evan 2026-07-15, PRD default) |
 | Reviews (student→org ratings) | out of scope | **Done (bonus)** | `94c185e`; PRD marks reviews out of scope — kept at Evan's direction |
-| Guardian revoke made retroactive (3 phases) | M5 follow-on | **Done** | 2026-08-11/12, Evan-directed. Phase 1 `4ddaaef` roster withdrawal + spot release + broadcast stop; Phase 2 `5303931` org-side greying via `account_inactive()`; Phase 3 `18a0c6c` guardian export/delete on the manage token (anonymize-in-place). `test_consent_gate_coverage.py` now fails any new write route that is neither gated nor consciously allowlisted. Then `a45be67`: a landing-check found the new `withdrawn` status had NO frontend rendering (the type union type-checked while showing a raw word in a "pending"-coloured pill) — status labels/pills/messages added in both CSS systems. 306 tests at that point (311 now) |
+| Guardian revoke made retroactive (3 phases) | M5 follow-on | **Done** | 2026-08-11/12, Evan-directed. Phase 1 `4ddaaef` roster withdrawal + spot release + broadcast stop; Phase 2 `5303931` org-side greying via `account_inactive()`; Phase 3 `18a0c6c` guardian export/delete on the manage token (anonymize-in-place). `test_consent_gate_coverage.py` now fails any new write route that is neither gated nor consciously allowlisted. Then `a45be67`: a landing-check found the new `withdrawn` status had NO frontend rendering (the type union type-checked while showing a raw word in a "pending"-coloured pill) — status labels/pills/messages added in both CSS systems. 306 tests at that point (323 now) |
 
 ## Design
 - **v1 look ported 2026-07-12** (off-roadmap, Evan-directed: "make the frontend look like v1").
@@ -257,6 +288,11 @@ contact email exists.
 - Turnstile site + secret keys (feature ships off-by-default until set).
 - Railway account, Postgres provisioning, prod secret VALUES (SECRET_KEY, DATABASE_URL,
   RESEND_API_KEY, STRIPE_*, TURNSTILE_*), domain purchase + DNS — runbook: docs/DEPLOY_RAILWAY.md.
+- **Schedule the monthly audit-log purge** (added 2026-08-13): `python -m scripts.purge_audit_log`
+  on the api service (Railway → Settings → Cron Schedule, e.g. `0 4 1 * *`). The privacy policy
+  now states audit entries are kept **12 months**; nothing enforces that until this runs, and a
+  stated retention limit you don't enforce is worse than stating none. `--dry-run` reports the
+  count without changing anything. Runbook: `docs/DEPLOY_RAILWAY.md` §Scheduled jobs.
 - **`TRUSTED_PROXY_HOPS=1` on the Railway service** (added 2026-08-12). Not a secret and not
   optional: the default 0 trusts nothing, which is right locally and wrong behind Railway's TLS
   proxy — leave it and every user shares one rate-limit bucket while NOTHING errors. Also keep the

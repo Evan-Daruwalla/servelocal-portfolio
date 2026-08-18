@@ -18,7 +18,7 @@ Core bins (last-updated):
 Standards bins (the codebase's committed choices, one home each):
 - `dependencies.md` — backend/frontend deps + pinned versions + pip-audit + what NOT to add. **Next 16, `eslint.config.mjs` flat config, `npm audit` 0.** (2026-08-07)
 - `ui.md` — UI + UX: editorial language, two visual systems, palette/fonts, emil-design-eng polish; UX flows/states/error-UX.
-- `testing.md` — **311 tests** on SQLite *and* on real Postgres (`TEST_DATABASE_URL`), warnings-as-errors, migration up/down/up, browser/CDP verification reality. (2026-08-12)
+- `testing.md` — **323 tests** on SQLite *and* on real Postgres (`TEST_DATABASE_URL`), warnings-as-errors, migration up/down/up, browser/CDP verification reality. (2026-08-13)
 - `data.md` — Alembic migration chain 0001–0024 + rules, schema conventions, API status-code contract.
 - `tooling.md` — backend/frontend commands, Docker rebuild flow, config/secrets + fail-closed boot guard, record hooks, shell. (2026-08-07)
 

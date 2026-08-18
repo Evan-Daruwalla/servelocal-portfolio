@@ -53,7 +53,7 @@ export default function PrivacyPage() {
             <li><strong>Match &amp; apply</strong>: show relevant opportunities and let you apply; the date of birth drives age-based award tracking and the consent gate.</li>
             <li><strong>Verify service</strong>: record hours and let organizations verify them, and recognize awards for verified hours.</li>
             <li><strong>Communicate</strong>: send in-app notifications, guardian-consent requests, and transactional emails (see Email, below).</li>
-            <li><strong>Keep it safe</strong>: bot protection, rate limiting, and an append-only audit log of security-relevant actions (logins, consent decisions, deletions).</li>
+            <li><strong>Keep it safe</strong>: bot protection, rate limiting, and an append-only audit log of security-relevant actions (logins, consent decisions, deletions), kept for 12 months.</li>
           </ul>
 
           <h3>Who sees what</h3>
@@ -71,14 +71,14 @@ export default function PrivacyPage() {
           <ul>
             <li><strong>Access &amp; export.</strong> Download a JSON copy of your data (profile, applications, hours, messages, reviews, and notifications) from the <strong>Account</strong> section of your dashboard (&ldquo;Download my data&rdquo;). The export excludes internal security fields such as your password hash and consent-decision IP.</li>
             <li><strong>Correct.</strong> Update your details any time in your account.</li>
-            <li><strong>Delete.</strong> Permanently delete your account from the <strong>Account</strong> section of your dashboard (password required). This removes your personal data and deactivates your account. <strong>Honest caveat:</strong> so that an organization&rsquo;s record of already-verified service survives, your applications and verified-hours history are <strong>kept in anonymized form with your name and identifying details removed</strong>, and entries in the append-only security audit log are retained. Organizations must deactivate active listings before deleting.</li>
+            <li><strong>Delete.</strong> Permanently delete your account from the <strong>Account</strong> section of your dashboard (password required). This removes your personal data and deactivates your account. <strong>Honest caveat:</strong> so that an organization&rsquo;s record of already-verified service survives, your applications and verified-hours history are <strong>kept in anonymized form with your name and identifying details removed</strong>, and entries in the append-only security audit log are retained for up to <strong>12 months</strong> from the date of the event. Organizations must deactivate active listings before deleting.</li>
           </ul>
 
           <h3>Email</h3>
           <p>We send <strong>transactional email only</strong>: things like application updates, hour verifications, guardian-consent requests, and password resets. There is no marketing email. You can turn off non-essential notification emails with the email-notifications toggle in your account settings; security and consent-critical messages may still be sent.</p>
 
           <h3>Data retention &amp; security</h3>
-          <p>We keep your data while your account is active and remove personal data when you delete your account, subject to the anonymized-service-record caveat above. Passwords are stored using a strong one-way hash (Argon2), never in plain text, and traffic is encrypted in transit (HTTPS). No system is perfectly secure, but we follow industry practices to protect your information.</p>
+          <p>We keep your data while your account is active and remove personal data when you delete your account, subject to the anonymized-service-record caveat above. The <strong>security audit log</strong> — the record of logins, consent decisions, password resets and deletions — is kept for <strong>12 months</strong> and then deleted by age; entries are never removed individually, because a log anyone can edit is not a record. Passwords are stored using a strong one-way hash (Argon2), never in plain text, and traffic is encrypted in transit (HTTPS). No system is perfectly secure, but we follow industry practices to protect your information.</p>
 
           <h3>Children&rsquo;s privacy</h3>
           <p>ServeLocal is used by students who may be minors, and we build for that. Students under <strong>12</strong> are not permitted to register. Students aged 12&ndash;17 may create an account, but a <strong>parent or guardian must verify consent before the student takes any real-world-contact action</strong>: applying, messaging, checking in, or making a portfolio public. We collect only what&rsquo;s needed for volunteer matching and hour tracking, and we minimize minors&rsquo; names on all public surfaces. If you believe a child under our minimum age has provided information, or a minor is using the service without appropriate guardian consent, contact us at <SupportEmail /> and we will address it.</p>

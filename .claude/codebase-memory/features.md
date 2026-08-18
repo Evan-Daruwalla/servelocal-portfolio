@@ -7,7 +7,7 @@ Last updated 2026-08-07.
   2026-07-12 — full stack boots, migrations applied on real Postgres), **M12 v1 visual parity**
   (2026-07-12), and two off-roadmap Evan-directed 2026-07-13 blocks: **v1 EXACT-COPY** (all 13
   screens rebuilt in the scoped `.v1` architecture — see architecture.md/conventions.md) and a
-  **public-portfolio slice**. **311 pytest green; migrations 0001–0024 (2026-08-12; supersedes the
+  **public-portfolio slice**. **323 pytest green; migrations 0001–0024 (2026-08-13; supersedes the
   189/0001–0021 figure). M11 launch = BLOCKED-ON-EVAN (host, domain/DNS, prod
   secrets, Resend key, Turnstile key, SUPPORT_EMAIL, legal).**
 - **Public portfolio (2026-07-13):** `GET /portfolio/{id}` — public verified-service transcript
