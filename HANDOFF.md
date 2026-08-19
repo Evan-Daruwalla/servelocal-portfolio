@@ -16,7 +16,30 @@ launch-readiness.** M5 guardian consent remains the hard gate before any public 
 
 ## Current state — M1–M10 + M12 + M13 + v1 EXACT-COPY + portfolio + audits COMPLETE; frontier = M11 launch (BLOCKED-ON-EVAN)
 
-**Last updated: 2026-08-13.**
+**Last updated: 2026-08-19.**
+
+> **2026-08-19 — cold audit of the memory docs; 13 findings, two critical.**
+> `/audit` scoped to both memory stores (the 12 `codebase-memory` bins and the
+> session memory), run by a fresh agent because this session had edited four of
+> the bins. **(1) `APP_BASE_URL` is a hard boot blocker that four documents
+> described as optional** — the guard is seven checks over six variables
+> (`config.py:145–169`), the bins said "six over five", and `DEPLOY_RAILWAY.md`
+> filed it under "should set". It would have crash-looped the first Railway
+> deploy, which is the only remaining frontier. **(2) `INDEX.md` still asserted
+> the audit log is never deleted**, which the 2026-08-13 retention purge
+> deliberately does — the third time in this batch that a fix swept its own call
+> site and not its siblings.
+> Also: the session memory had been five weeks stale while being injected into
+> every session's context; `security.md`'s audit-event register named 14 actions
+> and called them 12 (real figure **24**, derived by AST because two reach
+> `append_audit` only as a parameter); the public mirror's INDEX advertised seven
+> bins it does not ship.
+> **Four fixes are mechanisms, not text**: a boot-guard count test, three static
+> invariant guards, and a memory-store validator — each fed its own trigger to
+> prove it fires. **Two invariants remain UNENFORCEABLE and say so in the file.**
+> **327 pytest green** (323 → 327); ruff/eslint/tsc/build clean. No CVE run
+> (pip-audit absent), and Docker was down so the Postgres job and every
+> browser-verified claim stay unverified — not clean.
 
 > **2026-08-13 — the open non-account items closed, and the 2026-08-12 limiter fix
 > turned out to have been only a third of itself.**
@@ -260,19 +283,19 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
   how to obtain). No real values; those live in gitignored `.env`. The "what Evan must provide" list.
 
 ## BLOCKED-ON-EVAN (as of 2026-07-16 — the complete launch list)
-**⚠️ Product gap found 2026-07-16 (backend copy pass) — decide before launch:** a guardian's
-**decline permanently bricks a minor's account with zero recourse.** On decline the consent token is
-cleared, no manage token is issued (approve-only), the student can't resend (declined is terminal by
-v1 spec §4's no-auto-retry rule), and there are no admin moderation endpoints. The notification even
-says "Contact support if this was a mistake" — but support can't fix it (no mechanism) and no support
-address exists yet. At soft-launch scale you can flip the DB row by hand; past that it needs a real
-path (guardian re-invite, or an admin action). Copy left as-is: it's the right instruction once a
-contact email exists.
+**Decline recourse — MECHANISM SHIPPED, procedure drafted (updated 2026-08-19).** The
+2026-07-16 warning here ("decline permanently bricks a minor's account with zero recourse")
+went stale on 2026-08-05 when `POST /consent/admin/{user_id}/reopen` shipped: admin-only,
+audited, re-invites the guardian ALREADY on file (never a new address — that would defeat the
+gate). The written procedure behind the "contact support" copy is now drafted too
+(`docs/SUPPORT_PROCEDURES.md` — needs your sign-off). What actually remains BLOCKED-ON-EVAN:
+the `SUPPORT_EMAIL` value, someone reading that inbox, and one promoted admin account.
 
 **Decisions:**
-- ADR 0001 sign-off (token storage: keep localStorage-JWT) + the TTL choice (currently 7 days;
-  ADR recommends tightening — pick the number). Its follow-ups #2 (server-side logout) and
-  #3 (401 interceptor) SHIPPED 2026-07-16 (`0573d69`, E2E-verified); only the TTL number remains.
+- ADR 0001 sign-off (token storage: keep localStorage-JWT). ~~The TTL choice~~ — STALE as
+  written: the TTL has been **24h** since the 2026-08-05 audit (`config.py:44`), not 7 days, so
+  there is no number left to pick — signing the ADR ratifies what already runs. Follow-ups #2
+  (server-side logout) and #3 (401 interceptor) shipped 2026-07-16 (`0573d69`).
 - ADR 0002 sign-off (billing: launch free-tier-only, PRD default) + the launch-UI choice for the
   Pro upgrade surface (currently would 503 without keys — "coming soon" state vs leave).
 - Terms refund-policy default (drafted: cancel anytime, end-of-period, no proration).
@@ -283,8 +306,12 @@ contact email exists.
   policy, the copy can strengthen back — that's a product decision, note it here when made.
 - M13.6 DECIDE: SWR/React Query client caching (new dependency).
 **Values/accounts (all prepared up to the blocked step):**
-- Legal placeholders in the Terms/Privacy DRAFTS: [CONTACT EMAIL], [GOVERNING STATE],
-  [LEGAL ENTITY NAME] — then adult/guardian + legal review sign-off (hard launch gate).
+- Legal placeholders in the Terms/Privacy DRAFTS: [GOVERNING STATE] + [LEGAL ENTITY NAME]
+  (both on `terms/page.tsx:86`; ~~[CONTACT EMAIL]~~ resolved — the pages render `SUPPORT_EMAIL`
+  via `<SupportEmail/>`) — then adult/guardian + legal review sign-off (hard launch gate).
+  The entity question is real: operating as a person vs forming an entity has liability
+  consequences at 17 on a minors platform. Review must also check the policy's concrete
+  **12-month audit-retention promise** (added 2026-08-13) against reality.
 - Turnstile site + secret keys (feature ships off-by-default until set).
 - Railway account, Postgres provisioning, prod secret VALUES (SECRET_KEY, DATABASE_URL,
   RESEND_API_KEY, STRIPE_*, TURNSTILE_*), domain purchase + DNS — runbook: docs/DEPLOY_RAILWAY.md.

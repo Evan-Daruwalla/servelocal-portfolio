@@ -40,6 +40,12 @@ v1's editorial look — new milestone M12 below (M12.1 already done: fonts/palet
 `1cdeeea`). M12.2–.3 are ordered BEFORE M11.6's soft launch. Frontier: M12 per-page parity, then
 M11.**
 
+**Status 2026-08-19 (M11 execution plan appended — sequencing, not a scope change): all
+model-doable prep remains done; the plan under §M11 orders the remainder into phases and
+strikes three STALE blockers (admin reopen endpoint shipped 2026-08-05; TTL already 24h;
+[CONTACT EMAIL] resolved). Critical path = legal review. §3's M12 box ticked — done since
+2026-07-13, never checked off. 327 backend tests green.**
+
 ---
 
 ## 1. OBJECTIVE
@@ -154,9 +160,11 @@ The plan is complete when every box checks. Verify each with the command given.
       backups with a documented restore path (M11).
 - [ ] A real person can register, get guardian consent, apply, and log verified hours on the
       production site — verified end to end and recorded (M11).
-- [ ] Every page renders in v1's editorial system — Fraunces/DM Sans, v1 palette, and v1 component
+- [x] Every page renders in v1's editorial system — Fraunces/DM Sans, v1 palette, and v1 component
       treatments (cards, badges, forms, tables) — browser-verified against the v1 reference (M12,
-      added 2026-07-12; M12.1 foundation/chrome/homepage done that day, `1cdeeea`).
+      added 2026-07-12; M12.1 foundation/chrome/homepage done that day, `1cdeeea`). *(Box ticked
+      2026-08-19: M12.2–.3 completed 2026-07-12 (`67266d5`) and the 13-screen v1 EXACT-COPY landed
+      2026-07-13 — the work was done and recorded, the checkbox was simply never updated.)*
 
 ## 4. CONSTRAINTS
 
@@ -475,6 +483,59 @@ must do. Nothing in this milestone is guessed, faked, or worked around.
 7. **Launch docs sync.** Final HANDOFF sync + record entry declaring the site LIVE (with date
    and a full launch-state snapshot section), and the §3 checklist filled honestly. The v1
    `DEPLOY.txt`/meta-tag "aspirational" notes get a pointer that v2 is the live product.
+
+#### M11 execution plan (added 2026-08-19 — sequencing only, no scope change)
+
+The seven M11 tasks above stand; this orders what is actually left as of 2026-08-19
+into phases, after verifying each claimed blocker against the code. Three items on
+the standing blocked list turned out STALE — the remaining work is smaller than
+that list implies:
+
+- ~~"decline permanently bricks a minor's account, no mechanism"~~ —
+  `POST /consent/admin/{user_id}/reopen` shipped 2026-08-05
+  (`consent.py:139`). Remaining: a support address + a written procedure, not code.
+- ~~"TTL currently 7 days — pick the number"~~ — already **24h** since 2026-08-05
+  (`config.py:44`). Remaining: ADR 0001's Proposed→Accepted stamp only.
+- ~~"[CONTACT EMAIL] placeholder in the legal pages"~~ — resolved; only
+  `[GOVERNING STATE]` + `[LEGAL ENTITY NAME]` remain (`terms/page.tsx:86`).
+
+**Critical path is Phase 1 (legal)**: nothing blocks it, it blocks launch, and its
+clock belongs to other humans. Start it first; Phases 2–3 run in parallel behind it.
+
+- **Phase 0 — decisions [EVAN, ~30 min, unblocks everything]:** ADR 0001 → Accepted
+  (24h TTL already live; ratify); ADR 0002 → Accepted (free-tier-only) + Pro-surface
+  choice ("coming soon" vs leave 503); the support address (the single value most
+  things depend on); Sentry vs host-native error tracking (gates Phase 3 — nothing
+  reads `SENTRY_DSN` today, it is unbuilt); refund-policy default (drafted; moot at
+  free-tier launch but in the ToS); analytics (recommend: keep deferred); consent-IP
+  precision (recommend: KEEP, ratify); M13.6 SWR (recommend: skip, PRD default).
+- **Phase 1 — legal [EVAN + adult; hard gate]:** fill `[GOVERNING STATE]` +
+  `[LEGAL ENTITY NAME]` — deciding person-vs-entity is a real liability question at
+  17 on a minors platform; adult/guardian + legal review of Terms/Privacy (the
+  policy now makes a concrete 12-month audit-retention promise — review must check
+  it matches reality); write the decline-recourse support procedure using the
+  reopen endpoint [MODEL can draft].
+- **Phase 2 — infrastructure [EVAN drives; runbook = DEPLOY_RAILWAY.md]:** domain →
+  Railway + Postgres → Turnstile keys → Resend key + domain verification (needs
+  DNS) → set all SIX boot blockers incl. `APP_BASE_URL` (four docs called it
+  optional until 2026-08-19) → `TRUSTED_PROXY_HOPS=1`, ONE replica, monthly
+  `purge_audit_log` cron → deploy, DNS/TLS, `/api/v1/health` green.
+- **Phase 3 — monitoring + data safety [MODEL builds after the Phase-0 pick]:**
+  wire error tracking (real code, none exists); uptime monitor on `/health`; run
+  the backup restore-drill FOR REAL (`scripts/backup_db.py --restore-drill` has
+  only ever been verified by inspection; needs Docker up).
+- **Phase 4 — soft launch (= task 6 above):** promote an admin account (explicit
+  SQL per DEPLOY_RAILWAY.md); seed 1–2 real orgs [EVAN outreach]; one real cohort
+  end to end — the §3 box that cannot be faked.
+- **Phase 5 — close out [MODEL] (= task 7 above):** §3 filled honestly, HANDOFF +
+  record entry declaring LIVE, whole-project record + HTML twin, mirror sync.
+
+**Risks stated, not buried:** the frontend has NO test runner (lint+build is the
+whole gate; the 2026-08-11 audit found three live behavior bugs a build can't
+see) — adding one is a scope ADD, Evan's call; the in-memory rate limiter is
+correct at one replica and silently wrong at two (Redis is the fix, currently
+unbuildable locally — Docker down); Evan is 17, which constrains billing (handled,
+ADR 0002) and possibly the legal-entity choice.
 
 ### M12 — v1 visual parity (added 2026-07-12, Evan-directed)
 
