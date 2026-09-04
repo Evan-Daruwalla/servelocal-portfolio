@@ -9,6 +9,7 @@ import { ConsentBanner } from "@/components/consent-banner";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { HOURS_STATUS_LABEL_COMPACT, HOURS_STATUS_PILL } from "@/lib/status";
 import type { ApplicationWithOpportunity, HoursWithOpportunity, MyAwards, Opportunity } from "@/lib/types";
 
 type Tab = "calendar" | "history" | "log" | "saved" | "awards" | "impact" | "profile" | "account";
@@ -22,12 +23,6 @@ const TABS: { id: Tab; label: string; Icon: LucideIcon }[] = [
   { id: "profile", label: "Profile", Icon: User },
   { id: "account", label: "Account", Icon: Settings },
 ];
-const HOURS_STATUS: Record<string, [string, string]> = {
-  pending: ["sp-pending", "Pending"],
-  verified: ["sp-verified", "Verified"],
-  denied: ["sp-denied", "Denied"],
-  appealed: ["sp-appealed", "Appealed"],
-};
 const SRC: Record<string, string> = { auto: "Auto", self: "Self-report", checkin: "Check-in" };
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -211,15 +206,20 @@ export default function DashboardPage() {
             <hr className="ds-divider" />
             <div className="ds-stat">
               <span className="ds-stat-label">Verified Hours</span>
-              <span className="ds-stat-val big">{stats.verified}</span>
+              {/* Gated on dataError like every tab body below (240+). Ungated,
+                  a failed load showed "0 Verified Hours" — `hours` stays [] and
+                  is never reset — and a failed REFRESH after a good load showed
+                  stale-but-plausible counts with no staleness cue, which is
+                  worse because it looks right (audit 2026-09-02). */}
+              <span className="ds-stat-val big">{dataError ? "—" : stats.verified}</span>
             </div>
             <div className="ds-stat">
               <span className="ds-stat-label">Unverified Hours</span>
-              <span className="ds-stat-val">{stats.pending}</span>
+              <span className="ds-stat-val">{dataError ? "—" : stats.pending}</span>
             </div>
             <div className="ds-stat">
               <span className="ds-stat-label">Total Logged</span>
-              <span className="ds-stat-val">{stats.total}</span>
+              <span className="ds-stat-val">{dataError ? "—" : stats.total}</span>
             </div>
             <hr className="ds-divider" />
             <div className="ds-nav">
@@ -289,7 +289,7 @@ export default function DashboardPage() {
                         <td>{h.opportunity.title}</td>
                         <td>{h.hours}</td>
                         <td>{SRC[h.source] ?? h.source}</td>
-                        <td><span className={`status-pill ${HOURS_STATUS[h.status]?.[0] ?? "sp-pending"}`}>{HOURS_STATUS[h.status]?.[1] ?? h.status}</span></td>
+                        <td><span className={`status-pill ${HOURS_STATUS_PILL[h.status] ?? "sp-pending"}`}>{HOURS_STATUS_LABEL_COMPACT[h.status] ?? h.status}</span></td>
                       </tr>
                     ))}
                   </tbody>

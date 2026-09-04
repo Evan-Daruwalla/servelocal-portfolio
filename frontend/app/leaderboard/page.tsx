@@ -2,34 +2,33 @@
 
 import { Medal, Rocket, School, Trophy } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { LeaderboardEntry } from "@/lib/types";
+import { usePublicQuery } from "@/lib/use-api";
 
 const MEDAL_COLORS = ["var(--gold)", "#9ca3af", "#b45309"];
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [community, setCommunity] = useState({ totalHours: 0, students: 0, orgs: 0, events: 0 });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([api.leaderboard(), api.listOpportunities({})])
-      .then(([board, opps]) => {
-        setEntries(board);
-        setCommunity({
-          totalHours: board.reduce((s, e) => s + e.hours, 0),
-          students: board.length,
-          orgs: new Set(opps.map((o) => o.org_id)).size,
-          events: opps.length,
-        });
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // Public: the board renders for signed-out visitors, so this must not wait on
+  // auth. Both requests share one key because the stat band is derived from the
+  // pair — fetching them separately would let the band render against a
+  // half-loaded pair and show wrong totals.
+  const { data, loading, error, retry } = usePublicQuery("leaderboard+opps", async () => {
+    const [board, opps] = await Promise.all([api.leaderboard(), api.listOpportunities({})]);
+    return {
+      entries: board,
+      community: {
+        totalHours: board.reduce((s, e) => s + e.hours, 0),
+        students: board.length,
+        orgs: new Set(opps.map((o) => o.org_id)).size,
+        events: opps.length,
+      },
+    };
+  });
+  const entries = data?.entries ?? [];
+  const community = data?.community ?? { totalHours: 0, students: 0, orgs: 0, events: 0 };
 
   return (
     <V1Shell>
@@ -42,6 +41,17 @@ export default function LeaderboardPage() {
 
         {loading ? (
           <div className="loading"><div className="spinner" /><div>Loading…</div></div>
+        ) : error ? (
+          // Previously a failed load fell through to the board's own empty state
+          // and told every visitor "No verified hours yet" — the same
+          // false-empty-state bug the applications page had.
+          <div className="empty">
+            <div className="empty-icon"><Rocket size={40} strokeWidth={1.75} aria-hidden /></div>
+            Couldn&apos;t load the leaderboard. Check your connection and try again.
+            <div style={{ marginTop: 14 }}>
+              <button className="btn-s" onClick={retry}>Retry</button>
+            </div>
+          </div>
         ) : (
           <>
             <div className="lb-band">

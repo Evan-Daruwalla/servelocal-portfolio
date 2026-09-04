@@ -7,12 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { useAuthedQuery } from "@/lib/use-api";
 import type { Notification } from "@/lib/types";
 
 export default function NotificationsPage() {
   const { user, loading, refresh } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const {
+    data: notifications,
+    loading: fetching,
+    error,
+    retry,
+    mutate,
+  } = useAuthedQuery("notifications", (t) => api.notifications(t));
   const [emailPref, setEmailPref] = useState(true);
   const [savingPref, setSavingPref] = useState(false);
 
@@ -35,31 +41,18 @@ export default function NotificationsPage() {
     }
   }
 
-  function load() {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-    api
-      .notifications(token)
-      .then(setNotifications)
-      .finally(() => setFetching(false));
-  }
-
-  useEffect(() => {
-    if (!loading) load();
-  }, [loading]);
-
   async function markRead(id: string) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     await api.markNotificationRead(id, token);
-    load();
+    void mutate();
   }
 
   async function markAll() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     await api.markAllNotificationsRead(token);
-    load();
+    void mutate();
   }
 
   if (loading) return null;
@@ -72,7 +65,7 @@ export default function NotificationsPage() {
     );
   }
 
-  const hasUnread = notifications.some((n) => !n.read);
+  const hasUnread = (notifications ?? []).some((n) => !n.read);
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
@@ -113,12 +106,24 @@ export default function NotificationsPage() {
       </Card>
 
       {fetching && <p className="text-muted-foreground">Loading…</p>}
-      {!fetching && notifications.length === 0 && (
+
+      {/* Not the empty state: "No notifications yet" on a failed load hides a
+          guardian-consent or hours-verified message the student needs. */}
+      {!fetching && error && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-muted-foreground">
+            Couldn&apos;t load your notifications. Check your connection and try again.
+          </p>
+          <Button variant="outline" size="sm" onClick={retry}>Retry</Button>
+        </div>
+      )}
+
+      {!fetching && !error && notifications?.length === 0 && (
         <p className="text-muted-foreground">No notifications yet.</p>
       )}
 
       <div className="flex flex-col gap-2">
-        {notifications.map((n) => (
+        {notifications?.map((n) => (
           <Card key={n.id} className={n.read ? "opacity-60" : "border-primary"}>
             <CardContent className="flex items-start justify-between gap-3 py-3">
               <div className="flex flex-col gap-0.5">

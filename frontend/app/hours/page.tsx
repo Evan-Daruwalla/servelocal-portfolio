@@ -9,21 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { HOURS_STATUS_LABEL, HOURS_STATUS_PILL } from "@/lib/status";
 import type { ApplicationWithOpportunity, HoursWithOpportunity, MyAwards } from "@/lib/types";
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending verification",
-  verified: "Verified",
-  denied: "Denied",
-  appealed: "Appeal under review",
-};
 const SOURCE_LABEL: Record<string, string> = { auto: "Auto-logged", self: "Self-reported", checkin: "Check-in" };
-const STATUS_PILL: Record<string, string> = {
-  pending: "sp-pending",
-  verified: "sp-verified",
-  denied: "sp-denied",
-  appealed: "sp-waitlisted",
-};
 
 export default function MyHoursPage() {
   const { user, loading } = useAuth();
@@ -250,8 +239,8 @@ export default function MyHoursPage() {
                 )}
               </div>
               <div className="flex flex-shrink-0 flex-col items-end gap-2">
-                <span className={`status-pill ${STATUS_PILL[entry.status] ?? "sp-pending"}`}>
-                  {STATUS_LABEL[entry.status] ?? entry.status}
+                <span className={`status-pill ${HOURS_STATUS_PILL[entry.status] ?? "sp-pending"}`}>
+                  {HOURS_STATUS_LABEL[entry.status] ?? entry.status}
                 </span>
                 {entry.status === "denied" && !entry.appealed && (
                   <Button size="sm" variant="outline" disabled={busyId === entry.id} onClick={() => appeal(entry.id)}>

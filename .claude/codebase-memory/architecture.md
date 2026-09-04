@@ -1,6 +1,6 @@
 # architecture — servelocal-v2
 
-Last updated 2026-08-07.
+Last updated 2026-09-03.
 
 ## Stack
 **Dependencies + pinned versions → `dependencies.md`** (canonical). In brief:
@@ -48,6 +48,21 @@ Tailwind 3 + shadcn/ui.
   `app/layout.tsx` sets `dynamic = "force-dynamic"`, so every app route is server-rendered per
   request; only the 4 metadata routes (icon/OG/robots/sitemap) are still static. Details in
   security.md §Content-Security-Policy.
+
+## Analytics: two surfaces, two mechanisms, on purpose (M14, 2026-09-01/03)
+- **Site traffic** — `route_hits`, written by `core/traffic_middleware.py`, keyed by
+  (day, route TEMPLATE, method). It deliberately never records WHICH opportunity was
+  viewed; that is the privacy property, not an omission.
+- **Per-opportunity views** — therefore CANNOT read from the above, and use a separate
+  counter on `Opportunity.views`. The PRD's own sequencing claim that #2 reads #1's
+  counters was falsified in writing on 2026-09-01.
+- Reads: admin-only `GET /analytics/traffic`, org-scoped `GET /analytics/org`. Both in
+  `routes/analytics.py`; the org one is scoped by SQL, not by filtering after the fact.
+- **`get_current_user_optional`** (`api/deps.py`, 2026-09-03) — a second
+  `OAuth2PasswordBearer` with `auto_error=False`. Returns `None` for every failure mode
+  including an expired token, so a PUBLIC route can tell who is asking without
+  requiring anyone to sign in. It must never raise: a stale token on a public page has
+  to still render the page.
 
 ## Migrations
 **Migration chain 0001–0024, Alembic rules, and schema conventions → `data.md`**

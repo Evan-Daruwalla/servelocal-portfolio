@@ -2,12 +2,14 @@
 
 import { Clock, Globe, MapPin, RefreshCw, Search, Shuffle, TriangleAlert, Users } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import { CategoryIcon, getCategoryMeta } from "@/components/v1/category-icon";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { useAuthedQuery, usePublicQuery } from "@/lib/use-api";
 import type { Opportunity } from "@/lib/types";
 
 const CATEGORIES = ["Education", "Environment", "Health", "Animals", "Food & Hunger", "Arts & Culture", "Community", "STEM", "Agriculture"];
@@ -26,10 +28,26 @@ function relDate(iso: string): string {
 }
 
 export default function DiscoverPage() {
+  const router = useRouter();
   const { user } = useAuth();
-  const [opps, setOpps] = useState<Opportunity[]>([]);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [category, setCategory] = useState("");
+  // Public: the list renders for signed-out visitors. Keyed on category so each
+  // filter keeps its own cache entry and switching back is instant.
+  const {
+    data: oppsData,
+    loading,
+    error,
+    retry: loadOpps,
+  } = usePublicQuery(`opportunities:${category}`, () =>
+    api.listOpportunities({ category: category || undefined }),
+  );
+  const opps = oppsData ?? [];
+  // Held for anyone who is not a signed-in student: an org has no saved list.
+  const { data: savedIdsData, mutate: mutateSaved } = useAuthedQuery(
+    user?.role === "student" ? "saved/ids" : null,
+    (t) => api.listSavedIds(t),
+  );
+  const savedIds = useMemo(() => new Set(savedIdsData ?? []), [savedIdsData]);
   // These two shipped as `defaultValue`-only <select>s — no state, no handler —
   // so both filters were decorative while the section copy promised they worked
   // (audit 2026-08-11). Filtered client-side rather than server-side because the
@@ -39,25 +57,6 @@ export default function DiscoverPage() {
   const [format, setFormat] = useState("");
   const [q, setQ] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const loadOpps = useCallback(() => {
-    setLoading(true);
-    setError(false);
-    api.listOpportunities({ category: category || undefined })
-      .then((data) => { setOpps(data); setError(false); })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [category]);
-
-  useEffect(() => { loadOpps(); }, [loadOpps]);
-
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || user?.role !== "student") return;
-    api.listSavedIds(token).then((ids) => setSavedIds(new Set(ids))).catch(() => undefined);
-  }, [user]);
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -73,25 +72,33 @@ export default function DiscoverPage() {
     e.preventDefault();
     e.stopPropagation();
     const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
+    // The heart renders for signed-out visitors too (the button's own condition
+    // includes `!user`), so this path is reachable in ordinary browsing. It used to
+    // return silently: a real click target that did nothing, with no redirect, no
+    // message and no disabled state (audit 2026-09-02).
+    if (!token) {
+      router.push("/login");
+      return;
+    }
     // Optimistic, but REVERTED on failure. Both catches used to swallow the error
     // outright, so a failed save left the heart filled while the server recorded
     // nothing — the bookmark silently vanished on the next reload and the user
     // could not tell which of N saves had actually taken (audit 2026-08-11).
-    const prev = savedIds;
-    const next = new Set(savedIds);
+    // Written through SWR's cache rather than local state, but the CONTRACT is
+    // unchanged: optimistic, and reverted on failure. `revalidate: false` on
+    // both writes is what makes the revert authoritative — letting SWR refetch
+    // instead would race the failed request and could restore the wrong heart.
+    const prev = savedIdsData ?? [];
     const undo = (msg: string) => {
-      setSavedIds(prev);
+      void mutateSaved(prev, { revalidate: false });
       setSaveError(msg);
     };
     setSaveError(null);
-    if (next.has(id)) {
-      next.delete(id);
-      setSavedIds(next);
+    if (savedIds.has(id)) {
+      void mutateSaved(prev.filter((x) => x !== id), { revalidate: false });
       api.unsave(id, token).catch(() => undo("Couldn't remove that bookmark. Try again."));
     } else {
-      next.add(id);
-      setSavedIds(next);
+      void mutateSaved([...prev, id], { revalidate: false });
       api.save(id, token).catch(() => undo("Couldn't save that bookmark. Try again."));
     }
   }

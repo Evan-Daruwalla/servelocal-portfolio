@@ -1,10 +1,12 @@
 # Multi-stage build for the Next.js frontend → small standalone runtime image (M10.1).
-FROM node:20-slim AS deps
+# Digest-pinned on all three stages (audit 2026-09-02) — see backend/Dockerfile
+# for the refresh command. A floating tag is an unreviewed upstream change.
+FROM node:20-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0 AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-FROM node:20-slim AS builder
+FROM node:20-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0 AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -25,12 +27,16 @@ ARG NEXT_PUBLIC_SUPPORT_EMAIL=
 ENV NEXT_PUBLIC_SUPPORT_EMAIL=$NEXT_PUBLIC_SUPPORT_EMAIL
 RUN npm run build
 
-FROM node:20-slim AS runner
+FROM node:20-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # `output: "standalone"` bundles the server + only the deps it needs.
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+# The node images ship an unprivileged `node` user (uid 1000). The standalone
+# bundle is read-only at runtime, so no ownership change is needed.
+USER node
+
 EXPOSE 3000
 CMD ["node", "server.js"]

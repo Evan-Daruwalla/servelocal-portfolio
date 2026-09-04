@@ -7,31 +7,43 @@ import { useEffect, useState } from "react";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { useAuthedQuery } from "@/lib/use-api";
 import type { HoursWithOpportunity, MyAwards } from "@/lib/types";
 
 export default function PortfolioPage() {
   const { user, loading } = useAuth();
-  const [hours, setHours] = useState<HoursWithOpportunity[]>([]);
-  const [awards, setAwards] = useState<MyAwards | null>(null);
-  const [isPublic, setIsPublic] = useState(false);
+  // Held (null key) for anyone who is not a signed-in student — the page has
+  // nothing to show them, and firing the requests would only 401/403.
+  const isStudent = user?.role === "student";
+  const {
+    data: hoursData,
+    error: hoursError,
+    retry: retryHours,
+  } = useAuthedQuery(isStudent ? "hours/mine" : null, (t) => api.listHours(t));
+  const { data: awards, error: awardsError } = useAuthedQuery(
+    isStudent ? "awards/my" : null,
+    (t) => api.myAwards(t),
+  );
+  // Without this the page fell through to "No verified hours yet" on a failed
+  // load — telling a student their own transcript is empty when it is not.
+  // Seventh instance of that bug class, and it was introduced by the very
+  // migration meant to end it (audit 2026-09-01).
+  const loadFailed = Boolean(hoursError || awardsError);
+  const hours = (hoursData ?? []) as HoursWithOpportunity[];
+  // `portfolio_public` is a user field, not a fetch: derive it from auth rather
+  // than mirroring it into state that can drift from the server's copy.
+  const [publicOverride, setPublicOverride] = useState<boolean | null>(null);
+  const isPublic = publicOverride ?? user?.portfolio_public ?? false;
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (loading || !user || user.role !== "student" || !token) return;
-    setIsPublic(user.portfolio_public);
-    api.listHours(token).then(setHours).catch(() => {});
-    api.myAwards(token).then(setAwards).catch(() => {});
-  }, [loading, user]);
 
   async function togglepublic(next: boolean) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
-    setIsPublic(next); // optimistic
+    setPublicOverride(next); // optimistic
     try {
       await api.updateMe(token, { portfolio_public: next });
     } catch {
-      setIsPublic(!next); // revert on failure
+      setPublicOverride(!next); // revert on failure
     }
   }
 
@@ -65,7 +77,13 @@ export default function PortfolioPage() {
 
   const statCard = (n: number, label: string) => (
     <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 20 }}>
-      <div style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--green)" }}>{n}</div>
+      {/* An em dash, not 0, when the load failed. The fix below explains that an
+          empty table is a loading problem — while these cards sat above it
+          asserting "0 Verified Hours" in large type, which is the same false
+          claim in the same viewport (landing-check 2026-09-01). */}
+      <div style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--green)" }}>
+        {loadFailed ? "—" : n}
+      </div>
       <div style={{ fontSize: ".78rem", color: "var(--muted)" }}>{label}</div>
     </div>
   );
@@ -94,7 +112,21 @@ export default function PortfolioPage() {
                   <td style={{ textAlign: "right", fontWeight: 600, color: "var(--green)" }}>{hrs} hrs</td>
                 </tr>
               )) : (
-                <tr><td style={{ color: "var(--muted)" }}>No verified hours yet</td></tr>
+                <tr>
+                  <td style={{ color: "var(--muted)" }}>
+                    {loadFailed ? (
+                      <>
+                        Couldn&apos;t load your transcript. This is a loading problem, not an
+                        empty record.{" "}
+                        <button className="btn-s" style={{ marginLeft: 8 }} onClick={retryHours}>
+                          Retry
+                        </button>
+                      </>
+                    ) : (
+                      "No verified hours yet"
+                    )}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -106,7 +138,11 @@ export default function PortfolioPage() {
             {earned.length ? earned.map((a) => (
               <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "var(--green-pale)", border: "1px solid var(--green-mid)", padding: "6px 12px", borderRadius: 100, fontSize: ".78rem", fontWeight: 600, color: "var(--green)" }}><Trophy size={13} strokeWidth={1.75} aria-hidden />{a.name}</span>
             )) : (
-              <span style={{ color: "var(--muted)", fontSize: ".83rem" }}>No awards yet. They show up on their own as your verified hours add up.</span>
+              <span style={{ color: "var(--muted)", fontSize: ".83rem" }}>
+                {loadFailed
+                  ? "Couldn't load your awards — try again in a moment."
+                  : "No awards yet. They show up on their own as your verified hours add up."}
+              </span>
             )}
           </div>
         </div>

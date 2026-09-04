@@ -1,6 +1,6 @@
 # ADR 0002 — Billing at launch: ship orgs on the free Community tier only, defer live Stripe
 
-- **Status:** Proposed (Evan decides) — 2026-07-16
+- **Status:** ACCEPTED (Evan, 2026-08-31) — proposed 2026-07-16
 - **Milestone:** M11 (launch hardening), task M11.4
 - **Scope:** v2 only. Second v2 ADR (see ADR 0001 for the format precedent).
 
@@ -11,6 +11,13 @@ subscriptions: a free **Community** tier and a **Pro** tier. M8 built the
 Stripe integration end to end, but it has never been wired to live keys. The
 launch question (M11.4) is whether org monetization goes live at launch or is
 deferred — and the deciding constraint is Evan's age.
+
+> **Line numbers below were accurate at authoring (2026-07-16) and have drifted;
+> file and symbol names still hold.** Verified 2026-09-03: the two 503 guards are
+> at `billing.py:32` and `:66` (cited `:29-30` and `:61-62`), the webhook's
+> event-type branches at `:90-132` (cited `:73-88`), and `STRIPE_PRO_PRICE_CENTS`
+> at `config.py:83` (cited `:44`, which is now a closing paren). The $19-vs-$29
+> discrepancy this ADR flags was re-checked on disk and is still open.
 
 ### The age constraint
 
@@ -258,3 +265,12 @@ below).
 4. **If Option B is ever chosen:** document the guardian as the legal account
    owner/Representative and their acceptance of SSA liability before going live —
    this is a legal commitment, not a config step.
+
+## Accepted (appended 2026-08-31 ~22:12 CDT)
+
+Evan decided: launch free-tier-only. In the same message he picked the launch
+UI for the Pro surface — **"coming soon"** rather than leaving the would-503
+upgrade path — built the same session (see the record entry of 2026-08-31
+~22:12 CDT and the commit that follows it). The refund-policy draft (cancel
+anytime, end-of-period, no proration) was accepted in the same batch; it is
+moot while billing is free-tier-only but stands in the ToS.

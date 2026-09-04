@@ -34,7 +34,7 @@ export default function ForOrganizationsPage() {
           <Link className="btn-s" href="/pricing">View Pricing →</Link>
         </div>
         <p style={{ fontSize: ".8rem", color: "var(--muted)", marginTop: 14 }}>
-          Start free with up to 3 active listings. Upgrade to Pro for unlimited listings, featured placement, and analytics.
+          Start free with up to 3 active listings. Analytics are free for every organization. Upgrade to Pro for unlimited listings and featured placement.
         </p>
       </div>
     </V1Shell>

@@ -414,6 +414,14 @@
 .v1 .admin-stat:hover::after { background: var(--green); }
 .v1 .admin-stat-num { font-family: var(--font-display); font-size: 2.2rem; color: var(--green); margin-bottom: 4px; }
 .v1 .admin-stat-label { font-size: .73rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+/* M14.1 site-traffic day columns. Solid fill, no motion. A zero day keeps its slot
+   as a 2px stub so gaps in traffic stay visible instead of silently collapsing. */
+.v1 .traffic-bars { display: flex; align-items: flex-end; gap: 2px; height: 120px; padding: 0; margin: 0 0 6px; list-style: none; border-bottom: 1px solid var(--border); }
+.v1 .traffic-bars li { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+.v1 .traffic-bar { background: var(--green); border-radius: 2px 2px 0 0; }
+.v1 .traffic-bar.zero { background: var(--border); height: 2px; }
+.v1 .traffic-axis { display: flex; margin-bottom: 14px; font-size: .68rem; color: var(--muted); }
+.v1 .traffic-axis span { flex: 1 1 0; min-width: 0; white-space: nowrap; }
 .v1 .tabs { display: flex; gap: 3px; background: var(--green-pale); padding: 4px; border-radius: 8px; width: fit-content; margin-bottom: 24px; }
 .v1 .tab { padding: 9px 20px; border-radius: 6px; font-size: .82rem; font-weight: 600; cursor: pointer; color: var(--muted); border: none; background: none; transition: color .15s var(--ease), scale .16s var(--ease-out); }
 .v1 .tab:hover { color: var(--green); }
@@ -450,7 +458,7 @@
    tabular figures so stat counters don't jitter as values change. */
 .v1 ::selection { background: var(--green); color: #fff; }
 .v1 .sec-title, .v1 .hero h1, .v1 .mtitle { text-wrap: balance; }
-.v1 .lb-stat-num, .v1 .ds-stat-val, .v1 .admin-stat-num, .v1 .pc-price, .v1 .lb-hours b { font-variant-numeric: tabular-nums; }
+.v1 .lb-stat-num, .v1 .ds-stat-val, .v1 .admin-stat-num, .v1 .pc-price, .v1 .lb-hours b, .v1 .traffic-num { font-variant-numeric: tabular-nums; }
 
 /* ── POLISH ROUND 2 (2026-07-13): rare-surface delight + hover lift ──────────
    Opp-card hover lift, detail/auth card entrance, landing mini-card stagger.

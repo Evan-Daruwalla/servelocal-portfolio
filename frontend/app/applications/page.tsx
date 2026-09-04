@@ -1,48 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
-import type { ApplicationWithOpportunity } from "@/lib/types";
-
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending approval",
-  approved: "Approved",
-  rejected: "Not accepted",
-  waitlisted: "Waitlisted",
-  // Set by a guardian's revoke (M5). Without an entry here the student saw the
-  // raw word "withdrawn" in an amber "pending"-coloured pill, because both maps
-  // fall back (landing-check 2026-08-12). This page is NOT consent-gated — a
-  // revoked student can still sign in and read their own state, which is the
-  // point — so it is a live surface, not a theoretical one.
-  withdrawn: "Withdrawn",
-};
-
-const STATUS_PILL: Record<string, string> = {
-  pending: "sp-pending",
-  approved: "sp-approved",
-  rejected: "sp-rejected",
-  waitlisted: "sp-waitlisted",
-  withdrawn: "sp-withdrawn",
-};
+import { useAuth } from "@/lib/auth-context";
+import { APPLICATION_STATUS_LABEL, APPLICATION_STATUS_PILL } from "@/lib/status";
+import { useAuthedQuery } from "@/lib/use-api";
 
 export default function MyApplicationsPage() {
-  const { user, loading } = useAuth();
-  const [applications, setApplications] = useState<ApplicationWithOpportunity[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const {
+    data: applications,
+    loading,
+    error,
+    retry,
+  } = useAuthedQuery("applications/my", (t) => api.myApplications(t));
 
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || loading) return;
-    api
-      .myApplications(token)
-      .then(setApplications)
-      .finally(() => setFetching(false));
-  }, [loading]);
-
-  if (loading) return null;
+  if (authLoading) return null;
 
   if (!user || user.role !== "student") {
     return (
@@ -59,21 +34,34 @@ export default function MyApplicationsPage() {
         <h1 className="section-title">My Applications</h1>
       </div>
 
-      {fetching && <p className="empty-state">Loading…</p>}
-      {!fetching && applications.length === 0 && (
+      {loading && <p className="empty-state">Loading…</p>}
+
+      {/* An error must never fall through to the empty state below: "nothing here
+          yet" for a student who has applications, because the request failed, is
+          the bug this page shipped until 2026-08-31 (no .catch at all). */}
+      {!loading && error && (
+        <div className="empty-state flex flex-col items-center gap-3">
+          <span>Couldn&apos;t load your applications. Check your connection and try again.</span>
+          <Button variant="outline" onClick={retry}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {!loading && !error && applications?.length === 0 && (
         <div className="empty-state">Nothing here yet. Once you apply to an opportunity, it shows up here.</div>
       )}
 
       <div className="flex flex-col gap-4">
-        {applications.map((app) => (
+        {applications?.map((app) => (
           <Link key={app.id} href={`/opportunities/${app.opportunity.id}`} className="opp-card">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="opp-title">{app.opportunity.title}</h3>
                 <p className="opp-org">{app.opportunity.org_name}</p>
               </div>
-              <span className={`status-pill ${STATUS_PILL[app.status] ?? "sp-pending"}`}>
-                {STATUS_LABEL[app.status] ?? app.status}
+              <span className={`status-pill ${APPLICATION_STATUS_PILL[app.status] ?? "sp-pending"}`}>
+                {APPLICATION_STATUS_LABEL[app.status] ?? app.status}
               </span>
             </div>
           </Link>

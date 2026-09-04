@@ -1,7 +1,19 @@
 # gotchas — servelocal-v2
 
-Last updated 2026-08-07.
+Last updated 2026-09-03.
 
+- **Every role guard is literally named `guard`.** `require_org` and `require_student`
+  are both closures returned by `_role_guard`, so matching a route's dependencies by
+  `__name__` reports EVERY org route as unguarded and cannot tell the two roles apart.
+  Compare the function OBJECT (`d.call is require_org`), not its name (2026-09-03).
+- **`SessionLocal` in a test aims at the real database.** It binds to the configured
+  `DATABASE_URL`, and `dependency_overrides` cannot reach code outside the dependency
+  system — so a counter or middleware that opens its own session writes to Postgres
+  while the suite runs SQLite. Patch it in `conftest.py`; see `testing.md` (2026-09-03).
+- **The browser tool's `form_input` does not fire React's `onChange`.** It sets the DOM
+  value, so a controlled form still submits EMPTY and the login silently fails. Inject
+  a real token into `localStorage` instead when the form is not what you are testing
+  (2026-09-02).
 - **Browser-pane tab is `visibility:hidden` → CSS animation/transition clocks freeze at t=0**
   (2026-07-13). Reading computed styles "after" an entrance/stagger shows the FROM-frame (e.g.
   `opacity:0`) forever, and a hover transition sticks at its start — NOT a code bug. Fast-forward
@@ -58,3 +70,36 @@ Last updated 2026-08-07.
   CORS wraps it (last-added = outermost) and 429s carry CORS headers. Keep that order.
 - **The billing webhook needs the RAW request body** for signature verification — never add
   middleware/deps that consume or re-parse the body before `stripe.Webhook.construct_event` runs.
+- **A heredoc silently ate `\b` and wrote a literal BACKSPACE byte (0x08)** (2026-09-01). A regex
+  written as `re.compile(r"\b[A-Za-z0-9_-]{20,}\b")` through a `python - <<'EOF'` heredoc compiled
+  to `'\x08[A-Za-z0-9_-]{20,}\x08'` — requiring an unprintable character on both sides, so it
+  matched NOTHING while reading as protection. **`grep` cannot show you this**: the byte does not
+  render, and the mutated line prints byte-identically to the clean one. Only `repr(pattern)` exposes
+  it. The same heredoc then defeated the obvious fix. Build byte-sensitive content with explicit
+  values (`bytes([8])`, `chr(92)`) or the Write tool, and after writing any regex that matters, print
+  its `repr` and assert it matches a real positive. The record entry describing this bug initially
+  contained the same byte. **FIVE occurrences across 2026-09-01/02** — in the
+  regex, in the record entry about the regex, in the gotcha about both, and
+  twice more while writing bins about it. Every one arrived through a
+  `python - <<'EOF'` heredoc. Treat the heredoc as unable to carry a
+  backslash escape at all: build such text with explicit byte values
+  (`bytes([92, 98])`) or the Write tool, and scan afterwards —
+  `bytes([8]) in path.read_bytes()` over every file you touched.
+- **`git checkout -- <file>` is NOT a safe restore when the tree is dirty** (2026-09-01). Reverting a
+  test mutation that sat on top of an UNCOMMITTED change reverted both — silently wiping a fix made
+  minutes earlier. Copy the file aside first and restore from that copy, then prove it with
+  `git diff`.
+- **`git grep` with a pathspec is only trustworthy from the repo root** (2026-09-01). Run from a
+  subdirectory, `git grep -n 'x' -- backend` returns NOTHING (the pathspec does not exist relative to
+  cwd) — a false zero that reads exactly like a clean result.
+- **A plain `<a>` click is a FULL PAGE LOAD in the Next App Router — only
+  `<Link>`/`router.push` navigate softly** (2026-09-02). This invalidated a
+  security test and nearly cost a real fix: reproducing a client-cache leak
+  needs the JS context to survive an in-tab account switch, and
+  `document.createElement("a").click()` destroys that context (and the cache
+  with it) before the switch happens. The test passed no matter what the code
+  did, and on that false negative the fix was weakened and the bug publicly
+  retracted. **Put a `window.__marker` in any test that depends on the page not
+  reloading, and assert it survived.** Corollary, worth more than the specific
+  bug: *when a test reports "no bug", check that the test could have detected
+  one.*

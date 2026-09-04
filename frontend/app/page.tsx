@@ -15,17 +15,19 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
 import { V1Shell } from "@/components/v1/v1-shell";
 import { api } from "@/lib/api";
+import { usePublicQuery } from "@/lib/use-api";
 
 export default function Home() {
-  const [oppCount, setOppCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    api.listOpportunities({}).then((o) => setOppCount(o.length)).catch(() => undefined);
-  }, []);
+  // Shares the "opportunities" cache with /discover, so arriving here and
+  // clicking through no longer refetches the same list.
+  // `error` is read, not just `data`: without it a failed load left this tile
+  // showing "…" forever — a permanent loading state on the public landing page,
+  // with no error and no retry (audit 2026-09-02, reproduced against a stopped
+  // backend). "—" is the project's established failed-stat glyph.
+  const { data, error } = usePublicQuery("opportunities", () => api.listOpportunities({}));
+  const oppCount = data?.length ?? null;
 
   return (
     <V1Shell>
@@ -51,7 +53,7 @@ export default function Home() {
           </div>
           <div className="hero-stats">
             <div>
-              <div className="hs-num">{oppCount ?? "…"}</div>
+              <div className="hs-num">{error ? "—" : (oppCount ?? "…")}</div>
               <div className="hs-label">Active Listings</div>
             </div>
             <div>

@@ -1,6 +1,6 @@
 # features — servelocal-v2
 
-Last updated 2026-08-13.
+Last updated 2026-09-03.
 
 ## Milestone status (PRD M1–M11)
 - **Done:** M1–M9 (see below), **M10 COMPLETE** (`docker compose up --build` verified by Evan
@@ -10,6 +10,22 @@ Last updated 2026-08-13.
   **public-portfolio slice**. **327 pytest green; migrations 0001–0024 (2026-08-19; supersedes the
   189/0001–0021 figure). M11 launch = BLOCKED-ON-EVAN (host, domain/DNS, prod
   secrets, Resend key, Turnstile key, SUPPORT_EMAIL, legal).**
+- **M13 / M14 (added 2026-09-02).** This section stopped at M9/M10/M12 while INDEX.md
+  routed every reader here for milestone status — so a session following INDEX's own
+  instruction found no mention of the two most launch-relevant milestones (audit
+  2026-09-02). Current: **M13.1–.5 done**; **M13.6 REOPENED** — Evan reversed the
+  skip 2026-08-31 and adopted SWR, now **14 of 22 pages** converted (`lib/use-api.ts`,
+  `useAuthedQuery`/`usePublicQuery`); **M14.1 site analytics DONE** (`route_hits`,
+  migration 0025, admin-only `GET /analytics/traffic`, and the `/admin` "Site
+  traffic" section that reads it — 2026-09-02; it had no frontend consumer at all
+  until then); **M14.2 org analytics DONE 2026-09-03** — `GET /analytics/org` scoped
+  by SQL to the caller, a per-opportunity view counter on the previously dead
+  `Opportunity.views` that skips the owning org, and `returning_volunteers` as a
+  COUNT (never names). Fill rate is shown only for one-time listings: the backend
+  maintains `spots_remaining` for those alone, so a whole-listing percentage on a
+  recurring listing would be fabricated. **364 pytest
+  green; migrations 0001–0026.** HANDOFF.md remains the live snapshot; this line
+  exists so INDEX's routing is not a dead end.
 - **Public portfolio (2026-07-13):** `GET /portfolio/{id}` — public verified-service transcript
   (name, verified hours, hours-by-org, awards) for opted-in students only; opt-in via
   `portfolio_public` (migration 0021, minor consent-gated + name-minimized — see security.md).

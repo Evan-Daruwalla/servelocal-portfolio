@@ -22,7 +22,7 @@ export default function TermsPage() {
       <div className="section" style={{ maxWidth: 760 }}>
         <div className="sec-tag">Legal</div>
         <h2 className="sec-title" style={{ marginBottom: 6 }}>Terms of Service</h2>
-        <p className="sec-sub" style={{ marginBottom: 20 }}>Draft dated: July 16, 2026</p>
+        <p className="sec-sub" style={{ marginBottom: 20 }}>Draft dated: July 16, 2026 &middot; last revised 2026-09-03</p>
 
         <div style={draftBanner} role="note">
           <strong style={{ display: "block", fontSize: ".95rem", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".03em" }}>
@@ -30,7 +30,7 @@ export default function TermsPage() {
           </strong>
           This document is a working draft. It has <strong>not</strong> been reviewed by counsel and is
           <strong> not yet in effect</strong>. It does not create binding obligations until published in
-          final form. Draft dated July 16, 2026.
+          final form. Draft dated July 16, 2026, last revised 2026-09-03.
         </div>
 
         <div className="legal-body">
@@ -39,7 +39,7 @@ export default function TermsPage() {
           <h3>Accounts &amp; eligibility</h3>
           <ul>
             <li><strong>Minimum age.</strong> You must be at least <strong>12 years old</strong> to create a student account. Registration is blocked below that age, and every student account requires a date of birth, which we use to compute age for the consent and award rules below.</li>
-            <li><strong>Minors and guardian consent.</strong> If you are a student <strong>under 18</strong>, you must provide a parent or guardian&rsquo;s name and email at sign-up, and that guardian must approve your account before you can take any real-world-contact action: applying to an opportunity, messaging, checking in, or making your service portfolio public. Until a guardian verifies consent (and if a guardian later revokes it), those actions are blocked. A student who turns 18 is no longer gated.</li>
+            <li><strong>Minors and guardian consent.</strong> If you are a student <strong>under 18</strong>, you must provide a parent or guardian&rsquo;s name and email at sign-up, and that guardian must approve your account before you can take any real-world-contact action: applying to an opportunity, messaging, checking in, submitting or appealing hours, leaving a review, or making your service portfolio public. Until a guardian verifies consent (and if a guardian later revokes it), those actions are blocked. A student who turns 18 is no longer gated.</li>
             <li><strong>Organizations.</strong> Organization accounts must represent a legitimate group and provide accurate details. A ServeLocal administrator reviews organizations before their listings go live.</li>
             <li><strong>Account security.</strong> You are responsible for keeping your password secure and for activity under your account. Provide accurate information and keep it current. One person or organization per account; don&rsquo;t impersonate others.</li>
           </ul>
@@ -65,7 +65,7 @@ export default function TermsPage() {
           <h3>Organization subscriptions &amp; billing</h3>
           <p><strong>Students never pay.</strong> Paid plans apply only to organizations. Organizations may use ServeLocal on the free Community plan or subscribe to a paid <strong>Pro</strong> plan; current plan features and prices are listed on the <Link href="/pricing">Pricing</Link> page. Pro is billed as a recurring <strong>monthly</strong> subscription through our payment processor, Stripe, and renews automatically each month until cancelled.</p>
           <ul>
-            <li><strong>Fulfillment.</strong> Pro features (such as unlimited and featured listings, analytics, and roster export) activate <strong>immediately upon successful payment</strong> and remain available for the paid billing period.</li>
+            <li><strong>Fulfillment.</strong> Pro features (such as unlimited and featured listings, and roster export) activate <strong>immediately upon successful payment</strong> and remain available for the paid billing period.</li>
             <li><strong>Cancellation &amp; refunds.</strong> You can cancel Pro at any time. Cancellation takes effect at the <strong>end of the current billing period</strong>: your Pro features remain active until then, and your subscription does not renew for the next period. Payments already made for the current or past periods are <strong>non-refundable</strong>, and we do not provide prorated or partial refunds, except where required by law. <em>[Refund terms above are a proposed default — Evan to confirm before this document takes effect.]</em></li>
             <li><strong>Price &amp; tax changes.</strong> We may change subscription prices or features prospectively; we&rsquo;ll give notice before a change affects your next renewal. You are responsible for any applicable taxes.</li>
           </ul>

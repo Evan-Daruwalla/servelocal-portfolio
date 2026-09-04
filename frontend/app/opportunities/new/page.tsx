@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { useAuthedQuery } from "@/lib/use-api";
 import type { OpportunityTemplate } from "@/lib/types";
 
 export default function NewOpportunityPage() {
@@ -34,17 +35,18 @@ export default function NewOpportunityPage() {
   const [format, setFormat] = useState("In-Person");
   const [minAge, setMinAge] = useState<number | null>(null);
 
-  const [templates, setTemplates] = useState<OpportunityTemplate[]>([]);
+  // `templatesError` is read: without it a failed load showed an empty template
+  // picker, identical to "you've never posted before". The blank form below still
+  // works, so this is a note, not a blocker (audit 2026-09-02).
+  const { data: templatesData, error: templatesError } = useAuthedQuery(
+    user?.role === "org" ? "opportunity-templates" : null,
+    (t) => api.templates(t),
+  );
+  const templates = templatesData ?? [];
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
 
   const COMMITMENT_LABEL = { one_time: "One-time", weekly: "Weekly", monthly: "Monthly" } as const;
-
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || user?.role !== "org") return;
-    api.templates(token).then(setTemplates).catch(() => undefined);
-  }, [user]);
 
   function applyTemplate(id: string) {
     const t = templates.find((x) => x.id === id);
@@ -121,6 +123,11 @@ export default function NewOpportunityPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            {templatesError && (
+              <p className="text-sm text-muted-foreground">
+                Couldn&apos;t load your saved templates. You can still fill the form below.
+              </p>
+            )}
             {templates.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="template">Start from a template</Label>

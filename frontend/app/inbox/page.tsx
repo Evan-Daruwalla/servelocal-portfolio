@@ -1,33 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
-import type { Message } from "@/lib/types";
+import { useAuthedQuery } from "@/lib/use-api";
 
 export default function InboxPage() {
   const { user, loading } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const {
+    data: messages,
+    loading: fetching,
+    error,
+    retry,
+    mutate,
+  } = useAuthedQuery("messages/inbox", (t) => api.inbox(t));
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState("");
   const [sending, setSending] = useState(false);
-
-  function load() {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-    api
-      .inbox(token)
-      .then(setMessages)
-      .finally(() => setFetching(false));
-  }
-
-  useEffect(() => {
-    if (!loading) load();
-  }, [loading]);
 
   async function sendReply(id: string) {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -37,7 +29,7 @@ export default function InboxPage() {
       await api.replyMessage(id, replyBody.trim(), token);
       setReplyTo(null);
       setReplyBody("");
-      load();
+      void mutate();  // re-read the thread after a successful send
     } finally {
       setSending(false);
     }
@@ -61,10 +53,22 @@ export default function InboxPage() {
       </div>
 
       {fetching && <p className="empty-state">Loading…</p>}
-      {!fetching && messages.length === 0 && <div className="empty-state">No messages yet.</div>}
+
+      {/* An error must not fall through to "No messages yet" — that told a
+          student with an unread org message that their inbox was empty. */}
+      {!fetching && error && (
+        <div className="empty-state flex flex-col items-center gap-3">
+          <span>Couldn&apos;t load your inbox. Check your connection and try again.</span>
+          <Button variant="outline" onClick={retry}>Retry</Button>
+        </div>
+      )}
+
+      {!fetching && !error && messages?.length === 0 && (
+        <div className="empty-state">No messages yet.</div>
+      )}
 
       <div className="flex flex-col gap-2">
-        {messages.map((m) => (
+        {messages?.map((m) => (
           <Card key={m.id}>
             <CardContent className="flex flex-col gap-2 py-3">
               <div className="flex items-baseline justify-between gap-3">

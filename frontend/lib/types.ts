@@ -6,7 +6,10 @@
  */
 
 // ── Auth & user ──
-export type Role = "student" | "org" | "admin";
+// No "admin": the backend enum dropped it 2026-09-01 (assigned nowhere, and
+// registration is Literal[student, org]). Platform admin is the separate
+// `is_admin` flag below.
+export type Role = "student" | "org";
 
 export type ConsentStatus = "not_required" | "pending" | "verified" | "declined" | "revoked";
 
@@ -223,4 +226,45 @@ export interface OpportunityCreateInput {
   format: string;
   recurrence: "one_time" | "weekly" | "monthly";
   series_end?: string | null;
+}
+
+// ── Analytics (M14.1) ──
+// Mirrors backend/app/schemas/analytics.py. `route_hits` has NO user, IP, session
+// or opportunity column by design, so nothing derived from these types may ever be
+// labelled "visitors", "users" or "views" — app/privacy/page.tsx promises the
+// public that these are request counts and nothing else.
+export interface RouteHitRead {
+  day: string; // "YYYY-MM-DD" (UTC day)
+  route: string; // full template incl. the /api/v1 prefix
+  method: string;
+  count: number;
+}
+
+export interface OrgListingStat {
+  id: string;
+  title: string;
+  active: boolean;
+  recurrence: "one_time" | "weekly" | "monthly";
+  views: number; // lifetime detail views, owner's own visits excluded
+  approved: number; // approved signups only — not pending/rejected/withdrawn
+  spots_available: number;
+  verified_hours: number;
+}
+
+export interface OrgAnalytics {
+  listing_count: number;
+  total_views: number;
+  total_approved: number;
+  total_verified_hours: number;
+  // A COUNT, never names. Students appear nowhere in this payload — a backend test
+  // fails if one ever does.
+  returning_volunteers: number;
+  listings: OrgListingStat[];
+}
+
+export interface TrafficSummary {
+  since: string; // "YYYY-MM-DD", inclusive
+  until: string; // "YYYY-MM-DD", inclusive (today, UTC)
+  total: number;
+  rows: RouteHitRead[]; // one per (day, route, method); day desc, then count desc
 }

@@ -12,16 +12,24 @@ import { isV1Route } from "@/lib/v1-routes";
 
 export function SiteHeader() {
   const { user, loading, logout } = useAuth();
-  const [unread, setUnread] = useState(0);
+  // null = not known (never fetched, or the fetch failed). Distinct from 0.
+  const [unread, setUnread] = useState<number | null>(0);
   const pathname = usePathname();
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token || !user) {
-      setUnread(0);
+      setUnread(null);
       return;
     }
-    api.unreadCount(token).then((r) => setUnread(r.unread)).catch(() => undefined);
+    // Reset to 0 only on success. Swallowing the error left the previous count
+    // standing or showed 0 — indistinguishable from "nothing unread" — on any
+    // transient failure (audit 2026-09-01). A badge is not worth a visible
+    // error, but it must not assert a number it does not have.
+    api
+      .unreadCount(token)
+      .then((r) => setUnread(r.unread))
+      .catch(() => setUnread(null));
   }, [user]);
 
   if (isV1Route(pathname)) return null;
@@ -59,7 +67,7 @@ export function SiteHeader() {
                 href="/notifications"
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               >
-                Notifications{unread > 0 ? ` (${unread})` : ""}
+                Notifications{unread !== null && unread > 0 ? ` (${unread})` : ""}
               </Link>
               <Link
                 href="/inbox"

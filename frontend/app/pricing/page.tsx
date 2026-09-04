@@ -4,6 +4,7 @@ import { GraduationCap, Star } from "lucide-react";
 import Link from "next/link";
 
 import { V1Shell } from "@/components/v1/v1-shell";
+import { BILLING_LIVE } from "@/lib/flags";
 
 const FAQ = [
   {
@@ -60,11 +61,14 @@ export default function PricingPage() {
               <li>Everything in Community</li>
               <li className="pc-star">Unlimited active listings</li>
               <li className="pc-star">3 Featured listings, pinned to the top of search</li>
-              <li className="pc-star">Analytics dashboard: views, fill rates, retention</li>
               <li className="pc-star">Volunteer roster CSV export</li>
               <li className="pc-star">Priority support</li>
             </ul>
-            <div><Link className="btn-p" style={{ width: "100%", display: "block", textAlign: "center" }} href="/register">Get Pro</Link></div>
+            <div>{BILLING_LIVE ? (
+              <Link className="btn-p" style={{ width: "100%", display: "block", textAlign: "center" }} href="/register">Get Pro</Link>
+            ) : (
+              <span className="btn-s" style={{ width: "100%", display: "block", textAlign: "center", cursor: "default" }} aria-disabled="true">Launching soon</span>
+            )}</div>
           </div>
         </div>
 
@@ -72,7 +76,9 @@ export default function PricingPage() {
           <GraduationCap size={16} strokeWidth={1.75} aria-hidden /> <strong>Students never pay. Ever.</strong> Browsing, signing up, hour verification, awards, portfolios, and transcripts are free forever. That’s the whole point of ServeLocal.
         </div>
         <p style={{ fontSize: ".76rem", color: "var(--muted)", marginTop: 14 }}>
-          Checkout is in demo mode right now, so no payment is collected. Stripe goes live with deployment.
+          {BILLING_LIVE
+            ? "Checkout is in demo mode right now, so no payment is collected."
+            : "Pro subscriptions aren’t open yet — every organization starts on the free Community plan. Pro features arrive after launch."}
         </p>
 
         <div className="faq-wrap">

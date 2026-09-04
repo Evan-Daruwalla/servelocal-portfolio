@@ -46,6 +46,19 @@ strikes three STALE blockers (admin reopen endpoint shipped 2026-08-05; TTL alre
 [CONTACT EMAIL] resolved). Critical path = legal review. §3's M12 box ticked — done since
 2026-07-13, never checked off. 327 backend tests green.**
 
+**Status 2026-09-02 (state sync after the audit — not a scope change): M1–M10, M12, M13.1–.5
+COMPLETE. M13.6 REOPENED 2026-08-31 (Evan adopted SWR; 11 of 22 pages converted). M14 added
+2026-08-31 (below): **M14.1 DONE** — backend + tests 2026-09-01, and the admin-dashboard
+section its own done-check required shipped 2026-09-02; **M14.2 DONE 2026-09-03**,
+which closes M14. M11 Phase 0 CLOSED 2026-08-31 (all eight decisions);
+Phase 3 partly built (Sentry wired, OFF without a DSN; uptime monitor and the restore drill still
+open); Phases 1–2 BLOCKED-ON-EVAN and unchanged. A both-domains audit on 2026-09-02 (27 findings,
+fixed, `71c8fbd` + `7e2ad20`) found no scope change — it found the project's checks verify SHAPE,
+not TRUTH (record entry of that date). 364 backend tests green on SQLite AND real Postgres;
+migrations 0001–0026; boot blockers now SEVEN. Docker is back on the dev box. Everything pushed.
+Frontier unchanged: M11 Phase 1 (legal) is the critical path; model-doable next = M13.6 page by page
+(11 of 22 converted).**
+
 ---
 
 ## 1. OBJECTIVE
@@ -108,6 +121,14 @@ admin/audit log.
 except TOTP MFA, which §4 keeps out of scope. Reviews and leaderboard had shipped pre-PRD in the
 `94c185e` batch; the audit log landed at M9.2 with an admin-only endpoint, no admin UI, per spec.)*
 
+*(2026-09-02 note — the 2026-07-07 snapshot above is kept for history; current shape: 17 route
+modules under `app/api/routes/` (mounting 18 routers — `messages.py` exports two) (adds consent, billing, messages, notifications, reviews, saved,
+templates, portfolio, leaderboard, audit, analytics); migrations `0001`–`0026`; 364 tests, run
+on SQLite by default and on real Postgres via `TEST_DATABASE_URL`; frontend pages for every
+surface incl. dashboard, admin, portfolio, legal. Bookmarks finished in M1. TOTP MFA remains the
+one unported item and stays out of scope. A gitignored local SQLite stack for browser
+verification lives at `backend/.dev-sqlite/` — template `backend/.env.dev-sqlite.example`.)*
+
 ### Must not break
 
 - The 38+ existing backend tests and the existing route/model/schema layering.
@@ -154,10 +175,18 @@ The plan is complete when every box checks. Verify each with the command given.
       migrations applied by the deploy process (M11).
 - [ ] Terms of Service and Privacy Policy pages are live, linked from the footer and signup, and
       accurately describe the guardian-consent flow and data handling for minors (M11).
+      *(2026-09-02: pages exist as DRAFTS, linked from footer + register; `[GOVERNING STATE]`
+      and `[LEGAL ENTITY NAME]` unfilled; adult/legal review not done. Not live anywhere.)*
 - [ ] Signup has bot defense (CAPTCHA/Turnstile) and a documented token-storage decision (ADR:
       keep localStorage or move to HttpOnly cookies) implemented before launch (M11).
+      *(2026-09-02: ADR 0001 Accepted 2026-08-31 (localStorage, 24h TTL). Turnstile is coded and
+      tested against a stub key and is a production BOOT BLOCKER; the real site/secret keys are
+      BLOCKED-ON-EVAN, so the box stays open.)*
 - [ ] Production error tracking and uptime monitoring are wired; prod Postgres has scheduled
       backups with a documented restore path (M11).
+      *(2026-09-02: Sentry is wired and scrubbed, env-gated OFF until a DSN exists (BLOCKED-ON-EVAN,
+      18+ ToS). Uptime monitor: not built. Backups: `scripts/backup_db.py --restore-drill` exists
+      and has never been run for real — Docker is back, so it now can be.)*
 - [ ] A real person can register, get guardian consent, apply, and log verified hours on the
       production site — verified end to end and recorded (M11).
 - [x] Every page renders in v1's editorial system — Fraunces/DM Sans, v1 palette, and v1 component
@@ -221,7 +250,8 @@ The plan is complete when every box checks. Verify each with the command given.
 | M10 | Deploy readiness | Containerized stack, runbook, human-gated launch steps. |
 | M11 | Public launch | The site is live on a real domain with real users. Added 2026-07-08 (Evan's decision: ship, don't stop at ready). |
 | M12 | v1 visual parity | Frontend adopts v1's editorial design system end to end. Added 2026-07-12 (Evan: "make the frontend look like the servelocal v1 frontend"). M12.2–.3 land BEFORE M11.6's soft launch. |
-| M13 | Launch-checklist hardening | CSP/security headers, account deletion + data export (GDPR/CCPA), SEO/share metadata, per-section resilience UX. Added 2026-07-15 from Evan's 33-item checklist review; M13.2–.3 land BEFORE M11.6. |
+| M13 | Launch-checklist hardening | CSP/security headers, account deletion + data export (GDPR/CCPA), SEO/share metadata, per-section resilience UX. Added 2026-07-15 from Evan's 33-item checklist review; M13.2–.3 land BEFORE M11.6. *(2026-09-02: M13.1–.5 done; M13.6 SWR REOPENED 2026-08-31 by Evan, 11 of 22 pages — does not gate M11.)* |
+| M14 | Analytics, first-party and cookieless | Aggregate-only site counters + an org-facing tab, no cookies, no IPs, no per-user trail. Added 2026-08-31 (Evan reversed the 2026-07-15 deferral). Interleaves with M11 like M12/M13; neither part gates launch. *(Row added 2026-09-02 — the milestone had a §6 section since 2026-08-31 but no row here.)* |
 
 Order is deliberate: M2–M3 before consent because consent gating must cover check-in and
 recurring signups (building it first would mean re-touching it every milestone). M4 before M5–M6
@@ -495,7 +525,10 @@ that list implies:
   `POST /consent/admin/{user_id}/reopen` shipped 2026-08-05
   (`consent.py:139`). Remaining: a support address + a written procedure, not code.
 - ~~"TTL currently 7 days — pick the number"~~ — already **24h** since 2026-08-05
-  (`config.py:44`). Remaining: ADR 0001's Proposed→Accepted stamp only.
+  (`ACCESS_TOKEN_EXPIRE_MINUTES` in `config.py`). Remaining: ADR 0001's
+  Proposed→Accepted stamp only. *(Cited `config.py:44` until 2026-09-03; that
+  line is a closing paren — the declaration moved when the `repr=False` audit
+  fix added lines above it. Symbols do not drift.)*
 - ~~"[CONTACT EMAIL] placeholder in the legal pages"~~ — resolved; only
   `[GOVERNING STATE]` + `[LEGAL ENTITY NAME]` remain (`terms/page.tsx:86`).
 
@@ -509,6 +542,13 @@ clock belongs to other humans. Start it first; Phases 2–3 run in parallel behi
   reads `SENTRY_DSN` today, it is unbuilt); refund-policy default (drafted; moot at
   free-tier launch but in the ToS); analytics (recommend: keep deferred); consent-IP
   precision (recommend: KEEP, ratify); M13.6 SWR (recommend: skip, PRD default).
+  **CLOSED 2026-08-31 — all eight answered** (two against the recommendation). ADR 0001
+  Accepted · ADR 0002 Accepted · Pro surface = "coming soon" (built, `33468b7`) ·
+  refund draft Accepted · consent-IP = KEEP full precision, ratified · **support address
+  = `support@<domain>`, so its VALUE now waits on the Phase-2 domain purchase** ·
+  **error tracking = Sentry** (unblocks Phase 3) · **M13.6 = ADOPT SWR** (against the
+  recommendation; see M13.6) · **analytics = BUILD, both surfaces, shape (a)** (against
+  the recommendation; scoped as M14).
 - **Phase 1 — legal [EVAN + adult; hard gate]:** fill `[GOVERNING STATE]` +
   `[LEGAL ENTITY NAME]` — deciding person-vs-entity is a real liability question at
   17 on a minors platform; adult/guardian + legal review of Terms/Privacy (the
@@ -517,13 +557,21 @@ clock belongs to other humans. Start it first; Phases 2–3 run in parallel behi
   reopen endpoint [MODEL can draft].
 - **Phase 2 — infrastructure [EVAN drives; runbook = DEPLOY_RAILWAY.md]:** domain →
   Railway + Postgres → Turnstile keys → Resend key + domain verification (needs
-  DNS) → set all SIX boot blockers incl. `APP_BASE_URL` (four docs called it
-  optional until 2026-08-19) → `TRUSTED_PROXY_HOPS=1`, ONE replica, monthly
+  DNS) → set all **SEVEN** boot blockers incl. `APP_BASE_URL` (four docs called it
+  optional until 2026-08-19) and `TRUSTED_PROXY_HOPS`, which became the seventh blocker 2026-09-01 → ONE replica, monthly
   `purge_audit_log` cron → deploy, DNS/TLS, `/api/v1/health` green.
 - **Phase 3 — monitoring + data safety [MODEL builds after the Phase-0 pick]:**
   wire error tracking (real code, none exists); uptime monitor on `/health`; run
   the backup restore-drill FOR REAL (`scripts/backup_db.py --restore-drill` has
   only ever been verified by inspection; needs Docker up).
+  **Pick made 2026-08-31: Sentry**, chosen because host-native logging cannot see
+  browser-side errors at all — and with no frontend test runner and 19 hand-rolled
+  fetch pages, that is the likeliest failure class. Ships env-gated OFF by default
+  (the Turnstile precedent): no DSN → no client, no network calls, nothing to
+  configure in dev/CI. Must scrub PII before send (no emails, names, tokens, or
+  request bodies in events) — a minors platform does not ship user data to a
+  third party as a side effect of error reporting. The DSN and the account remain
+  BLOCKED-ON-EVAN (an 18+ ToS question, same class as live Stripe).
 - **Phase 4 — soft launch (= task 6 above):** promote an admin account (explicit
   SQL per DEPLOY_RAILWAY.md); seed 1–2 real orgs [EVAN outreach]; one real cohort
   end to end — the §3 box that cannot be faked.
@@ -536,6 +584,10 @@ see) — adding one is a scope ADD, Evan's call; the in-memory rate limiter is
 correct at one replica and silently wrong at two (Redis is the fix, currently
 unbuildable locally — Docker down); Evan is 17, which constrains billing (handled,
 ADR 0002) and possibly the legal-entity choice.
+*(2026-09-02: Docker is back on the dev box — the "unbuildable locally" qualifier no longer
+applies to Redis or to the restore drill. The frontend still has no test runner; the
+2026-09-02 audit found two more bugs of the class a build cannot see, one on the public
+landing page.)*
 
 ### M12 — v1 visual parity (added 2026-07-12, Evan-directed)
 
@@ -606,12 +658,23 @@ before M11.6's soft launch** — real users have deletion rights from day one.
 6. **DECIDE (unscheduled): client-side caching + optimistic updates.** SWR or React Query +
    optimistic bookmark/notification toggles. New dependency — Evan decides; default is skip
    until post-launch unless real-use performance says otherwise.
+   **DECIDED 2026-08-31 — ADOPT SWR** (reverses the "default is skip" above; the sentence
+   stands as written per this file's history rules). Evan chose SWR *as* the fix for the
+   open load/error/retry duplication (19 pages hand-roll `useEffect`, `error` state declared
+   in 12), rather than building a zero-dependency shared hook that SWR would then replace.
+   Scope: SWR becomes the data-fetch idiom for authenticated client pages; the hand-rolled
+   pattern is retired page by page, **not** in one mechanical sweep — the frontend has no
+   test runner, so each page's states (loading / error+retry / empty / data) are verified
+   individually. Optimistic toggles are a follow-on, not part of the consolidation.
 
 **Dated decisions from the 2026-07-15 checklist review (don't re-litigate without Evan):**
 
 - ~~Analytics + cookie banner~~ — DEFERRED (BLOCKED-ON-EVAN decision): the site sets zero
   cookies today (JWT in localStorage), so a banner is currently theater; any analytics must be
   cookieless/consent-aware and mind that users include minors (COPPA/GDPR-K). Revisit post-launch.
+  **REVERSED 2026-08-31 (Evan): BUILD IT — both surfaces, shape (a) first-party cookieless.**
+  The deferral text stands as written; the constraints in it do not change and are now
+  requirements, not reasons to wait. Scoped as **M14** below.
 - ~~Subdomain split (app vs landing)~~ — REJECTED 2026-07-15: no payoff at this scale; Next.js
   serves both. DNS shape is decided inside M11.3 anyway.
 - ~~Animations on every screen~~ — REJECTED 2026-07-15: violates the editorial calm-motion
@@ -629,6 +692,68 @@ before M11.6's soft launch** — real users have deletion rights from day one.
   credential). The M11.1(a) token-storage ADR is where this re-opens if auth ever moves to
   cookies.
 
+### M14 — Analytics, first-party and cookieless (added 2026-08-31, Evan-directed)
+
+Reverses the 2026-07-15 deferral above. Evan: "build it and properly", **both** surfaces,
+**shape (a)**: first-party, in our own stack. No third-party script, no hosted SaaS, no
+data processor to name in a privacy policy that is entering legal review, and nothing for
+the nonce-CSP to admit. "Properly" on a minors platform means collecting the least that
+still answers the question — that constraint is the design, not a caveat on it.
+
+**Hard rules (from the deferral this replaces, now requirements):** no cookies; no stored
+IP addresses, raw or hashed; no per-user browsing trail — a minor's page-by-page history
+must not become a queryable record; aggregate-only rows written at request time. If a
+question cannot be answered from counters, it does not get answered. Retention follows
+the existing audit-log precedent (age-only purge, stated in the policy).
+
+1. **Site analytics (public traffic).** Aggregate counters per (date, route) — request
+   count, and nothing that identifies who. Written server-side from the API/middleware, so
+   there is no client script and no consent banner to add. Admin-only read endpoint +
+   a dashboard section on the existing admin screen (today an honest stub). Done-check:
+   a request increments exactly one row; the table holds no column that could identify a
+   person; admin-only enforced by test; the privacy policy gains a truthful paragraph.
+2. **Org-facing analytics (the tab that already exists).** The org dashboard's Analytics
+   tab is a derived subset today, while the pricing page advertises "views, fill rates,
+   retention". Back it with a real endpoint scoped to the caller's own opportunities:
+   ~~views (from #1's counters, per opportunity)~~ **views from a per-opportunity
+   counter — see the sequencing correction below, which falsifies this clause;
+   struck 2026-09-03 rather than left contradicting the note eight lines down**,
+   fill rate (approved ÷ spots), verified-hours totals, returning-volunteer count. Done-check: an org sees only its own numbers (test),
+   the numbers reconcile against the underlying rows, and any metric that cannot be computed
+   honestly is dropped from the tab and from the pricing copy rather than faked.
+
+**Sequencing:** ~~#1 before #2 (#2 reads #1's view counters)~~ — **FALSIFIED 2026-09-01 by
+what #1 actually shipped, corrected here rather than left to mislead.** `route_hits` stores
+the route TEMPLATE and deliberately never records WHICH opportunity was viewed, which is the
+privacy property #1 was built around — so **#2 cannot read per-opportunity views from #1**.
+M14.2 needs its own per-opportunity counter. `Opportunity.views` already exists as a **dead
+column** (declared, never written, never read, absent from every schema — the same shape
+`Opportunity.active` had before 2026-08-05) and is the natural place for it: one integer on
+a row that already exists, no new per-user data. Neither part blocks M11; not a launch gate.
+
+**M14.1 DONE 2026-09-01** (`1c0b16e`): `route_hits` + middleware + admin-only
+`GET /analytics/traffic` + migration 0025 (up/down/up verified). All four done-checks pass —
+a request increments exactly one row, the table holds no identifying column (two tests fail
+if one is added), admin-only is enforced by test, and the privacy policy states the counters.
+
+**CORRECTED 2026-09-02 — M14.1 is PARTIAL, not DONE.** The four done-checks above are the
+backend's; the task's own text also requires "a dashboard section on the existing admin screen",
+and that was never built — `grep -rl analytics/traffic frontend/` returns 0 files, so the
+endpoint has no consumer and an admin cannot see the counters without curl. The 2026-09-01
+line stands as written; this note is the correction. Remaining for M14.1: the admin section
+(plan step S3). M14.2 unchanged and open; `Opportunity.views` re-verified 2026-09-02 as still
+dead (declared at `models/opportunity.py:54`, 0 reads or writes elsewhere, in no schema).
+
+**M14.1 DONE 2026-09-02 ~23:10 CDT.** The admin "Site traffic" section shipped: `/admin`
+reads `GET /analytics/traffic` with a 7/30/90-day window selector, a zero-filled per-day
+column strip, and a top-15 route table. No charting dependency was added (Evan's call) —
+the bars are CSS divs in the existing `.progress-bar` idiom. Copy says "requests", never
+"visitors", because `route_hits` has no user, IP or session column and the privacy policy
+promises exactly that. Browser-verified on the SQLite stack, including the failure path the
+frontend's lint+build gate cannot see: with the backend stopped the tile reads "—" (not 0),
+the error panel and Retry appear, the table and bars are absent, and the "no requests"
+empty copy is correctly NOT shown; restarting recovers without a reload.
+
 ## 7. HANDOFF NOTES
 
 **Read first, in order:** this file → `servelocal-v2/HANDOFF.md` (after M1.1 creates it) →
@@ -640,7 +765,9 @@ finish (tests green + commit + record entry) before starting the next. If a task
 wrong-sized or blocked, log it in the record and move on only if independent. *(Amended
 2026-07-12: M12 was added out of numeric order — it interleaves with M11.1–.5 but M12.2–.3 must
 complete before M11.6's soft launch.)* *(Amended 2026-07-15: M13 added the same way — interleaves
-with M11.1–.5, but M13.2–.3 must complete before M11.6.)*
+with M11.1–.5, but M13.2–.3 must complete before M11.6.)* *(Amended 2026-09-02: M14 interleaves the same way and gates nothing; `HANDOFF.md` has existed
+since M1.1, so read it second, as written. Default next task when Evan gives no direction:
+M13.6, one page at a time. (M14 closed 2026-09-03.))*
 
 **Gotchas that will bite you:**
 
@@ -669,3 +796,13 @@ with M11.1–.5, but M13.2–.3 must complete before M11.6.)*
   milestone; scope shifts get a snapshot section inside the record entry (state-doc tier retired
   2026-07-08). Honest failures beat silent skips — this repo's documentation trail is a
   college-application artifact.
+- **The project's guards verify SHAPE, not TRUTH** (audit 2026-09-02). The consent-gate test
+  proves every write route *has* a decision, not that its stated reason is true; the record
+  renderer's `broken: 0` proves links resolve, not that every entry is linked; lint + build
+  cannot tell an empty state from a failed load. A clean gate is not evidence for the thing the
+  gate does not measure — plant the positive and watch it fire.
+- **Browser verification is the frontend's only real gate**, and it needs the local SQLite
+  stack: `.claude/launch.json` (root) → `servelocal-v2-backend-sqlite` + `servelocal-v2-frontend-prod`.
+  On a fresh clone, create `backend/.dev-sqlite/dev.env` from `backend/.env.dev-sqlite.example`
+  first. The highest-value check: load a page, stop the backend, press Retry — every page must
+  show its error panel, never its empty copy, and every stat tile must read "—", not 0.

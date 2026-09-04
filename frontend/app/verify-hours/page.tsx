@@ -1,31 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { useAuthedQuery } from "@/lib/use-api";
 import type { HoursWithOpportunity } from "@/lib/types";
 
 export default function VerifyHoursPage() {
   const { user, loading } = useAuth();
-  const [entries, setEntries] = useState<HoursWithOpportunity[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const {
+    data,
+    loading: fetching,
+    error: loadError,
+    retry,
+    mutate,
+  } = useAuthedQuery("hours/org-queue", (t) => api.listHours(t));
+  const entries = (data ?? []) as HoursWithOpportunity[];
+  // Separate from `loadError`: this one reports a failed APPROVE/DENY, which the
+  // user must see next to the row they acted on, not in place of the list.
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-
-  function load(token: string) {
-    api
-      .listHours(token)
-      .then((data) => setEntries(data as HoursWithOpportunity[]))
-      .finally(() => setFetching(false));
-  }
-
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || loading) return;
-    load(token);
-  }, [loading]);
 
   async function decide(hoursId: string, action: "approve" | "deny") {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -34,7 +30,7 @@ export default function VerifyHoursPage() {
     setBusyId(hoursId);
     try {
       await api.verifyHours(hoursId, action, token);
-      load(token);
+      void mutate();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {
@@ -64,7 +60,19 @@ export default function VerifyHoursPage() {
       </div>
 
       {fetching && <p className="empty-state">Loading…</p>}
-      {!fetching && pending.length === 0 && <div className="empty-state">No hours awaiting verification.</div>}
+
+      {/* Not the empty state: telling an org "nothing to verify" because the
+          request failed hides real students waiting on their hours. */}
+      {!fetching && loadError && (
+        <div className="empty-state flex flex-col items-center gap-3">
+          <span>Couldn&apos;t load the verification queue. Check your connection and try again.</span>
+          <Button variant="outline" onClick={retry}>Retry</Button>
+        </div>
+      )}
+
+      {!fetching && !loadError && pending.length === 0 && (
+        <div className="empty-state">No hours awaiting verification.</div>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-col gap-4">

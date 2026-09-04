@@ -104,6 +104,26 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.24 — two CRITs on minors' data, then the guardian kill switch made retroactive (2026-08-08 to 2026-08-12)](#ii24--two-crits-on-minors-data-then-the-guardian-kill-switch-made-retroactive-2026-08-08-to-2026-08-12)
 - [II.25 — the rate limiter was counting the proxy, and a docstring was describing the opposite of what shipped (2026-08-12)](#ii25--the-rate-limiter-was-counting-the-proxy-and-a-docstring-was-describing-the-opposite-of-what-shipped-2026-08-12)
 - [II.26 — a fix that swept only its own call site, and the first retention limit (2026-08-13)](#ii26--a-fix-that-swept-only-its-own-call-site-and-the-first-retention-limit-2026-08-13)
+- [II.27 — scheduled daily-audit: the retention cron was already correctly deferred, two items stay pending on Evan (2026-08-16)](#ii27--scheduled-daily-audit-the-retention-cron-was-already-correctly-deferred-two-items-stay-pending-on-evan-2026-08-16)
+- [II.28 — the mirror did not self-heal, and the secret guard skipped what it could not decode (2026-08-18)](#ii28--the-mirror-did-not-self-heal-and-the-secret-guard-skipped-what-it-could-not-decode-2026-08-18)
+- [II.29 — scheduled daily-audit: the PUBLIC MIRROR was audited, ServeLocal itself was NOT (2026-08-21)](#ii29--scheduled-daily-audit-the-public-mirror-was-audited-servelocal-itself-was-not-2026-08-21)
+- [II.30 — scheduled daily-audit: the guardian MANAGE token never expires and rides in the URL path, and II.29's own follow-through never landed (2026-08-25)](#ii30--scheduled-daily-audit-the-guardian-manage-token-never-expires-and-rides-in-the-url-path-and-ii29s-own-follow-through-never-landed-2026-08-25)
+- [II.31 — the role-guard consolidation lands, and the near-miss that preceded it becomes a test (2026-08-31)](#ii31--the-role-guard-consolidation-lands-and-the-near-miss-that-preceded-it-becomes-a-test-2026-08-31)
+- [II.32 — the rest of 2026-08-31: two more consolidations, eight decisions, SWR, and a sweep that graded the prose (2026-08-31)](#ii32--the-rest-of-2026-08-31-two-more-consolidations-eight-decisions-swr-and-a-sweep-that-graded-the-prose-2026-08-31)
+- [II.33 — the five follow-ons, and two bugs that only a mechanism would have found (2026-09-01)](#ii33--the-five-follow-ons-and-two-bugs-that-only-a-mechanism-would-have-found-2026-09-01)
+- [II.34 — a pre-mortem, a fallback audit, and two guards that could not fire (2026-09-01)](#ii34--a-pre-mortem-a-fallback-audit-and-two-guards-that-could-not-fire-2026-09-01)
+- [II.35 — scheduled daily-audit: the MANAGE-token HIGH is still open, and the audit's own repo-scope premise was wrong (2026-09-01, ~20:14 CDT)](#ii35--scheduled-daily-audit-the-manage-token-high-is-still-open-and-the-audits-own-repo-scope-premise-was-wrong-2026-09-01-2014-cdt)
+- [II.36 — the config object printed every secret when it printed itself, and the fix sat green and unlanded (2026-09-02, ~16:29 CDT)](#ii36--the-config-object-printed-every-secret-when-it-printed-itself-and-the-fix-sat-green-and-unlanded-2026-09-02-1629-cdt)
+- [II.37 — a both-domains audit: the checks verified shape, not truth (2026-09-02, ~18:14 CDT)](#ii37--a-both-domains-audit-the-checks-verified-shape-not-truth-2026-09-02-1814-cdt)
+- [II.38 — the landing-check on II.37's own work: every guard fired, and three of the claims were wrong (2026-09-02, ~19:34 CDT)](#ii38--the-landing-check-on-ii37s-own-work-every-guard-fired-and-three-of-the-claims-were-wrong-2026-09-02-1934-cdt)
+- [II.39 — M14.1's other half, and the dev database that could not have served it (2026-09-02, ~23:13 CDT)](#ii39--m141s-other-half-and-the-dev-database-that-could-not-have-served-it-2026-09-02-2313-cdt)
+- [II.40 — M14 closes by deleting a claim, not by building one (2026-09-03, ~19:17 CDT)](#ii40--m14-closes-by-deleting-a-claim-not-by-building-one-2026-09-03-1917-cdt)
+- [II.41 — the guard that now checks its own reasons, and a licence that would not have reached its readers (2026-09-03, ~19:30 CDT)](#ii41--the-guard-that-now-checks-its-own-reasons-and-a-licence-that-would-not-have-reached-its-readers-2026-09-03-1930-cdt)
+- [II.42 — the snapshot had become a changelog, and the check that saved it was not the one in the plan (2026-09-03, ~20:07 CDT)](#ii42--the-snapshot-had-become-a-changelog-and-the-check-that-saved-it-was-not-the-one-in-the-plan-2026-09-03-2007-cdt)
+- [II.43 — both cap decisions closed: one section compressed, one cap raised for every project (2026-09-03, ~20:22 CDT)](#ii43--both-cap-decisions-closed-one-section-compressed-one-cap-raised-for-every-project-2026-09-03-2022-cdt)
+- [II.44 — two pages that showed the wrong screen on failure, and a legal packet whose value is that it concludes nothing (2026-09-03, ~20:33 CDT)](#ii44--two-pages-that-showed-the-wrong-screen-on-failure-and-a-legal-packet-whose-value-is-that-it-concludes-nothing-2026-09-03-2033-cdt)
+- [II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)](#ii45--a-pre-mortem-on-the-whole-project-whose-top-risk-is-that-two-of-our-own-documents-disagree-2026-09-03-2214-cdt)
+- [II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)](#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -885,6 +905,10 @@ verification and the first GitHub push of the v2 work.
   committed. The v1 repo was already clean/up-to-date. **This root repo (the
   whole-project record) has no remote and stays LOCAL by Evan's decision — it is
   portfolio narrative, not code of record.**
+  **[Corrected 2026-08-21 (II.29): the "no remote" half is false and was already
+  false when written — `Evan-Daruwalla/servelocal-docs` carries commits from
+  2026-07-08. It is a PRIVATE remote (anonymous fetch → HTTP 404), so nothing was
+  exposed. Original sentence left standing per append-only.]**
 
 **State:** v2 is through **M9 complete + M10 partial**; 127 → **175 backend tests**,
 all green; migrations 0015–0020 up/down/up clean. **Remaining:** M10.1
@@ -1676,6 +1700,335 @@ one file the mirror's own tooling does not maintain.
 | 2026-08-13 | v2 | **The limiter fix had swept only its own call site** — `guardian_consent_ip` (approve + revoke) and Turnstile's `remoteip` still read the proxy, so parental-consent evidence would have been the same address for every family. Fifth appearance of the fix-one-site-miss-the-siblings shape | this entry |
 | 2026-08-13 | v2 | **First retention limit on the audit log** (`AUDIT_LOG_RETENTION_DAYS`, age-only purge, policy states 12 months) + `min_age` grandfathering closed by construction. 323 tests; landing-check returned FIX FIRST and caught a wrong route enumeration in 3 places | this entry |
 | 2026-08-16 | v2 | Scheduled daily-audit: retention-cron finding checked and found already correctly documented as BLOCKED-ON-EVAN (no fix applied); 2 unpushed commits stay pending his go | this entry |
+| 2026-08-31 | v2 | A green 2026-08-25 fix pass found UNCOMMITTED after twelve days — committed with its entry reconstructed from the diff (provenance stated); the `sync_portfolio.py` managed-root-files bug fixed in it means every earlier `--check` on HANDOFF/PRD is suspect | `e98ab4f`, `ccc1396` |
+| 2026-08-31 | v2 | **Role-guard consolidation** — 25 inlined role checks classified into four shapes (a regex sweep treating them as one briefly ungated `create_review`; reverted, then rebuilt by hand): 15 pure gates now resolve through `require_student`/`require_org` in `deps.py`; new wrong-role probe on all five consent-gated student routes. 330 tests | II.31 |
+| 2026-08-31 | v2 | **Status maps consolidated** to `lib/status.ts` — four copies (not the briefed three) across TWO status domains that merely shared a constant name; a naive three-way merge would have fused application and hours vocabularies. Zero display strings changed | II.32 |
+| 2026-08-31 | v2 | **Phase 0 CLOSED — all eight launch decisions answered.** ADRs 0001+0002 stamped ACCEPTED; Pro "coming soon" surface built behind `NEXT_PUBLIC_BILLING_LIVE` (fail-closed); support address, Sentry, consent-IP, SWR and analytics decided — the last two against the model's recommendation | II.32 |
+| 2026-08-31 | v2 | **M13.6 reopened and started: SWR adopted** as the fix for 19 hand-rolled fetch pages. `useAuthedQuery` + 1 page converted, which had no `.catch` and showed a false empty state on failure. Verified on a **SQLite-backed local stack** — the first browser verification since Docker went down | II.32 |
+| 2026-08-31 | v2 | **`/landing-check`: zero code defects, four wrong numbers in the day's own prose** — plus the whole-project record covering 1 of 5 commits and HANDOFF contradicting itself on M13.6. Tenth run, same ratio: the code lands, the claims drift | II.32 |
+| 2026-09-01 | v2 | **Four consent-gated routes gained wrong-role coverage**, and `/hours/{id}/appeal` gained the role gate it never had — safe until now only because `Hours.user_id` is always a student, i.e. a property of the data rather than a stated rule | II.33 |
+| 2026-09-01 | v2 | **An unreachable API no longer logs the user out.** `auth-context` cleared the token on ANY `/auth/me` failure, so a dropped connection or a deploy restart destroyed the session | II.33 |
+| 2026-09-01 | v2 | **M14.1 site analytics shipped** — `route_hits` counts per (day, route TEMPLATE, method) with no user, IP, session or sub-day time, so it cannot reconstruct one person's path; two tests fail if an identifying column is added. Migration 0025 | II.33 |
+| 2026-09-01 | v2 | **Sentry wired, off by default, scrubbed before send.** The test asserting the scrubber is WIRED (not merely correct) caught a crash that would only ever have happened in production: the integration needs `jinja2`, absent → boot failure the moment a real DSN is set | II.33 |
+| 2026-09-01 | v2 | **SWR migration to 11 of 22 pages**, and **SIX pages carried the same false-empty-state bug** — the sixth found by a landing-check because the author's own census grepped a token that breaks across lines | II.33 |
+| 2026-09-01 | v2 | **Pre-mortem on the M11 soft launch** — 18 risks; all SEVEN launch-blocking Tigers fail silently, and two Elephants (a 17-year-old with no legal entity; whether launch needs real minors at all) are decisions for a responsible adult rather than commits | II.34 |
+| 2026-09-01 | v2 | **Fallback audit, 7 cold workers.** `scrub_event` shipped raw guardian tokens and emails through `exception`/`breadcrumbs`; the guardian manage token skipped its own guards at 2 of 4 callers; the boot guard never covered `TRUSTED_PROXY_HOPS`. All fixed; 354 tests | II.34 |
+| 2026-09-01 | v2 | **A guard that could never fire**: the first redaction regex compiled its word-boundary escape as a literal backspace byte, so it matched nothing — invisible to `grep`, caught only by re-running the reproduction. The record entry describing it then contained the same byte | II.34 |
+
+## II.29 — scheduled daily-audit: the PUBLIC MIRROR was audited, ServeLocal itself was NOT (2026-08-21)
+
+**Scope, stated first because it is easy to misread.** The 2026-08-21 sweep
+classified `ServeLocal` as SKIP-AUDITED (audit II.27 dated 2026-08-16, only 2
+non-audit commits after `43722c0`). The project it audited was
+`D:\ClaudeCode\servelocal-portfolio` — the **public mirror**, which has no audit
+in its own history, ever. This entry lives here because mirror findings have
+always been recorded here (II.28 is a mirror entry). **A future sweep that reads
+this entry as "ServeLocal was audited on 2026-08-21" is wrong.**
+
+**10 findings, 6 edge cases, nothing fixed** (the sweep is read-only).
+
+**Top finding — the secret guard's abort leaves the secret in the public repo.**
+`servelocal-v2/scripts/sync_portfolio.py` `main()` wipes and copies directly into
+the live mirror, and only then runs `scrub_and_guard()`. On a violation it prints
+"ABORT — secret guard tripped (nothing was committed)" and returns 4 with the
+offending file already written into `servelocal-portfolio\`. The message is true
+and misleading: the next `git add -A` — which the script itself prints as the
+manual publish path, and runs under `--commit` — publishes it. `check_drift()`
+already does this correctly, into a tempdir. The same non-atomicity means a crash
+between `wipe_managed()` and `copy_frontend()` leaves the mirror gutted.
+
+**Landing-check on the most recent entry** (`servelocal-v2/docs/record_2026-07-16.md`,
+2026-08-19 ~17:55 CDT): mirror range `1ed22ae..e5a7235` VERIFIED (5 files, 317
+insertions); "119 files" VERIFIED; push `8d22c75..3996577` VERIFIED and on
+`origin/main`; the "uncommitted note change, committing next" HONORED (`784d725`).
+Two claims did not hold:
+
+1. **"`--check` now reports IN SYNC"** — it reports STALE, exit 1. The mirror is
+   missing exactly that entry, because the entry documenting the sync is
+   necessarily written after the sync runs. Any session that records a sync ends
+   stale by construction.
+2. **"Root record repo untouched — it stays LOCAL"** — and this document said the
+   same in the 2026-07-09 "First push" entry and in the "What's not in this
+   record (honest gaps)" trailer ("has no remote and stays LOCAL by Evan's
+   decision"); both are corrected in place as of this entry. This repo has remote `Evan-Daruwalla/servelocal-docs`, 29 commits
+   on `origin/master`, first dated 2026-07-08. An anonymous fetch of that repo
+   returned HTTP 404 during this 2026-08-21 07:06-07:19 CDT sweep, so it is
+   **not publicly readable** —
+   this is doc-vs-disk drift, not an exposure. The decision text has been wrong
+   for six weeks. **Evan's call: correct the doc, or remove the remote.**
+
+**VERIFY.** Secret scanner clean on the mirror (`--staged` and `--history`, 0
+findings); `npm audit` 0 vulnerabilities; `tsc --noEmit` exit 0; `eslint` 12
+warnings / 0 errors; mirror `git ls-files` = 119. The mirror carries no personal
+email addresses (cross-checked with two grep implementations).
+
+**Consequence of this entry.** The HTML twin is now one entry behind — run
+`python scripts/render_record_html.py`, then re-sync the mirror. Do the sync
+LAST, after this entry, or finding 3 reproduces immediately.
+
+---
+
+## II.30 — scheduled daily-audit: the guardian MANAGE token never expires and rides in the URL path, and II.29's own follow-through never landed (2026-08-25)
+
+Audit run — 26 findings across `servelocal-v2` (backend + frontend/docs) and the
+public mirror, findings only, nothing fixed.
+
+**Top finding — HIGH.** Every guardian consent/manage token is a **URL path
+segment** (`app/api/routes/consent.py:203,301,315,338,390,401`), including
+`GET /manage/{token}/export` and `POST /manage/{token}/delete`. Unlike
+`reset_token_hash` and `guardian_consent_token_hash`, `guardian_manage_token_hash`
+(`app/models/user.py:108`) has **no `_expires` column** — and `consent.py:447`
+makes the permanence deliberate: "Keep this link. It is the only way to manage
+your decision later." So a minor's export-and-delete credential is permanent,
+un-rotatable, and lands in every proxy/CDN access log. The model's own comment at
+`user.py:91` calls these hashes "single-use", which is false for this one.
+Backend adds no `Referrer-Policy` or `Cache-Control: no-store` on these routes.
+**Evan's call**, not a patch — this is a launch-gate decision for a platform
+serving minors.
+
+**Landing-check on II.29.** Its findings all still reproduce, and its own closing
+instruction ("run `render_record_html.py`, then re-sync the mirror") was never
+carried out in the four days since:
+
+- II.29 itself is **uncommitted** (` M` on this file) and **absent from the HTML
+  twin** — twin last built 2026-08-18 09:00, 52 `<h2>` vs 53 `##` headings.
+- `python scripts/sync_portfolio.py --check` → **STALE**, 2 files.
+- `servelocal-v2` is **ahead 1** of `origin/main` (`784d725`).
+- II.29's top finding is unfixed: `sync_portfolio.py` `main()` still wipes and
+  copies into the live mirror at `:328-330` and only runs `scrub_and_guard()` at
+  `:339`, returning 4 at `:347` with the offending file already on disk —
+  while `check_drift()` at `:249` does the same sequence into a tempdir.
+
+**Mirror.** README:6-9 says rate limiting and auth are "deliberately not
+published"; the mirror publishes the thresholds (auth 30/min, writes 120/min),
+the backend file:line, and `docs/adr/0001:196`'s "more than one replica silently
+multiplies every rate limit by the replica count". Graded high, not crit — nothing
+is deployed yet. **Clean:** two independent grep implementations found no live
+secret value, no personal email, and no non-public API host in the mirror.
+
+**Counts.** `pytest -q` → **328 passed** (HANDOFF says 327). `ruff` clean;
+`pip-audit` no known vulnerabilities. `frontend/README.md` says "Next.js 15";
+`package.json` pins `^16.3.0`, and it points at `backend/README.md`, which the
+mirror does not ship.
+
+**Guard gaps.** Neither `servelocal-v2` nor `servelocal-portfolio` carries the
+record-invariant delegation in `scripts/git-hooks/pre-commit`, and neither has a
+`.gitattributes` LF pin (five sibling repos got both). Stale dead copies remain
+at `servelocal-v2/.git/hooks/pre-commit` and `ServeLocal/.git/hooks/pre-commit`
+— `core.hooksPath` means git never runs them. An abandoned worktree sits at
+`.claude/worktrees/dazzling-murdock-5a8c6a`.
+
+Full report in the scheduled daily-audit session output for 2026-08-25.
+
+## II.31 — the role-guard consolidation lands, and the near-miss that preceded it becomes a test (2026-08-31)
+
+Two sessions on one day. The first found the working tree holding twelve days of
+foreign green work from 2026-08-25 — including the `sync_portfolio.py` fix for
+managed ROOT files, which retroactively taints every earlier `--check` verdict on
+`HANDOFF.md`/`PRD_ROADMAP.md` — committed it with a provenance-marked entry
+reconstructed from the diff (`e98ab4f`), then designed the role-guard
+consolidation, nearly shipped a hole with a regex sweep (`create_review` briefly
+lost its student gate when the check-deletion and the dependency-swap didn't
+pair), and reverted everything (`ccc1396`).
+
+The second session built it by hand. The 25 inlined role checks are four shapes,
+not one: 15 pure caller-role gates (converted — `require_student`/`require_org`,
+one definition in `deps.py`), 4 role-AND-ownership conditions, subject-shaped
+checks, and 2 bespoke-copy gates (all left alone). The five consent-gated student
+routes keep `Depends(require_consent)` in their signatures — the coverage test
+detects the launch gate by that exact name — and take the role guard as a
+decorator dependency. The near-miss became mechanism: no test had ever sent an
+org token at a consent-gated student route, which is exactly why the regex hole
+would have shipped green; `tests/test_role_guards.py` now probes all five,
+proven red against the reintroduced hole before being trusted. **330 backend
+tests green.** Detail: `servelocal-v2/docs/record_2026-07-16.md`, entries of
+2026-08-31.
+
+## II.32 — the rest of 2026-08-31: two more consolidations, eight decisions, SWR, and a sweep that graded the prose (2026-08-31)
+
+**Why this entry exists at all is the finding.** II.31 covered the role guards
+and said "entries of 2026-08-31", plural. Four more commits followed it and none
+reached this document — a project rule (`servelocal-v2/CLAUDE.md` §Definition of
+done, item 4: medium-or-larger changes append here) quietly unmet for the rest of
+the day. A `/landing-check` sweep caught it. That is the same shape as every
+other failure in this record: the code was fine, the account of it was not.
+
+**Status maps → `frontend/lib/status.ts`.** The open item said three files
+defined one status vocabulary. Classification first — the lesson of II.31, applied
+the same day — found **four** copies across **two** domains: application status
+(pending/approved/rejected/waitlisted/withdrawn) and hours status
+(pending/verified/denied/appealed), sharing only a constant name. Merging the
+three named files, the literal reading of the task, would have fused two
+vocabularies. Zero display strings changed; a fifth site (the org-facing
+applicants table, which renders raw status words in the organization's own
+register) was deliberately left alone.
+
+**Phase 0 closed — eight launch decisions, in one sitting.** ADR 0001 (keep
+localStorage-JWT at 24h) and ADR 0002 (launch free-tier-only) stamped ACCEPTED
+with dated sections; the Pro upgrade surface became a "launching soon" state
+behind `NEXT_PUBLIC_BILLING_LIVE`, default off so the safe state is the unset
+one; the pricing page's "Stripe goes live with deployment" line, which a
+free-tier launch would have made false on day one, went with it. Support address
+= `support@<domain>` (so its value now waits on the domain purchase rather than
+on a decision); error tracking = **Sentry**, because host-native logging cannot
+see browser errors and this frontend has no test runner; consent-IP precision
+kept in full. **Two decisions went against the model's recommendation** and are
+recorded as such: adopt SWR rather than build a zero-dependency hook that SWR
+would later replace, and **build analytics properly** rather than keep deferring
+it — now PRD **M14**, first-party and cookieless, with the deferral's old
+constraints (no cookies, no stored IPs, no per-user trail, minors) converted from
+reasons-to-wait into build requirements.
+
+**SWR adopted; one page converted; the local stack came back.** `useAuthedQuery`
+holds `loading` true while auth hydrates — the precise reason a page can no
+longer render "nothing here yet" before knowing whether the fetch failed — and
+never retries client errors, since a 403 from the consent gate is a settled
+answer and the rate limiter counts every attempt. The pilot page had **no
+`.catch` at all**, so a failed load showed a student with applications an empty
+state; the 2026-08-11 bug class, in a second file, invisible to a build.
+**Docker has been down since mid-August**, so the backend was booted on SQLite
+instead (`create_all` + `uvicorn --env-file`) and the flow driven through the
+real HTTP API: data renders, an injected 503 produces the error panel and Retry
+rather than the false empty state, Retry issues exactly one request and recovers,
+and cached data survives an outage. SWR's focus/reconnect revalidation stays
+**unverified** — the browser pane pins `visibilityState` to hidden and SWR gates
+on it.
+
+**The sweep.** Ten runs in, `/landing-check` again found **zero code defects and
+zero mislandings** while every control it planted fired: 18 of 18 guarded routes
+403 a wrong-role caller (derived twice, independently), 5 of 5 decorator guards
+turn the suite red when removed, the consent-gate coverage test fires on the
+exact mechanical-sweep failure that nearly shipped a hole earlier that day, and
+the billing flag changes rendered output in both directions. What it found
+instead: **four wrong numbers in the day's own record prose** (an unpushed-commit
+count of 7 that was 5, "five maps" that are six, a "10 sites" list summing to 13,
+"nine files" that are eight plus one), this document missing four of five
+commits, and HANDOFF asserting both "M13.6 skipped" and "adopt SWR" twelve lines
+apart. All corrected, with the originals left standing.
+
+**Open and honest:** `auth-context` clears the token on any `/auth/me` failure,
+so an unreachable API silently logs a user out — reported, unfixed, because auth
+behavior on a minors platform deserves its own decision rather than a ride-along
+in a refactor. Four consent-gated routes still have no wrong-role coverage. The
+public mirror carries absolute local paths in four tracked files, all predating
+this session — inherited, not introduced, and still a real disclosure.
+
+## II.33 — the five follow-ons, and two bugs that only a mechanism would have found (2026-09-01)
+
+Evan closed Phase 0 the previous day; this covers the five model-doable items
+that followed, done in one run.
+
+**Two were bug fixes with teeth.** `/hours/{id}/appeal` carried no role gate at
+all — it was safe only because `Hours.user_id` is always a student, so an
+organization fell through to an ownership 404. Safety as a property of the data
+rather than a stated rule is the kind that stops holding quietly, so the gate is
+now explicit and the test fails without it. And `auth-context` cleared the login
+token on *any* `/auth/me` failure, unable to tell "your token is rejected" from
+"the server is unreachable" — so a dropped connection or a routine deploy
+restart silently signed users out. Both directions are now verified: an outage
+keeps the session, a tampered token is still cleared.
+
+**M14.1 built analytics that cannot become surveillance.** The table stores a
+count per day, route template and method — no account, no IP, no session, no
+user agent, and no time finer than a day. It records that the opportunity page
+was opened forty times, never which opportunity or by whom. On a platform whose
+users are minors that is the whole design, so it is enforced rather than
+described: one test fails if an identifying column is added, another if any code
+writes one, and a third proves the stored route is the template and not a
+resolved id. Three traps surfaced en route — Alembic autogenerate inventing a
+foreign key, a route-template lookup that silently matched nothing because
+FastAPI wraps included routers, and an exclusion list that could never match
+while its own test passed *vacuously*.
+
+**Sentry went in switched off, and the test that mattered was about wiring, not
+correctness.** A scrubber that is never passed to `init()` leaves every
+unit test green while real events ship unscrubbed, so the suite asserts the live
+client's options. That test caught a failure nothing else would have: the
+integration imports a templating module that needs `jinja2`, so with a real DSN
+the app would have crashed at boot — in production, and nowhere else.
+
+**The SWR migration reached 11 of 22 pages and found the same bug six times.**
+Pages that fetched without a `.catch` fell through to their empty state on
+failure: *no bookmarks, no messages, no notifications, no hours awaiting
+verification, no verified hours yet*. Each was a lie told to a user whose data
+existed. The shared hook makes it structurally impossible — `loading` stays true
+until auth resolves, and client errors are never retried.
+
+**The sixth instance was found by a mechanism, not by the author.** A
+`/landing-check` sweep re-derived the page census and got a different number:
+the original grep looked for `api.` and one page wrote `api` with the method on
+the next line, so it never matched and looked converted. The same sweep caught a
+blocking CI job already red on an inherited advisory, and two documents
+contradicting themselves about whether Sentry was wired. That is the tenth run
+of that sweep and the ratio holds: no mislandings, every planted control fired,
+and the errors were all in the account of the work rather than the work.
+
+**Left open honestly:** four pages plus four components remain unconverted, with
+`hours` singled out because its load begins with a write and would re-fire on
+every revalidation; the two guardian-consent token pages are deliberately
+excluded. M14.2 needs its own counter — shipping M14.1 falsified the PRD's plan
+for it, since template-level counts cannot answer per-opportunity questions.
+
+---
+
+## II.34 — a pre-mortem, a fallback audit, and two guards that could not fire (2026-09-01)
+
+**The pre-mortem asked the question the roadmap could not.** Imagining the soft
+launch had failed fourteen days in produced eighteen risks, and one pattern
+organised them: **every launch-blocking risk fails silently** — the guardian
+email that never sends, the proxy variable left at its default, the retention
+cron nobody scheduled, the backup nobody restored, the monitoring nobody turned
+on, the support inbox nobody reads. None produces an error, a red build, or a
+failing test. A launch checklist that looks for errors passes while all seven
+are live.
+
+The uncomfortable half was the elephants. Evan is seventeen and the Terms still
+carry an unfilled legal-entity placeholder, so launching with real minors puts
+personal liability on a minor. There is one operator, in school, and the breach
+runbook's first step names a responsible adult identified nowhere in the
+documentation. And the question nobody had written down: **the stated goal is a
+college-application portfolio where the process is the product — does that
+require real minors at all?** A deployed application exercised by invited adult
+testers might satisfy it while creating none of the ongoing duty of care, and it
+is the cheapest available mitigation for four of the seven blocking risks. The
+recommendation on record is that no launch date be set until an adult answers
+that.
+
+**The fallback audit turned the same lens on the code.** Seven cold workers
+swept every place the code decides what to do when something is missing,
+invalid, or failed. What it found is this project's oldest pattern, still alive:
+a correct decision applied at one site and not at its structural twins, five
+times, in five unrelated subsystems — twice in code written that same morning.
+
+The worst was in the privacy mechanism itself. `scrub_event` strips personal
+data from error reports before they leave for a third party, and it dropped the
+request URL for a stated reason: a guardian's permanent revoke token rides in
+the URL path. That reasoning was applied to exactly one field. Exception
+messages and breadcrumb URLs — structurally identical, just as likely to carry
+the same token — went through untouched. Elsewhere the guardian manage token
+skipped the two guards its own documentation calls load-bearing at two of four
+callers, so a years-old link could still revoke consent for someone who had
+since become an adult and pull them off every roster.
+
+**Then the fix contained the same class of bug as the thing it fixed.** The new
+redaction pattern was written with a word-boundary escape that landed in the
+file as a literal backspace character, so the regex required an unprintable byte
+on both sides and could never match anything. It read as protection and was not.
+`grep` could not reveal it, because the byte does not render; only printing the
+compiled pattern exposed it, and only because the original reproduction was run
+again instead of the edit being trusted. The record entry written to explain
+that bug then contained the same byte, in the same way, and was found by the
+landing-check that followed.
+
+**The landing-check's verdict is the entry's point.** Every new guard fired when
+its positive was planted. What had not landed was the documentation: seven
+documents still described the boot guard as it was before the change, one
+runbook instructed operators to set a variable *after* a deploy that the same
+variable now prevents, and another said "no error is raised either way" about a
+condition that had just become fatal. The code was right and the account of it
+was wrong — the tenth consecutive time that sweep has returned that shape.
+
+---
 
 ## What's not in this record (honest gaps)
 
@@ -1696,3 +2049,723 @@ one file the mirror's own tooling does not maintain.
 - **Reasoning/decision conversations** — this record covers WHAT was built and
   WHAT was learned; the deliberations live in the session transcripts under
   `~/.claude/projects/D--ClaudeCode-ServeLocal/*.jsonl`.
+
+## II.35 — scheduled daily-audit: the MANAGE-token HIGH is still open, and the audit's own repo-scope premise was wrong (2026-09-01, ~20:14 CDT)
+
+**Audit run — 3 findings, top: II.30's guardian MANAGE token (no expiry, rides in the URL path)
+is still unfixed on disk, correctly logged as pending Evan's call rather than silently dropped.**
+
+Cold, read-only, budget-constrained (single agent, no fan-out).
+
+## II.35.1 Findings
+1. **HIGH, still open.** `backend/app/models/user.py:96-98` and
+   `backend/app/api/routes/consent.py:203,293,304,319,345-390` — the token is still permanent,
+   multi-use, and carried in the URL path. The model comment now calls this deliberate
+   ("see FINDING 1, 2026-08-25 audit") and `consent.py:355` still reads "the manage token never
+   expires and never rotates." Unlike II.29, this non-fix is *documented* as a pending launch-gate
+   decision. It remains live risk on a platform holding minors' data.
+   **BLOCKED-ON-EVAN:** expire+rotate, or accept and record the acceptance.
+2. **MEDIUM, process.** `servelocal-v2` carries **12 modified, uncommitted files** (HANDOFF.md,
+   PRD_ROADMAP.md, docs/record_2026-07-16.md, backend/.env.example, docs/API_KEYS.md,
+   docs/DEPLOY.md, docs/DEPLOY_RAILWAY.md, frontend/app/{applicants,portfolio}/page.tsx,
+   frontend/lib/types.ts, 2 codebase-memory bins). Separately, the **root** repo's chronological
+   record .md/.html twin has not been committed since **2026-08-18** — ~14 days of uncommitted
+   narrative, the exact pattern II.29 flagged in itself. Fix: commit both sets.
+3. **Correction to the audit's own premise.** The sweep classified this project using
+   `ServeLocal/.git`, which does **not track `servelocal-v2/` at all** (nested repo, no submodule
+   wiring). The active repo has commits through today (`6310e35`, 2026-09-01, "Fallback audit
+   fixes"). II.31–II.33's code work was never stranded. Any future sweep must read
+   `servelocal-v2/.git`, not the root.
+
+## II.35.2 Verified HEALTHY by running it
+- `pytest -q` → **354 passed in 153.20s**, matching HANDOFF's claimed count exactly.
+- `pytest tests/test_role_guards.py -v` → **5 passed in 2.95s**.
+- II.31's role-guard consolidation is real and complete: `require_student`/`require_org` are
+  single definitions from one `_role_guard` factory (`backend/app/api/deps.py:67-68`), used at
+  6 decorator sites plus 13 `Depends(require_org)` sites. `backend/tests/test_role_guards.py`
+  exists, its docstring narrates the real 2026-08-31 near-miss, and it covers all 6 role-gated
+  routes plus /apply's bespoke copy and the two relationship-gated messaging routes.
+- No personal data or token values were printed at any point in this audit.
+
+## II.35.3 Not checked
+`core.hooksPath` configuration in the root repo; the frontend suite (only backend pytest ran);
+whether II.34's "2 of 4 callers" manage-token guard fix is itself complete; public-mirror sync
+status ("20 commits behind" per the uncommitted HANDOFF diff).
+
+## II.36 — the config object printed every secret when it printed itself, and the fix sat green and unlanded (2026-09-02, ~16:29 CDT)
+
+**Three layers closed a credential-exposure path in the backend config. The
+entry that had described this bug the day before named the wrong cause, and the
+finished fix then sat uncommitted for a day — the same shape II.35 had just
+flagged, repeated by the session that read it.**
+
+**The defect.** `repr(Settings(...))` returned every field value in plain text:
+853 characters covering `SECRET_KEY`, both Stripe secrets, `RESEND_API_KEY`,
+`TURNSTILE_SECRET_KEY`, `SENTRY_DSN`, and the password embedded in
+`DATABASE_URL`. It was not a hypothetical string — during reproduction the
+rendered value carried the real `sk_test_…` key out of the gitignored
+`backend/.env`.
+
+**The correction comes first, because it is the reusable part.** The
+`security.md` bin entry written on 2026-09-01 said an `AttributeError` on
+`Settings` renders every value. It does not. The message is exactly
+`'Settings' object has no attribute 'X'` and contains nothing else. That entry
+had been written from a sweep finding without running it. The first action of
+this task was to reproduce the claim, which failed immediately — and the real
+mechanism turned out to be worse than the recorded one, not milder. **A finding
+recorded without reproduction is not a finding; it is a guess with a citation
+format.** Eleventh consecutive sweep in which the code and the account of the
+code disagreed.
+
+**Why three layers and not one.** Each covers a shape the others structurally
+cannot reach:
+
+- **`Field(repr=False)` on 8 secret-bearing fields** (`backend/app/core/config.py`).
+  Values stay plain `str`, so every read site is untouched — only rendering
+  changes. `SecretStr` was the obvious alternative and was rejected on
+  measurement: 12 of the 33 `monkeypatch.setattr` sites in the suite would
+  silently install a bare `str` into a `SecretStr` field, producing tests that
+  pass while asserting against the wrong type.
+- **Frame-variable scrubbing** (`backend/app/core/observability.py`). Sentry
+  collects stack-frame locals by default and writes real values to
+  `exception.values[].stacktrace.frames[].vars`. Neither the project's scrubber
+  nor Sentry's own reached that path. A dict local arrives as a genuine nested
+  dict, so key-name filtering works there — where it cannot work on a repr,
+  because **a repr is a string and a string has no keys to match.** That is the
+  precise reason field masking is not redundant with frame scrubbing.
+- **`include_local_variables=False`** — the chokepoint. It is the only layer
+  that reaches the three frames *inside httpx* that bind the Turnstile secret as
+  a `data=` parameter. Measured: the secret appeared in four frames, one of them
+  ours. Rewriting `turnstile.py`, the intuitive fix at the reported call site,
+  would have closed one frame of four and read as complete.
+
+**What was deliberately left open, in-code.** The masking does not cover
+`model_dump()` / `model_dump_json()`, which still return plaintext; there are
+zero callers of either on settings today and no route returns `Settings`. The
+key filter deliberately omits `"s"` — redacting every one-letter local in every
+frame is not defensible, and that gap is the stated reason the other two layers
+exist. Both are written into the source, not just here.
+
+**VERIFY.** `pytest -q` with `ENVIRONMENT=ci` → **360 passed in 54.35s**.
+`ruff check` → all checks passed; `ruff format --check` → 116 files already
+formatted. Secret scanner on commit → 0 findings. `repr(settings)` is now 499
+characters with no key material. Committed as `3e0ff52` in `servelocal-v2`,
+8 files, 449 insertions.
+
+**The process failure, which is the larger one.** The fix above was complete,
+green, and **uncommitted** — code and its own record entry and HANDOFF update all
+sitting in the working tree together, so the docs and the code would have been
+lost as a unit. II.35 had flagged exactly this pattern the previous day, in this
+same repo, and the flag did not prevent the recurrence; a human instruction at
+the start of the next session did. **A finding that names a risk does not reduce
+it. Only a mechanism does, and there is no mechanism here** — nothing fails when
+green work goes unlanded, which is precisely why it keeps happening.
+
+This record was itself the proof: last committed **2026-08-18** (`202200e`), it
+carried **seven unlanded entries** — II.29 through II.35, 391 lines — for
+**15 days**, in a repo whose remote nothing routinely pushes to, so no external
+signal existed to notice. Both sets are committed as of this entry.
+
+**BLOCKED-ON-EVAN.** The real test-mode Stripe key rendered into agent output
+during reproduction. It is test-mode, gitignored, and was never committed;
+whether to rotate it is Evan's call and is not worked around here.
+
+**Known open, unchanged by this entry.** The table of contents above stops at
+II.26 — entries II.27 through II.36 have no TOC line. Not a broken anchor (the
+renderer's `broken:` count is unaffected), but the TOC no longer describes the
+document.
+
+**Two in-place corrections were reverted to land this, and that is a tradeoff,
+not a cleanup.** The append-only guard
+(`~/.claude/skills/project-memory/hooks/pre-commit-record`, shared by six repos)
+blocked this commit: a previous session had corrected two committed claims *in
+place* — the 2026-07-13 snapshot's "M13.6 SWR skipped" gained a `[REVERSED
+2026-08-31 (II.32)]` marker, and the "What's not in this record" bullet saying
+this repo "stays LOCAL — no remote" was rewritten to say it IS pushed to a
+private remote. Both annotations preserved the original wording and both were
+factually right. The guard is line-based, so it cannot tell an annotation that
+keeps the original from an overwrite that destroys it, and it correctly refused
+all five modified lines.
+
+**Resolved by restoring the five lines to their committed bytes** (Evan's call,
+2026-09-02). Nothing factual is lost: II.29 states the private-remote finding
+and II.32 states the SWR reversal, and both entries land in this same commit.
+What *is* lost is the forward-pointer — a reader who encounters "stays LOCAL" in
+the 2026-07-09 material now gets no marker there that it is stale, and must
+reach II.29 to learn it. **A pure mid-file insertion passes the guard; only
+modifying an existing line fails it**, which is why the other II.29 annotation
+(at the 2026-07-09 entry) survives untouched and these two did not.
+
+The real fix is a guard that permits annotate-in-place when the original text is
+retained as a substring. That is a change to a hook executing for six repos and
+does not belong inside a record commit. **Not done; open.**
+
+
+## II.37 — a both-domains audit: the checks verified shape, not truth (2026-09-02, ~18:14 CDT)
+
+**Cold `/audit` across `servelocal-v2` (293 tracked files) and this root repo (6),
+seven Sonnet workers under a reconciled file manifest, then the approved fixes.
+27 findings. 364 pytest green on SQLite AND on real Postgres 16.**
+
+**The pattern is the finding.** Every mechanism this project built to catch a
+defect class works exactly as specified — and the defects live in the prose those
+mechanisms accept without checking. Five independent instances:
+
+- The consent-gate guard fails the build when a write route carries no consent
+  decision. An entry is a route tuple plus a free-text comment, and **nothing
+  tests the comment.** Its comment on `DELETE /apply` said the route reaches "no
+  organization"; `consent.py` says the row exists precisely so "the organization
+  retains its record". That false premise is what made the day's worst bug
+  reachable.
+- **This document's own renderer** checks `hrefs - ids` and never `ids - hrefs`,
+  so `broken: 0` printed on every commit while **ten entries — II.27 through
+  II.36 — were unreachable from the table of contents.** Fixed here: internal
+  links 36 → 46.
+- The codebase-memory `Last updated` header is documented as the single freshness
+  signal; six of twelve headers were older than dated content inside their own
+  file.
+- The frontend gate is lint + build, which structurally cannot distinguish an
+  empty state from a failed one.
+- Migration 0025 justified dropping a foreign key by citing a "documented
+  convention" that **does not exist** — grep for "reflect" across every bin
+  returns zero.
+
+**Two highs, both reproduced rather than reasoned about.** A guardian-revoked
+minor could permanently delete the organization's roster record that the revoke
+flow deliberately preserves: `withdraw_application` selected the caller's row with
+no status filter and deleted it unconditionally. Revoke flips `consent_blocks`,
+not `is_active`, so the minor's token still worked. Observed end to end before the
+fix — revoke, organization sees one `withdrawn` row, minor calls DELETE, 204,
+organization sees nothing. And the **public landing page** showed a permanent
+loading ellipsis on any backend failure: no error, no retry, on the first page a
+launch visitor sees. Verified in a browser against a genuinely stopped backend.
+
+**Docker returned mid-task and turned one verdict from inference into proof.** The
+claim was that `messages.recipient_id` is a foreign key in the ORM, free in the
+test suite because it builds the schema with `create_all`, and **absent from every
+migration** — so production has no referential integrity and no test can ever
+notice. On real Postgres at revision 0025, `\d messages` showed foreign keys on
+two columns and none on `recipient_id`. Migration 0026 adds it, named so the
+downgrade works, verified up/down/up on both engines. A first attempt to run the
+suite "against Postgres" was still silently on SQLite because `conftest.py` keys
+on `TEST_DATABASE_URL`, not `DATABASE_URL` — caught by reading the fixture rather
+than trusting the run.
+
+**A dependency this repo executes on every commit had no manifest.** The
+pre-commit hook runs `render_record_html.py`, which imports `markdown` and fails
+CLOSED. The version was whatever sat on the developer's ambient PATH, with no
+requirements file anywhere in this repo to pin or roll back to. Now pinned at
+`scripts/requirements.txt`. The specific risk is quiet: an upstream change to the
+`toc` extension's slug generation would not fail the render, it would silently
+mint different anchor ids — and the render's own check cannot see that, which is
+the same blind spot that hid the missing TOC entries.
+
+**The audit's own errors are recorded because the method is the point.** Two of
+seven shard counts handed to workers were wrong, and both were caught by the
+workers rather than by the orchestrator. A relative-churn ranking computed every
+ratio as `0.00` because `bc` is not installed, so the first targeting list was
+silently ordered by absolute churn — the weak signal, R²=0.052 against 0.811.
+
+**VERIFY.** 364 pytest on SQLite and on Postgres 16. ruff clean; tsc exit 0;
+eslint 0 errors; `npm run build` clean. This document: internal links 46, heading
+ids 63, `broken: 0`; the append-only guard passes, the TOC additions being a pure
+insertion. `servelocal-v2` committed as `71c8fbd` (34 files).
+
+**BLOCKED-ON-EVAN.** Splitting `security.md` (316 lines against a ~150 cap);
+whether to move a real account export out of the repo tree; a LICENSE choice for a
+repo with a public mirror; and whether the consent allowlist should carry
+assertions instead of comments — the last being the one that stops the pattern
+above from recurring.
+
+
+## II.38 — the landing-check on II.37's own work: every guard fired, and three of the claims were wrong (2026-09-02, ~19:34 CDT)
+
+**A fresh agent, given the artifacts and deliberately NOT the author's account of
+them, swept the seven unpushed commits from II.37. Verdict on the work: it lands.
+Verdict on the prose about it: three false claims, all the author's.**
+
+**The work was verified by ACTIVATION, not by reading.** This is the distinction
+the whole sweep exists for. A guard that is present in a diff and a guard that
+fires are different facts, and only one of them is protection. So: the new 409 in
+`withdraw_application` was fired with its planted positive, and its negative twin
+confirmed an ordinary withdrawal still returns 204 — a guard that blocked the
+normal path would have been worse than the bug it closed. Both `opp.active`
+guards fired. Both Dockerfiles' `USER` directives were reproduced by building and
+running the images (uid 10001, uid 1000) rather than trusted as text, because a
+`USER` line that breaks a container reads identically in a diff. Migration 0026's
+foreign key was watched through its full cycle on Postgres — absent at 0025,
+present at 0026, absent after downgrade.
+
+**The three false claims.** The commit message for the audit fixes said five
+codebase-memory headers were stale; the real number is six, and the record entry
+*inside that same commit* says six — so the commit contradicted itself. The cause
+is worth more than the number: one bin was fixed in an earlier step and the other
+five by a script, and the message counted the script's batch. HANDOFF asserted "46
+internal links" — true when it was written at 18:14 and false nine minutes later,
+when II.37 landed in this repo and added its own TOC row. Neither repo's tooling
+could have caught that: the claim lives in one repo and the number is a property
+of the other. And a twelfth bin, `disclosure.md`, was carrying day-old content
+under a stale header — missed by the very sweep that fixed six of its siblings,
+because that scan matched the literal string `Last updated` and this file spells
+the field differently.
+
+**That last one is the audit's own pattern, turned on the audit.** The scan
+verified the form it expected rather than the thing it was for, which is exactly
+what II.37 said about the consent allowlist, the record renderer and the frontend
+gate. A check keyed to one spelling of a convention cannot see a file that spells
+it another way — and it reports clean while doing so.
+
+**The correction was deliberately made forward rather than by amending.** The bad
+commit was still unpushed, so amending was available and would have produced a
+tidier history. It was refused: II.37, already committed here and append-only,
+cites that commit by SHA, and amending would have rewritten the SHA and broken a
+cross-repo reference that cannot be edited. A wrong number in a commit message is
+the smaller and more honest error.
+
+**The verifier itself broke something and reported it against itself** — it
+deleted the project's dev-Postgres container while checking the migration claims,
+violating its own governing rule. Recovered: the named volume survived, the
+container was recreated, and the schema and revision state were confirmed intact.
+"No rows were lost" was specifically NOT claimed, because no pre-deletion count
+existed to compare against.
+
+**VERIFY.** Re-derived at 19:34 CDT: internal links 47, heading ids 64,
+`broken: 0`, render idempotent. Six stale bins re-derived by reconstructing each
+file's pre-fix state. Corrections committed to `servelocal-v2` as `9d686c6`.
+Nothing is pushed: a guard blocks model-initiated pushes because a bare push
+publishes a whole branch, and two of the five v2 commits predate this session.
+
+
+## II.39 — M14.1's other half, and the dev database that could not have served it (2026-09-02, ~23:13 CDT)
+
+**The analytics endpoint shipped on 2026-09-01 with seven tests and zero callers.**
+M14.1's own task text asked for "a dashboard section on the existing admin screen";
+the backend was built, the four done-checks it listed were all backend checks, and the
+frontend half was simply never written. The milestone read DONE for a day, was
+corrected to PARTIAL on 2026-09-02, and is now genuinely done: `/admin` reads
+`GET /analytics/traffic` behind a 7/30/90-day window selector, with a zero-filled
+per-day column strip and a table of the top fifteen routes.
+
+**A milestone can pass every check it wrote for itself and still be half-built.** That
+is the same shape this project has been finding all week — a gate that verifies the
+form it measures and is silent about the rest. Here the done-check list was the
+artifact at fault: four items, all backend, for a task whose own sentence named a
+frontend deliverable.
+
+**The dev database could not have served the feature, and only running it revealed
+that.** The local SQLite stack is the project's sole browser-verification path, and it
+held ten tables with no `route_hits` and no `alembic_version` — built by `create_all`
+before migration 0025 existed. The endpoint would have returned a server error against
+it. Running `alembic upgrade head` would have been the wrong repair: with no version
+row it replays from the first migration. The single table was created from model
+metadata instead. **No test could have caught this**, because the test fixture builds a
+fresh schema from the current models every run; only the persistent database was
+behind, and nothing in the suite ever looks at it.
+
+**Two design calls, both Evan's, both reducing what gets added.** The day columns are
+CSS divs rather than a charting library: no new dependency, nothing further for the
+nonce-CSP to admit, and no motion to exempt from the reduced-motion rule. The columns
+run vertically because ninety stacked horizontal rows would be roughly thirteen hundred
+pixels tall while ninety columns fit a single strip.
+
+**The wording is a privacy constraint rather than a style preference.** The counter
+table has no user, no address, no session and no opportunity column, and the published
+privacy policy tells the public these are request counts and nothing else. So the
+section says *requests* and never *visitors*, *users* or *views*, and both new types
+carry that reasoning in a comment so a later session does not relabel a column on
+instinct.
+
+**Verified against a stopped backend, which is the check that matters here.** With the
+page open and the API killed, the tile reads an em dash rather than zero, the error
+panel and its retry control appear, the table and the bars vanish, and the "no
+requests" empty-state copy is correctly withheld — a failure must never be able to
+impersonate an empty result. Restarting recovered the page without a reload. The
+static gate held its exact baseline of zero errors and eleven warnings; a new warning
+would have counted as a regression rather than an acceptable cost.
+
+**Stated rather than glossed:** the empty-window state cannot be reached today, since
+loading the admin page generates requests on the very day it queries, so that branch
+was reviewed and not executed. And the client-side proof that a non-admin never sends
+the request rests on the redirect, the absent section and the held query key, because
+the browser's network log is cumulative and could not evidence the negative directly;
+the server returns a forbidden response to a student regardless.
+
+**VERIFY.** Committed to `servelocal-v2` as `578ad70` (9 files). Lint 0 errors / 11
+warnings, unchanged; production build clean; TypeScript clean; 364 backend tests pass.
+Status propagated to every live copy in the same commit, with the grep gate for the
+superseded wording returning only the dated historical note, which now carries its own
+closed line.
+
+
+## II.40 — M14 closes by deleting a claim, not by building one (2026-09-03, ~19:17 CDT)
+
+**The org dashboard's Analytics tab now shows real numbers, and the pricing page
+advertises one fewer thing than it did this morning. Both halves were the milestone.**
+
+**Two of the three numbers on that tab were wrong, and had been for weeks.** Everything
+was computed in the browser from lists fetched for other tabs. "Applicants" counted
+every application, including the ones the organization had rejected and the ones a
+guardian had withdrawn. "Spots filled" subtracted remaining spots from total spots — and
+the backend only maintains remaining spots for one-time listings, because a recurring
+event tracks capacity per date. So every recurring listing showed a fabricated fill
+figure to the organization running it. Neither number was a lie anyone told; both were
+what happens when a display is derived from whatever data the page already had.
+
+**The milestone's own done-check is what made this interesting.** It required that any
+metric which cannot be computed honestly be dropped *from the tab and from the pricing
+copy*, rather than faked. The pricing page sold "views, fill rates, retention". Views
+and fill rate were buildable. **Retention was not.** Nothing in this schema distinguishes
+a volunteer who chose to come back from one who simply appears twice, beyond what
+"applied to two of our listings" can say — and that is not retention. So the word was
+deleted from the pricing page. What ships is the honest, narrower thing it was standing
+in for: a count of students with approved signups to two or more of that organization's
+listings, labelled as exactly that.
+
+Fill rate got the same treatment at smaller scale. Rather than print a percentage that
+means nothing for a recurring listing, the tab shows one only where it is meaningful and
+otherwise says so in words.
+
+**Deleting a marketing claim to make a document true is the part worth keeping.** The
+project's own disclosure notes had carried this as an open defect for weeks — "copy that
+outruns the code is a disclosure defect, not a marketing one." It closed from both ends
+at once: two metrics built, one claim removed. The same pass found that analytics was
+listed as a paid Pro feature in both the pricing page and the Terms while shipping free
+to every organization, and cut it from both.
+
+**The privacy policy needed a sentence and got one.** It promised that aggregate counts
+"cannot show what any individual person looked at" — true, and written when the only
+counts were site-wide. It did not say an organization can see totals for its own
+listings. Shipping the feature without that sentence would have left a live policy
+incomplete, so the counters paragraph now says it plainly and on the same terms.
+
+**A counter that could not have worked, caught by a test that asserted a number.** The
+new per-listing view counter first opened a database session that binds to the real
+configured database, so under test it reached for Postgres while the suite runs on
+SQLite. The project's own test configuration already carried the warning, written months
+earlier for the site-wide counter: without redirecting that session, the counters would
+quietly aim at the wrong database and every analytics assertion would silently test
+nothing. **The tests failed loudly instead — because they assert a specific count rather
+than merely that the code ran.** The repair moved the session inside the service, so
+future counters have one place to redirect rather than one per route that counts.
+
+**What the organization cannot see.** The returning-volunteer figure is a count and
+never names. An organization can already see its own applicants, so the risk here was
+never the names themselves but the linkage across listings; a list would have created a
+fourth place this platform publishes student data, beside the leaderboard, the portfolio
+and the applicant lists, where the standing rule is that a change to one is a change to
+all three. A test serialises the entire response and fails if any student identifier
+appears in it, which is what will make a future "just add the names" change loud.
+
+**VERIFY.** 376 backend tests green (364 before, 12 added); lint held its exact baseline;
+build and type-check clean. Against the live local stack: three anonymous views counted
+and two views by the listing's own organization correctly not counted. With the backend
+stopped, the tab shows its error panel and Retry, with no tiles, no table, and — the
+point — not the "post a listing" empty message, so a failure cannot impersonate having
+no data. A student gets 403, an anonymous request 401. Committed to `servelocal-v2` as
+`cf4e09f`.
+
+
+## II.41 — the guard that now checks its own reasons, and a licence that would not have reached its readers (2026-09-03, ~19:30 CDT)
+
+**Four standing decisions cleared at once, and the one that matters is the smallest to
+describe: a test that verified a decision had been made now verifies part of what the
+decision says.**
+
+**The consent-gate coverage test was already a real mechanism.** It fails the build when
+a new write route carries no decision about the guardian-consent gate, and it exists
+because that gate had been missed three separate times, each caught only by a human
+happening to read the right file. But an entry in its allowlist was a route plus a
+free-text comment, and **nothing checked the comment**. The September audit measured what
+that costs: one route was exempted on the written grounds that it reaches "no
+organization", while the very function that creates its rows says they are kept precisely
+so the organization retains its record. A guardian-revoked minor could delete the
+organization's evidence, and the mechanism built to catch that class of error had approved
+it in writing.
+
+Every entry now carries a *kind*, and the kinds a machine can check are checked against
+the running application: a route claiming to be organization-only must actually depend on
+the organization guard; one claiming to need no authentication must not require a user.
+**No test can make prose true.** What this does is reduce the unverifiable remainder to a
+single named entry, with a second test that fails if that number grows — so unexamined
+prose cannot quietly become the default again.
+
+**The new test's first run found two things, and the first was about the test.** Matching
+dependencies by name reported every organization route as unguarded, because the role
+guards are closures produced by one factory and are therefore all literally named "guard".
+Comparing function identity instead fixes that and, unlike the name check, can tell two
+roles apart at all. Five routes then failed honestly: they check role *and* ownership
+together inside the handler, which no role-only dependency can express. They are now
+classified as exactly that, asserting what is true of them and stating plainly what the
+test cannot see.
+
+**The guard was watched firing before it was trusted.** A deliberately false
+classification was planted on a route — the same class of false claim the audit had found
+— and the test failed on it. A control never observed firing is unverified, whatever its
+code says.
+
+**A split reported with its real number.** The security notes had reached 316 lines
+against a documented cap of about 150. The guardian-consent material moved verbatim into
+its own file, and a line-by-line check confirms nothing was lost. The result is 227 and
+113 — **and 227 is still over the cap.** Saying so is the point: closing the remaining gap
+means moving the audit-log material as well, and where that belongs is a judgement about
+boundaries worth making deliberately rather than as a side effect of this one.
+
+**A licence nobody would have read.** The project had none, which legally means all rights
+reserved but says so to no one — a real problem for a repository whose whole purpose is a
+public mirror people are invited to read. One was written, retaining rights and explaining
+why in the file itself: this is an operable service that handles the personal data of
+minors, and an unmodified third-party deployment would collect that data from real
+children under someone else's control. Then a check found the gap that would have made the
+whole exercise pointless: **the mirror script copies only two root files, and the licence
+was not one of them.** It is now on that list. Nothing was published; a sync remains a
+separate and deliberate act.
+
+**And a real export left the tree.** A file holding one person's email, full name and date
+of birth had been sitting in the repository's documentation folder, protected only by an
+ignore rule. It moved outside every repository in the container. An ignore rule is a good
+backstop and a poor primary control: a single forcing flag walks straight past it, and the
+file sat in a directory the mirror script reads.
+
+**VERIFY.** 378 backend tests green; linting and formatting clean; the frontend gate held
+its exact baseline. The split preserved 290 of 290 non-blank lines. The planted false
+classification failed the test and was reverted to zero occurrences. Committed to
+`servelocal-v2` as `b6a57b8`.
+
+**Left undone on purpose:** rotating a test-mode payment key, which needs an account only
+Evan holds. It is reported, not worked around.
+
+
+## II.42 — the snapshot had become a changelog, and the check that saved it was not the one in the plan (2026-09-03, ~20:07 CDT)
+
+**`HANDOFF.md` is defined as the project's only live snapshot and is the first file any
+cold session reads. It had become a changelog: 590 lines, of which 432 — 73% — were
+fourteen dated narrative entries, five of them added the same day. Rewritten to 255.**
+
+**The drift is worth naming because it is what a well-intentioned rule produces.** The
+documentation system says to update the snapshot every session, and the honest way to do
+that looks like appending what changed. Do it fourteen times and the snapshot becomes a
+second, worse copy of the record — worse because it is unordered, undated at the section
+level, and read first by every session that needs to know what is true *now*. Nobody
+decided to make it a changelog; it accreted one entry at a time.
+
+**The deletion was gated, and the gate is the only reason it was safe.** This file is not
+append-only — the chronological record is — so trimming it is legitimate *if and only if*
+nothing in the trimmed region exists solely there. Every distinct entry date was checked
+against the record's own headings before anything was cut: nine dates, none missing. One
+appeared orphaned, and that turned out to be the checking script being wrong rather than a
+real gap — the entry was dated one day and merely mentioned another in its body.
+
+**Then the verification step caught what the plan itself had missed.** The plan required
+grepping for anything that *pointed into* the region being removed, separately from
+checking whether its prose survived elsewhere. That grep found a per-milestone status
+table sitting immediately after the narrative pile — inside the range marked for deletion,
+and referenced by four other documents including the project's own definition of done,
+which instructs every session to update it. Its prose existed nowhere else. It was
+restored, with a note recording that it is not history, so a future rewrite does not
+repeat the mistake.
+
+**That is the transferable part.** Twice in one day a *structural* documentation change
+broke something no *content* check could have seen. Whether the words survive somewhere
+else is the wrong question when deleting a region of a document; the right one is who
+points into it.
+
+**Re-deriving rather than copying caught a stale number.** The plan forbade carrying
+figures over from the old file. Recomputing them from disk showed the client-side data
+migration standing at twelve of twenty-two pages rather than eleven — a page had been
+converted hours earlier as a side effect of other work, and four separate places still
+said eleven. Two more places described the roadmap by a milestone range that stopped being
+true when a milestone closed that morning.
+
+**The file also, finally, ends with a handoff prompt** — a paste-ready block giving the
+next session its read order, the current state in a paragraph, the constraints that
+actually bite on this machine, and the next actions in priority order. The documentation
+system has required one from the beginning; the file contained no fenced block at all.
+
+**VERIFY.** 590 to 255 lines. Nine entry dates removed, none lacking record coverage.
+Seven section headings became nine, the two apparent losses being deliberate re-datings of
+the current-state and blocked-on-Evan headings. Status table restored at twenty-eight
+rows. Zero carriage returns and zero control bytes. Backend suite green at 378, unmoved by
+a change to prose. Committed to `servelocal-v2` as `56c18e1`.
+
+## II.43 — both cap decisions closed: one section compressed, one cap raised for every project (2026-09-03, ~20:22 CDT)
+
+II.41 ended with two questions that were Evan's to answer, not mine: whether to compress a
+*fixed* security incident down to its durable facts, and whether a cap that the prescribed bin
+set makes unreachable should be raised for every project. He answered both, and both landed.
+
+**`security.md` 183 → 150 lines.** The 47-line `repr(Settings)` section became 13. Four facts
+stayed — secrets must never render in a repr (853 characters, a real `sk_test_…` key); the two
+carriers (Sentry stack-frame locals, live; `monkeypatch.setattr`'s `!r`, latent at 33 sites);
+why the fix needed three layers rather than one (an object serializes into a repr STRING with
+no keys to match, a dict stays a dict with no repr to mask, and no single tool covers both);
+and that layer 3 alone reaches the three httpx frames binding the Turnstile secret, so
+re-enabling frame locals silently reopens part of the hole. The narrative, the wrong-cause
+correction, and the `SecretStr` rejection moved to a pointer — after confirming they were
+already in the day-file record entry, not on the assumption that they were.
+
+**150 is AT the cap, not under it.** The plan said 149. Getting under would have meant deleting
+the knowingly-exposed bullet (`model_dump*()` still returns plaintext; Sentry `context_line`
+shows source text), and that bullet is a live trigger condition for revisiting `SecretStr`, not
+history. So the file sits exactly at ~150 and the number is stated rather than rounded down.
+
+**The INDEX cap went 25 → 75, globally.** Two lines in the `project-memory` skill, plus the
+dated reason written beside the number so the next reader does not have to re-derive it. This
+relaxes the standard; it does not resolve the conflict II.41 found — 15 prescribed bins force
+15 routing lines before a single invariant, and 75 simply moves the line beyond where the
+arithmetic bites. Recorded plainly because a cap raised without its reason is how the previous
+one became a permanently violated number nobody read. **Blast radius checked rather than
+assumed:** Trading's INDEX is 22 lines over 10 bins and was already compliant, so v2 is the
+only project whose memory system this touches.
+
+## II.44 — two pages that showed the wrong screen on failure, and a legal packet whose value is that it concludes nothing (2026-09-03, ~20:33 CDT)
+
+Two unrelated pieces of M11-adjacent work in one sitting, plus the finding that the project's
+own highest-value check can be defeated by a cache.
+
+**M13.6 SWR, 12 → 14 of 22.** `portfolio/[id]` and `opportunities/[id]`. Neither was converted
+for consistency; each was rendering a false screen. The portfolio page caught *every* failure
+into one "this portfolio is private or doesn't exist" state, so a dropped connection accused a
+student of having opted out. The opportunity page had no loading state at all and shared one
+error string between the page load and the Feature toggle, so either cleared the other. The
+4xx/other split uses `error instanceof ApiError` rather than reading `error.status`, because a
+network failure throws a raw `TypeError`: the typed cast in `use-api.ts` would have let
+`error.status` typecheck while being `undefined` at runtime — the quiet version of the bug
+being fixed.
+
+**The standing check silently passed against a stopped server.** "Load a page, stop the
+backend, press Retry" is this project's single highest-value check because the frontend has no
+test runner. Run on an already-visited URL it proves nothing: the browser HTTP cache replayed
+the public-portfolio response and the network log showed `200 OK` from a server that `curl`
+could not reach. The check is only meaningful on a URL the browser has never fetched. Redone
+that way, both error panels appeared as designed, and the Retry button was separately proven to
+dispatch — an earlier recovery had come from SWR's own reconnect revalidation, which would have
+credited the button for something it did not do.
+
+**The legal packet (`servelocal-v2/docs/LEGAL_REVIEW_PACKET.md`) answers nothing, deliberately.**
+M11 Phase 1 is the launch critical path and is not the model's to close. What the model can do
+is make the review possible: the routing decision (RED, escalation forced by matter type at
+every score), the deterministic `cite-scan` output verbatim, and a claim-by-claim table mapping
+each promise in the public Terms and Privacy Policy to the code that does or does not keep it.
+That table is where the value is. It surfaces that the policy's 12-month audit-retention
+promise is currently kept by hand because nothing schedules the purge, that account deletion is
+anonymize-in-place rather than removal, and that a sentence about organization-level totals was
+added the same day and the reviewer has never seen it. One scanner finding — a missing
+not-legal-advice disclaimer — is reported as a judgment call rather than quietly fixed, because
+suppressing a finding to make a report look clean is how a real one gets lost.
+
+## II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)
+
+The 2026-09-01 pre-mortem stress-tested the M11 launch. This one, at Evan's direction,
+stress-tested the project — the app, the launch, and the reason the project exists — looking
+back from 2027-01-01 with applications submitted. **14 risks: 7 Tigers (5 launch-blocking),
+3 Paper Tigers, 4 Elephants, 3 flagged for escalation.**
+
+**The top finding is not in the code. Two live documents disagree about whether this project
+should be building toward a launch at all.** `EVAN_CONTEXT.md`, compiled 2026-07-22 from
+Evan's own interview answers, says ServeLocal is on hold until 18 for legal reasons and ranks
+it third of three projects. `HANDOFF.md` and `PRD_ROADMAP.md` say the finish line is a real
+public launch, decided 2026-07-08, and that M11 is the frontier. The context file is the
+newer document and it says stop. Seven weeks of work has assumed the older one, and neither
+document references the other. A related blank: Evan's 18th birthday appears in no project
+document, and it is the single fact that decides person-versus-entity — recorded as UNKNOWN
+rather than estimated.
+
+**The third escalation is about the work this same session produced.** On 2026-09-01 the
+pre-mortem raised two questions for a responsible adult. On 2026-09-03 the session wrote a
+legal review packet — a better-formed version of the same ask — and sent it to nobody. A
+model can always generate the next artifact for a blocked step; each is individually good
+work, and the pile feels like progress while the blocked thing does not move. It is written
+into the register against our own output on purpose.
+
+**None of the five blocking Tigers is about the code**, which is the point of running the
+exercise at project scope. The public mirror is 15 days stale and still ships a bug the
+private tree fixed — an artifact publishing a defect the project already closed. The mirror
+carries no backend at all, so a reader sees a Next.js frontend and prose about the FastAPI
+service that is most of the engineering. There are 9,295 lines of record behind a 33-line
+README and no case study, which means the project's own thesis — that the documented process
+is the product — is currently unreadable in the time anyone will give it. The remaining two
+are money and time: a $0 spend ceiling against a launch that needs a domain and a host, and a
+priority order in which ServeLocal sits third while the flagship has a late-September
+deadline, both drawing on the same two-hour sitting.
+
+The recommendation on file is to stop building features until the contradiction is answered.
+If the answer is "artifact, not launch," the remaining work is about a week long and contains
+no money, no accounts and no adults: sync the mirror, decide whether the backend ships, write
+one case study.
+
+## II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)
+
+Evan asked `/legal-triage` to explore "everything even remotely connected legally
+to the app," then a `/research-brief` on what triage flagged unverified, then
+`/audit-docs` on the two live legal pages, then fixes, then this entry.
+
+**Triage: five matters, all RED by forced override** (`minors-data`, `contract`,
+`money`, `ip`, `publish`) — routing, not a verdict. **The brief**
+(`servelocal-v2/docs/research/2026-09-03_ccpa-gdpr-coppa-state-minors-privacy-background.md`)
+found one fact nobody had written down: COPPA's line is under 13, and the
+platform's own "under 12" floor still admits 12-year-olds, who are inside it.
+CCPA's thresholds ($26.625M revenue / 100k CA records sold-or-shared / 50%
+revenue from data) sit far above documented practice; GDPR's targeting test
+matches the regulator's own examples of *non*-application for a US-only,
+unmarketed site; the Texas SCOPE Act is a live open question, not a settled
+non-issue. A cold-assessment pass caught two real problems in the first draft
+— a same-source dependency and a false "no interested sources" claim (the
+SCOPE Act injunction-scope finding traced to CCIA, the trade group that sued
+to block it) — both corrected, plus one follow-up round on five more states
+that turned out **not** to work alike (Virginia has no CT/CO-style teen
+opt-in at all).
+
+**The docs audit** (`servelocal-v2/docs/audit_2026-09-03_legal-pages.md`), two
+cold Sonnet workers plus session re-verification, found the pages accurate
+about the product and wrong about themselves: a **high** — registration
+forces "I agree" (`auth.py:68`) on a Terms page whose own banner says it
+"does not create binding obligations" — plus four mediums (a stale "draft
+dated" line despite 5 substantive commits since; a "website or EIN" field
+nothing collects; an undisclosed Stripe customer ID; an undisclosed Cloudflare
+Turnstile vendor) and several lows, one of which corrected the legal packet's
+own claim that only two placeholders existed (a third was at `terms:69`).
+
+**Seven of the eight findings were text.** Applied directly: revision dates,
+the EIN sentence, the Stripe/Turnstile disclosures, the consent-verb list
+widened from 4 to match the 9 actual `require_consent` call sites, the
+notifications-toggle location, and the packet correction.
+
+**The eighth, the high, is now code, not a document.** Evan chose to close it
+by gating the app's own boot, not by editing prose: `LEGAL_SIGNOFF_COMPLETE`
+joins `check_production_config`'s seven other boot blockers (`app/core/config.py`),
+defaulting `false`. Production will not start without it, the same mechanism
+that already refuses a dev `SECRET_KEY` or an unset `SUPPORT_EMAIL` — nine
+checks over eight variables now, not eight over seven. The loud tripwire test
+(`test_boot_guard_check_count_matches_the_docs`) caught every place the count
+is written down: `security.md`, `tooling.md`, `INDEX.md`, `DEPLOY_RAILWAY.md`,
+`API_KEYS.md`, `.env.example`, plus a new regression test. 379 backend tests
+green (378 + 1); `tsc --noEmit` clean on the frontend.
+
+**Why the distinction matters, stated plainly because II.45 raised it directly
+against this same session's prior output.** A research brief and an audit
+report are artifacts a person has to read and act on — exactly what II.45
+named as the failure mode: generating the next document for a blocked step
+while the step stays blocked. `LEGAL_SIGNOFF_COMPLETE` is not that. It is a
+mechanism that acts whether or not anyone reads this entry: the app will not
+serve real registrations in production until a human flips one flag, and
+flipping it truthfully requires the two `terms/page.tsx:86` blanks filled and
+actual sign-off recorded — the code cannot be fooled by a well-written
+document the way a reader can be. One of today's three outputs closes a gap;
+the other two are, honestly, more of what II.45 already flagged — read
+alongside it, not instead of it. The pre-mortem's harder questions (person-vs-
+entity, whether Evan wants this duty at all, the stale public mirror) remain
+exactly as open as they were nine hours ago.
+
+**Pre-existing gap noticed, not fixed.** The Summary timeline table's last row
+is dated 2026-09-01 (II.34); II.35 through II.45 have no timeline rows despite
+the update protocol requiring one per entry. Left as found — out of scope for
+this entry, and fixing eleven un-added rows silently would be a bigger,
+undiscussed change than what was asked.
+
+**VERIFY.** `ENVIRONMENT=ci .venv/Scripts/python.exe -m pytest -q` in
+`servelocal-v2/backend`: 379 passed. `npx tsc --noEmit -p .` in
+`servelocal-v2/frontend`: clean. TOC/heading balance for this file checked
+before appending: 45 top-level `## II.N` headings, 45 TOC lines (three
+`II.35.N` sub-headings inside one entry accounted for, not orphaned). No
+commit made this session; commit hash not yet available — cite as "this
+entry" per this table's own convention for uncommitted rows.

@@ -10,7 +10,12 @@ import { useAuth } from "@/lib/auth-context";
 // Exact v1 nav + footer chrome (transcribed from ../ServeLocal website/public/index.html),
 // wrapping page content in the scoped `.v1` root. Every converted screen uses this.
 export function V1Shell({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  // `loading` matters: without it this nav rendered signed-OUT chrome while auth
+  // was still hydrating, so a signed-in user saw Log In / Sign Up on every cold
+  // load and "Dashboard" pointed at /login until /auth/me resolved.
+  // site-header.tsx already guarded this window; V1Shell — the nav most users
+  // actually see, since it covers every v1 route — did not (audit 2026-09-01).
+  const { user, loading, logout } = useAuth();
   const pathname = usePathname();
 
   // Logged out → send Dashboard to /login (prompt to sign in); logged in → their dash.
@@ -39,7 +44,9 @@ export function V1Shell({ children }: { children: React.ReactNode }) {
           {nl("/leaderboard", "Community", pathname === "/leaderboard")}
         </div>
         <div className="nav-right">
-          {user ? (
+          {/* Render nothing until auth resolves — asserting "signed out" before
+              we know is what produced the logged-out flash. */}
+          {loading ? null : user ? (
             <>
               {/* Notifications + inbox lived only in the suppressed shadcn header,
                   orphaning both features on v1 screens (audit 2026-07-13 #3). */}

@@ -23,7 +23,9 @@ import type {
   OrgReviews,
   PublicPortfolio,
   Review,
+  OrgAnalytics,
   Token,
+  TrafficSummary,
   User,
 } from "@/lib/types";
 
@@ -302,4 +304,16 @@ export const api = {
       body: JSON.stringify({ featured }),
       token,
     }),
+
+  // ── Analytics (M14.1, admin-only) ──
+  // 403s for a non-admin; the caller holds the key null until `is_admin`, so the
+  // request is not merely rejected, it is never sent.
+  // Org's own numbers. 403s for a student; the caller holds the key null until the
+  // user is an org, so the request is never sent.
+  orgAnalytics: (token: string) => request<OrgAnalytics>("/analytics/org", { token }),
+
+  siteTraffic: (days: number, token: string) => {
+    const qs = new URLSearchParams({ days: String(days) });
+    return request<TrafficSummary>(`/analytics/traffic?${qs.toString()}`, { token });
+  },
 };

@@ -5,17 +5,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY } from "@/lib/auth-context";
+import { APPLICATION_STATUS_MESSAGE } from "@/lib/status";
 import type { Opportunity } from "@/lib/types";
-
-const STATUS_MESSAGE: Record<string, string> = {
-  approved: "You're signed up!",
-  pending: "Application submitted. Pending approval.",
-  waitlisted: "You're on the waitlist. We'll sign you up if a spot frees.",
-  // A guardian's revoke withdraws the signup (M5). Says what happened without
-  // pretending it can be undone here — restoring consent is the guardian's
-  // action, and re-signing-up is blocked by `require_consent` until it is.
-  withdrawn: "This signup was withdrawn because guardian approval was removed.",
-};
 
 export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: () => void }) {
   const recurring = opp.recurrence !== "one_time";
@@ -27,7 +18,14 @@ export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: (
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (recurring) api.dateSpots(opp.id).then(setDateSpots).catch(() => undefined);
+    // Was `.catch(() => undefined)`: an empty date list is a REAL state (no dates
+    // left), so swallowing the failure made "couldn't load" indistinguishable from
+    // it. "Subscribe to all dates" still works either way (audit 2026-09-02).
+    if (recurring)
+      api
+        .dateSpots(opp.id)
+        .then(setDateSpots)
+        .catch(() => setError("Couldn't load available dates. You can still subscribe to all dates."));
   }, [opp.id, recurring]);
 
   async function apply() {
@@ -50,7 +48,7 @@ export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: (
   }
 
   if (status) {
-    return <p className="text-sm font-medium text-primary">{STATUS_MESSAGE[status] ?? status}</p>;
+    return <p className="text-sm font-medium text-primary">{APPLICATION_STATUS_MESSAGE[status] ?? status}</p>;
   }
 
   if (!recurring) {

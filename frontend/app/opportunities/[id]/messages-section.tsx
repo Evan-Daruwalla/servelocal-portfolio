@@ -14,6 +14,7 @@ import type { Message } from "@/lib/types";
 export function MessagesSection({ opportunityId }: { opportunityId: string }) {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [visible, setVisible] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,7 +27,16 @@ export function MessagesSection({ opportunityId }: { opportunityId: string }) {
         setMessages(m);
         setVisible(true);
       })
-      .catch(() => setVisible(false));
+      // Only a 403 means "you can't see this thread". Catching everything hid the
+      // whole feature on any timeout or 5xx, contradicting this module's own header
+      // comment, with no retry affordance (audit 2026-09-02).
+      .catch((err) => {
+        // A successful retry sets visible=true, which exits the error branch below —
+        // so loadError needs no reset, and resetting it in the effect body would
+        // trip react-hooks/set-state-in-effect.
+        if (err instanceof ApiError && err.status === 403) setVisible(false);
+        else setLoadError(true);
+      });
   }
 
   useEffect(load, [opportunityId]);
@@ -47,6 +57,18 @@ export function MessagesSection({ opportunityId }: { opportunityId: string }) {
     }
   }
 
+  if (loadError && !visible) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-between gap-3 py-4">
+          <p className="text-sm text-muted-foreground">Couldn&apos;t load messages.</p>
+          <Button type="button" size="sm" variant="outline" onClick={load}>
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
   if (!visible) return null;
 
   return (

@@ -1,6 +1,6 @@
 # conventions — servelocal-v2
 
-Last updated 2026-07-13.
+Last updated 2026-09-03 (supersedes the 2026-07-13 version, which predated the role-guard, data-fetch and status-map conventions below).
 
 ## Visual / UI standards → `ui.md` (canonical)
 Editorial language, the two coexisting visual systems (`.v1` scoped vs shadcn —
@@ -15,9 +15,108 @@ then read it) → schema (`app/schemas/x.py`) → route module (`app/api/routes/
 in `app/api/router.py`**) → tests (`backend/tests/test_x.py`).
 
 ## Frontend slice
-types in `lib/types.ts` → calls in `lib/api.ts` → page/component → verify in the browser (zero
-console errors). `useSearchParams` must sit under a `<Suspense>` boundary or the static build fails
+types in `lib/types.ts` → calls in `lib/api.ts` → **fetch through `lib/use-api.ts`** → page/component
+→ verify in the browser (zero console errors). `useSearchParams` must sit under a `<Suspense>` boundary or the static build fails
 (`/reset` does this). Dynamic route params use `useParams` (no Suspense needed).
+
+## Authorization: one definition per question (2026-08-31)
+- **Caller-role checks go through `require_student` / `require_org` in `app/api/deps.py`** — never a
+  fresh inline `if current_user.role != ...`. 25 inlined copies were consolidated; 15 of them were
+  the same check written 15 times.
+- **On a CONSENT-GATED route the role guard goes in the DECORATOR**, not the signature:
+  `@router.post(..., dependencies=[Depends(require_student)])` while the signature keeps
+  `current_user: User = Depends(require_consent)`. `test_consent_gate_coverage` detects the launch
+  gate by the *name* `require_consent` at the top level of the route's dependencies — put the role
+  guard in the signature instead and you either break that test or silently ungate the route.
+- **NOT every role check belongs in a dependency.** Four shapes share the syntax and only the first
+  converts: (1) pure caller-role → dependency; (2) role AND ownership (`role != org or opp.org_id !=
+  user.id`) → needs the loaded resource, stays inline; (3) a check on a SUBJECT rather than the
+  caller (consent's `dob` predicates, portfolio's 404 union) → different question, stays; (4) bespoke
+  user-facing copy ("Only students can apply") → changing a 403 a user reads is a copy decision.
+  Classify before sweeping — a regex over these four nearly shipped an ungated `create_review`.
+- **A new write route must be classified in `test_consent_gate_coverage`.** When it fails, decide
+  whether a student acting there reaches a real organization, a public surface, or their hours —
+  do NOT add the route to the allowlist to go green.
+
+## Data fetching: `useAuthedQuery` / `usePublicQuery` (2026-08-31, M13.6)
+- **Never hand-roll `useEffect` + `useState(loading)` + `useState(error)` again.** Use
+  `useAuthedQuery(key, fetcher)` for token-bearing endpoints and `usePublicQuery(key, fetcher)` for
+  tokenless ones. They are separate on purpose: the public one must fetch for a signed-OUT visitor,
+  the authed one must NOT fire until auth hydrates.
+- **Render error and empty as DIFFERENT branches.** The hand-rolled pattern shipped this bug seven
+  times — a failed load falling through to "No verified hours yet" / "No messages yet" / "No
+  applicants", telling a user their real data does not exist. `loading` stays true while auth
+  hydrates precisely so a page cannot render its empty state before it knows.
+- **Split a 4xx from a transport failure with `error instanceof ApiError`, never
+  `error.status`** (2026-09-03). A fetch network failure throws a raw `TypeError` with no
+  `status`; `use-api.ts` casts its error to `ApiError | undefined`, so `error.status >= 400`
+  TYPECHECKS and is `undefined` at runtime — a dropped connection then renders the page's
+  "not found / private" copy. `portfolio/[id]` shipped exactly that bug for two months.
+- **Never assert a number you do not have.** Stat tiles, counters and badges render `—` (or nothing)
+  when the load failed — not `0`. Fixing the list and leaving `0 Verified Hours` in the summary above
+  it is the same lie in the same viewport.
+- Client errors (4xx) are never retried; the API's 403/404 are settled answers and the rate limiter
+  counts every attempt.
+
+## Cache keys name the ANSWER, not the endpoint (2026-09-02)
+- If a response shape depends on WHO is asking, the asker's role is part of the
+  answer and part of the key: `hours/mine` (a student's own ledger) vs
+  `hours/org-queue` (an org's verification queue). Both call the same fetcher,
+  and that is correct — a session has one role, so the two can never be live
+  together. **Never a third spelling, never a bare `hours`.** If you cannot say
+  what a key's value IS as a noun phrase without naming a page, the key is wrong.
+- What makes that safe is STRUCTURAL (one role per session), and it holds only
+  because the cache is cleared on identity change — see §Client-side cache is
+  identity-scoped BELOW in this file (moved here from `security.md` 2026-09-03).
+  The key rule and that clear are the same invariant from two sides.
+
+## Status vocabulary: `lib/status.ts` is the only home (2026-08-31)
+- Labels, pills and messages for application status and hours status live there — four copies across
+  two *different* status domains were merged into one file with the domains kept apart. Do not
+  reintroduce a local map.
+- **Do NOT consolidate the `sp-*` CSS across `globals.css` and `v1.css`.** That duplication is the
+  deliberate v1 exact-copy architecture, not drift.
+
+## Analytics counters: own session, in the SERVICE (2026-09-03)
+- A counter writes on a session it opens ITSELF, never the request's — analytics must
+  never cost a reader their request, and a counter must never roll back the read that
+  triggered it.
+- Keep that session in the service (`services/traffic.py`), not the route. One symbol
+  for tests to redirect; a new counting route adds no new patch point. The ROUTE owns
+  the try/except, so a failure is logged once where a page is being served.
+- Count as a SIDE EFFECT of an existing GET, not a new write route: a new POST must be
+  classified in `test_consent_gate_coverage`'s allowlist, and a counter is not a student
+  action, so that entry would be a false-but-passing classification.
+
+## Role gating has TWO shapes, and they are not interchangeable (2026-09-03)
+- `Depends(require_org)` — a pure role gate, visible to tests as a dependency.
+- **Role AND ownership checked in the handler** (`opp.org_id != current_user.id`) —
+  five routes do this because a role-only dependency cannot express ownership. The
+  2026-08-31 consolidation moved the pure gates and deliberately left these. They are
+  classified `ORG_OWNER_INLINE` in the consent allowlist, which asserts only that a user
+  is required and says plainly what it cannot see.
+
+## Client-side cache is identity-scoped — clear it on every identity change (2026-09-01)
+
+- SWR's cache is **process-global** and there is no `<SWRConfig>` in this app, so
+  a cache entry outlives a sign-out and survives until a hard page reload.
+  `logout()` cleared the token and left the cache untouched, so in ONE TAB the
+  next account inherited the previous account's data — **one student's private
+  list rendered in another student's session**. Introduced by `6d75394`
+  (SWR adoption); before that, fetches were component-local and could not
+  survive a logout.
+- **Fix, and the rule:** `auth-context.tsx` `clearCache()` — `mutate(() => true,
+  undefined, { revalidate: false })` — is called from **both `login()` and
+  `logout()`**. Login-side is NOT redundant: `lib/api.ts` drops the token on a
+  401 *without* going through `logout()`, so that path clears no cache and does
+  not reset `user`; the next login is what cleans up after it.
+- Reproduced both directions on a production build. **See `gotchas.md` for the
+  test trap that made the first reproduction attempt falsely pass** — it matters
+  more than this entry, because it is why the fix was briefly weakened.
+- Any future client-side cache (React Query, a service worker, `sessionStorage`)
+  inherits this rule: identity change ⇒ drop everything.
+
+*(Moved verbatim from `security.md` 2026-09-03: it is a frontend data-fetching rule, not a codebase-security one, and it belongs beside the cache-key convention above.)*
 
 ## Hard rules
 - Response schemas strip secrets (see `security.md`). Students free forever — no plan gate on a

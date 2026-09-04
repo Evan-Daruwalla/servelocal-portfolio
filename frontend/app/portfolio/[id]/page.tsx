@@ -1,30 +1,26 @@
 "use client";
 
-import { Lock, Printer, Trophy } from "lucide-react";
+import { Lock, Printer, Trophy, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
-import { api } from "@/lib/api";
-import type { PublicPortfolio } from "@/lib/types";
+import { ApiError, api } from "@/lib/api";
+import { usePublicQuery } from "@/lib/use-api";
 
 export default function PublicPortfolioPage() {
   const params = useParams<{ id: string }>();
-  const [pf, setPf] = useState<PublicPortfolio | null>(null);
-  const [state, setState] = useState<"loading" | "ok" | "unavailable">("loading");
+  // Public: a shared transcript link must render for a signed-out visitor.
+  const { data: pf, loading, error, retry } = usePublicQuery(
+    `portfolio/${params.id}`,
+    () => api.publicPortfolio(params.id),
+  );
+  // Until this conversion, EVERY failure landed on the "private or doesn't
+  // exist" copy — a dropped connection told the visitor the student had made
+  // their transcript private. Only the server's own answer means that now.
+  const unavailable = error instanceof ApiError && error.status >= 400 && error.status < 500;
 
-  useEffect(() => {
-    api
-      .publicPortfolio(params.id)
-      .then((d) => {
-        setPf(d);
-        setState("ok");
-      })
-      .catch(() => setState("unavailable"));
-  }, [params.id]);
-
-  if (state === "loading") {
+  if (loading) {
     return (
       <V1Shell>
         <div className="section" style={{ maxWidth: 680 }}>
@@ -34,13 +30,29 @@ export default function PublicPortfolioPage() {
     );
   }
 
-  if (state === "unavailable" || !pf) {
+  if (unavailable) {
     return (
       <V1Shell>
         <div className="section" style={{ maxWidth: 620, textAlign: "center" }}>
           <div className="empty">
             <div className="empty-icon"><Lock size={40} strokeWidth={1.75} aria-hidden /></div>
             This portfolio is private or doesn&apos;t exist. <Link href="/discover">Browse opportunities</Link> instead.
+          </div>
+        </div>
+      </V1Shell>
+    );
+  }
+
+  if (error || !pf) {
+    return (
+      <V1Shell>
+        <div className="section" style={{ maxWidth: 620, textAlign: "center" }}>
+          <div className="empty">
+            <div className="empty-icon"><WifiOff size={40} strokeWidth={1.75} aria-hidden /></div>
+            Couldn&apos;t load this transcript. Check your connection and try again.
+            <div style={{ marginTop: 14 }}>
+              <button className="btn-s" onClick={retry}>Retry</button>
+            </div>
           </div>
         </div>
       </V1Shell>

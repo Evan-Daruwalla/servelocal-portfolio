@@ -1,15 +1,15 @@
 "use client";
 
-import { CalendarDays, Clock, Globe, MapPin, RefreshCw, Shuffle, Timer, Users } from "lucide-react";
+import { CalendarDays, Clock, Globe, MapPin, RefreshCw, Shuffle, Timer, Users, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
 import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
-import type { Opportunity } from "@/lib/types";
+import { usePublicQuery } from "@/lib/use-api";
 import { MessagesSection } from "./messages-section";
 import { OrgCheckinSection } from "./org-checkin-section";
 import { ReviewsSection } from "./reviews-section";
@@ -30,33 +30,31 @@ function fmtDateTime(iso: string): string {
 export default function OpportunityDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [opp, setOpp] = useState<Opportunity | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Public: a shared listing link must render for a signed-out visitor.
+  const { data: opp, loading, error, retry } = usePublicQuery(
+    `opportunities/${params.id}`,
+    () => api.getOpportunity(params.id),
+  );
+  // The WRITE's error is kept separate from the LOAD's. One `error` string used
+  // to serve both, so a failed Feature toggle and a failed page load rendered
+  // the same red line, and either one cleared the other.
+  const [actionError, setActionError] = useState<string | null>(null);
   const [featuring, setFeaturing] = useState(false);
 
   async function toggleFeatured() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token || !opp) return;
     setFeaturing(true);
-    setError(null);
+    setActionError(null);
     try {
       await api.setFeatured(opp.id, !opp.featured, token);
-      load();
+      retry();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not update the listing.");
+      setActionError(err instanceof ApiError ? err.message : "Could not update the listing.");
     } finally {
       setFeaturing(false);
     }
   }
-
-  function load() {
-    api
-      .getOpportunity(params.id)
-      .then(setOpp)
-      .catch((err) => setError(err instanceof ApiError ? err.message : "Could not load this opportunity."));
-  }
-
-  useEffect(load, [params.id]);
 
   const loc = (opp?.location || "").toLowerCase();
   const fmt = opp?.format || "";
@@ -70,7 +68,30 @@ export default function OpportunityDetailPage() {
         ← Back to Opportunities
       </Link>
 
-      {error && <div className="detail-wrap"><p style={{ color: "var(--red)" }}>{error}</p></div>}
+      {actionError && <div className="detail-wrap"><p style={{ color: "var(--red)" }}>{actionError}</p></div>}
+
+      {/* There was no loading state at all before this conversion: a slow load
+          rendered the back-link over an empty page, indistinguishable from a
+          listing that had been deleted. */}
+      {loading && (
+        <div className="detail-wrap">
+          <div className="loading"><div className="spinner" /><div>Loading…</div></div>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="detail-wrap">
+          <div className="empty">
+            <div className="empty-icon"><WifiOff size={40} strokeWidth={1.75} aria-hidden /></div>
+            {error instanceof ApiError && error.status >= 400 && error.status < 500
+              ? error.message
+              : "Couldn't load this opportunity. Check your connection and try again."}
+            <div style={{ marginTop: 14 }}>
+              <button className="btn-s" onClick={retry}>Retry</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {opp && (
         <div className="detail-wrap">
@@ -122,7 +143,7 @@ export default function OpportunityDetailPage() {
                 </>
               )}
 
-              {user?.role === "student" && <SignupSection opp={opp} onChange={load} />}
+              {user?.role === "student" && <SignupSection opp={opp} onChange={retry} />}
             </div>
           </div>
 

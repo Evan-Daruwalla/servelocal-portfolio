@@ -19,13 +19,14 @@ import { NextResponse, type NextRequest } from "next/server";
 // Origin of the backend API (scheme + host + port, no path), derived from the
 // public API URL by dropping the /api/v1 suffix — needed for connect-src.
 // NEXT_PUBLIC_* is inlined at build time, so this is a constant here.
-const apiOrigin = (() => {
-  try {
-    return new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1").origin;
-  } catch {
-    return "http://localhost:8000";
-  }
-})();
+// No try/catch fallback here. It used to swallow a malformed NEXT_PUBLIC_API_URL
+// and hand CSP a localhost `connect-src` — but `lib/api.ts` reads the same
+// variable unguarded, so every request breaks anyway. The fallback prevented
+// nothing and turned a loud build failure into a silent production one
+// (audit 2026-09-01). Let it throw.
+const apiOrigin = new URL(
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
+).origin;
 
 // Cloudflare Turnstile (signup bot defense, M11.1) loads its script AND runs its
 // challenge in an iframe, so it needs both script-src and frame-src.

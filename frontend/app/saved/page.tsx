@@ -1,25 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
-import type { Opportunity } from "@/lib/types";
+import { useAuth } from "@/lib/auth-context";
+import { useAuthedQuery } from "@/lib/use-api";
 
 export default function SavedPage() {
   const { user, loading } = useAuth();
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [fetching, setFetching] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || loading) return;
-    api
-      .listSaved(token)
-      .then(setOpportunities)
-      .finally(() => setFetching(false));
-  }, [loading]);
+  const {
+    data: opportunities,
+    loading: fetching,
+    error,
+    retry,
+  } = useAuthedQuery("saved", (t) => api.listSaved(t));
 
   if (loading) return null;
 
@@ -39,12 +34,25 @@ export default function SavedPage() {
       </div>
 
       {fetching && <p className="empty-state">Loading…</p>}
-      {!fetching && opportunities.length === 0 && (
+
+      {/* Missed by the first pass of this migration: the census grepped for
+          `api.` and this call breaks the line after `api`, so the page looked
+          converted when it was not (landing-check 2026-09-01). It carried the
+          same bug as the other five — a failed load told a student with
+          bookmarks they had none. */}
+      {!fetching && error && (
+        <div className="empty-state flex flex-col items-center gap-3">
+          <span>Couldn&apos;t load your bookmarks. Check your connection and try again.</span>
+          <Button variant="outline" onClick={retry}>Retry</Button>
+        </div>
+      )}
+
+      {!fetching && !error && opportunities?.length === 0 && (
         <div className="empty-state">No bookmarks yet. Tap the heart on any opportunity.</div>
       )}
 
       <div className="flex flex-col gap-4">
-        {opportunities.map((opp) => (
+        {opportunities?.map((opp) => (
           <Link key={opp.id} href={`/opportunities/${opp.id}`} className="opp-card">
             <h3 className="opp-title">{opp.title}</h3>
             <p className="opp-org">

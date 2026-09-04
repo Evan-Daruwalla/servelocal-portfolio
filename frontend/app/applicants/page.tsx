@@ -9,6 +9,7 @@ import { CategoryIcon, getCategoryMeta } from "@/components/v1/category-icon";
 import { StudentCell } from "@/components/student-cell";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
+import { useAuthedQuery } from "@/lib/use-api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import type { ApplicationWithOpportunity, HoursWithOpportunity, Opportunity } from "@/lib/types";
 
@@ -41,11 +42,26 @@ export default function OrgDashboardPage() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("listings");
+  // M14.2. One SWR hook alongside this page's older hand-rolled refresh(): the full
+  // conversion is M13.6's job for this page, and doing it here would make a milestone
+  // commit carry an unrelated migration. Key held null until the user is an org, so a
+  // student never sends a request the server would 403 anyway.
+  const {
+    data: orgStats,
+    error: orgStatsError,
+    loading: orgStatsLoading,
+    retry: retryOrgStats,
+  } = useAuthedQuery(user?.role === "org" ? "analytics/org" : null, (t) => api.orgAnalytics(t));
   const [opps, setOpps] = useState<Opportunity[]>([]);
   const [apps, setApps] = useState<ApplicationWithOpportunity[]>([]);
   const [hours, setHours] = useState<HoursWithOpportunity[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Distinguishes a genuinely empty tab from a failed initial load (audit
+  // finding 2026-08-25) — dashboard/page.tsx and hours/page.tsx already do
+  // this on the identical load pattern; this page's refresh() silently
+  // swallowed the failure instead.
+  const [loadError, setLoadError] = useState(false);
 
   // Broadcast composer state.
   const [msgOpp, setMsgOpp] = useState<string>("");
@@ -67,9 +83,14 @@ export default function OrgDashboardPage() {
   function refresh() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token || !user) return;
-    api.myOpportunities(token).then(setOpps).catch(() => {});
-    api.orgApplications(token).then(setApps).catch(() => {});
-    api.listHours(token).then(setHours).catch(() => {});
+    setLoadError(false);
+    Promise.all([api.myOpportunities(token), api.orgApplications(token), api.listHours(token)])
+      .then(([o, a, h]) => {
+        setOpps(o);
+        setApps(a);
+        setHours(h);
+      })
+      .catch(() => setLoadError(true));
   }
 
   useEffect(() => {
@@ -228,6 +249,19 @@ export default function OrgDashboardPage() {
   const planLabel = user.plan === "pro" ? "Pro" : "Community";
   const maxActive = user.plan === "pro" ? "∞" : "3";
 
+  // Mirrors dashboard/page.tsx's sectionError + hours/page.tsx's loadError panel.
+  const loadErrorPanel = (
+    <div className="load-error">
+      <div className="empty-icon"><TriangleAlert size={40} strokeWidth={1.75} aria-hidden /></div>
+      <div className="ferr">Couldn&apos;t load your data. Check your connection and try again.</div>
+      <div>
+        <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={refresh}>
+          Retry
+        </button>
+      </div>
+    </div>
+  );
+
   function listingCard(o: Opportunity, inHistory: boolean) {
     const loc = (o.location || "").toLowerCase();
     const fmt = (o.format || "").toLowerCase();
@@ -295,13 +329,15 @@ export default function OrgDashboardPage() {
             <div className="ds-name">{user.full_name || "Organization"}</div>
             <div className="ds-role" style={{ color: "var(--muted)", fontSize: ".73rem", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>Organization</div>
             <div className="plan-usage" style={{ marginBottom: 14 }}>
-              <strong>{planLabel}</strong> plan · {activeOpps.filter((o) => o.active).length}/{maxActive} active listings
+              {/* `—` not 0 while the load is failed: these sit in the sidebar on
+                  every tab, including next to loadErrorPanel (landing-check 2026-09-01). */}
+              <strong>{planLabel}</strong> plan · {loadError ? "—" : activeOpps.filter((o) => o.active).length}/{maxActive} active listings
               {user.plan !== "pro" && <><br /><Link href="/billing" style={{ color: "var(--green)" }}>Upgrade to Pro →</Link></>}
             </div>
             <hr className="ds-divider" />
-            <div className="ds-stat"><span className="ds-stat-label">Active Listings</span><span className="ds-stat-val big">{activeOpps.filter((o) => o.active).length}</span></div>
-            <div className="ds-stat"><span className="ds-stat-label">Total Volunteers</span><span className="ds-stat-val">{apps.length}</span></div>
-            <div className="ds-stat"><span className="ds-stat-label">Pending Approvals</span><span className="ds-stat-val">{pending.length}</span></div>
+            <div className="ds-stat"><span className="ds-stat-label">Active Listings</span><span className="ds-stat-val big">{loadError ? "—" : activeOpps.filter((o) => o.active).length}</span></div>
+            <div className="ds-stat"><span className="ds-stat-label">Total Volunteers</span><span className="ds-stat-val">{loadError ? "—" : apps.length}</span></div>
+            <div className="ds-stat"><span className="ds-stat-label">Pending Approvals</span><span className="ds-stat-val">{loadError ? "—" : pending.length}</span></div>
             <hr className="ds-divider" />
             <div className="ds-nav">
               {TABS.map((t) => (
@@ -323,7 +359,7 @@ export default function OrgDashboardPage() {
                 <Link className="btn-p" style={{ padding: "10px 20px", fontSize: ".85rem" }} href="/opportunities/new">＋ Add Listing</Link>
               </div>
               <div className="cards-grid">
-                {activeOpps.length ? activeOpps.map((o) => listingCard(o, false)) : (
+                {loadError ? loadErrorPanel : activeOpps.length ? activeOpps.map((o) => listingCard(o, false)) : (
                   <div className="empty"><div className="empty-icon"><ClipboardList size={40} strokeWidth={1.75} aria-hidden /></div>No listings yet. Hit ＋ Add Listing to post your first.</div>
                 )}
               </div>
@@ -333,22 +369,82 @@ export default function OrgDashboardPage() {
           {tab === "analytics" && (
             <div className="tab-panel on">
               <h1 className="dash-h" style={{ marginBottom: 6 }}>Analytics</h1>
-              <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>Applications and fill rates for each of your active listings.</p>
-              {activeOpps.length ? (
-                <table className="tbl">
-                  <thead><tr><th>Listing</th><th>Applicants</th><th>Spots filled</th></tr></thead>
-                  <tbody>
-                    {activeOpps.map((o) => (
-                      <tr key={o.id}>
-                        <td><strong>{o.title}</strong></td>
-                        <td>{apps.filter((a) => a.opportunity_id === o.id).length}</td>
-                        <td>{o.spots_available - o.spots_remaining}/{o.spots_available}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
+              <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>Detail views, approved signups and verified hours for each of your listings.</p>
+              {/* M14.2. Backed by GET /analytics/org, scoped in SQL to this org.
+                  Until 2026-09-03 these numbers were derived client-side and two of
+                  the three were wrong: "Applicants" counted rejected and withdrawn
+                  rows, and "Spots filled" used `spots_available - spots_remaining`,
+                  which the backend only maintains for ONE-TIME listings — so every
+                  recurring listing showed a fabricated figure. Fill rate is now shown
+                  only where it is meaningful.
+                  Counts only: no viewer identity exists to report, so nothing here
+                  may be labelled "visitors" (app/privacy/page.tsx). */}
+              {orgStatsError ? (
+                <div className="load-error">
+                  <div className="empty-icon"><TriangleAlert size={40} strokeWidth={1.75} aria-hidden /></div>
+                  <div className="ferr">Couldn&apos;t load your analytics. Check your connection and try again.</div>
+                  <div><button className="btn-s" style={{ padding: "9px 18px", fontSize: ".83rem" }} onClick={retryOrgStats}>Retry</button></div>
+                </div>
+              ) : orgStatsLoading || !orgStats ? (
+                /* `!orgStats` matters: the hook can be neither loading nor errored
+                   with data still undefined, and that instant must show the skeleton,
+                   never the "post a listing" empty copy. */
+                <div className="skel-card" aria-busy="true">
+                  <div className="skel skel-line" style={{ width: "55%", height: 16, marginBottom: 14 }} />
+                  <div className="skel skel-line" style={{ width: "100%", marginBottom: 8 }} />
+                  <div className="skel skel-line" style={{ width: "92%" }} />
+                </div>
+              ) : orgStats.listing_count === 0 ? (
                 <div className="empty"><div className="empty-icon"><TrendingUp size={40} strokeWidth={1.75} aria-hidden /></div>Post a listing to start collecting analytics.</div>
+              ) : (
+                <>
+                  <div className="lb-band" style={{ marginBottom: 18 }}>
+                    <div className="lb-stat"><div className="lb-stat-num traffic-num">{orgStats.total_views.toLocaleString()}</div><div className="lb-stat-label">Detail Views</div></div>
+                    <div className="lb-stat"><div className="lb-stat-num traffic-num">{orgStats.total_approved.toLocaleString()}</div><div className="lb-stat-label">Approved Signups</div></div>
+                    <div className="lb-stat"><div className="lb-stat-num traffic-num">{orgStats.total_verified_hours.toLocaleString()}</div><div className="lb-stat-label">Verified Hours</div></div>
+                    <div className="lb-stat"><div className="lb-stat-num traffic-num">{orgStats.returning_volunteers.toLocaleString()}</div><div className="lb-stat-label">Returning Volunteers</div></div>
+                  </div>
+                  <table className="tbl">
+                    <caption className="sr-only">Per-listing detail views, approved signups, fill rate and verified hours</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Listing</th>
+                        <th scope="col" style={{ textAlign: "right" }}>Views</th>
+                        <th scope="col" style={{ textAlign: "right" }}>Approved</th>
+                        <th scope="col">Fill rate</th>
+                        <th scope="col" style={{ textAlign: "right" }}>Verified hrs</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orgStats.listings.map((row) => {
+                        // A whole-listing percentage is only honest for a one-time
+                        // event. On a recurring listing `spots_available` is per DATE,
+                        // so approved-over-spots can exceed 100% and mean nothing.
+                        const pct = row.recurrence === "one_time" && row.spots_available > 0
+                          ? Math.min(100, Math.round((row.approved / row.spots_available) * 100))
+                          : null;
+                        return (
+                          <tr key={row.id}>
+                            <td><strong>{row.title}</strong>{row.active ? "" : " (inactive)"}</td>
+                            <td className="traffic-num" style={{ textAlign: "right" }}>{row.views.toLocaleString()}</td>
+                            <td className="traffic-num" style={{ textAlign: "right" }}>{row.approved.toLocaleString()}</td>
+                            <td>
+                              {pct === null ? (
+                                <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>Per-date &mdash; see listing</span>
+                              ) : (
+                                <>
+                                  <div className="progress-bar"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
+                                  <div className="progress-label">{row.approved}/{row.spots_available} spots ({pct}%)</div>
+                                </>
+                              )}
+                            </td>
+                            <td className="traffic-num" style={{ textAlign: "right" }}>{row.verified_hours.toLocaleString()}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
               )}
               <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--gold-pale, #fdf7e3)", border: "1px solid var(--gold)", borderRadius: 8, fontSize: ".83rem", color: "var(--dark)" }}>
                 <Star size={14} strokeWidth={1.75} aria-hidden /> <strong>Pro adds:</strong> unlimited listings, featured placement at the top of search, and volunteer roster exports.
@@ -359,6 +455,7 @@ export default function OrgDashboardPage() {
           {tab === "calendar" && (
             <div className="tab-panel on">
               <h1 className="dash-h">Events Calendar</h1>
+              {loadError && loadErrorPanel}
               <div className="cal-wrap">
                 <div className="cal-hdr"><span className="cal-title">{now.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</span></div>
                 <div className="cal-grid">
@@ -406,7 +503,7 @@ export default function OrgDashboardPage() {
                 </div>
               </div>
 
-              {apps.length ? (
+              {loadError ? loadErrorPanel : apps.length ? (
                 <table className="tbl">
                   <thead><tr><th>Student</th><th>Opportunity</th><th>Status</th><th>Applied</th><th></th></tr></thead>
                   <tbody>
@@ -441,7 +538,7 @@ export default function OrgDashboardPage() {
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                 <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".82rem" }} onClick={exportRoster}><Download size={15} strokeWidth={1.75} aria-hidden /> Export Volunteer Roster (CSV)</button>
               </div>
-              {hours.length ? (
+              {loadError ? loadErrorPanel : hours.length ? (
                 <table className="tbl">
                   <thead><tr><th>Student</th><th>Opportunity</th><th>Date</th><th>Hours</th><th>Status</th><th></th></tr></thead>
                   <tbody>
@@ -475,7 +572,7 @@ export default function OrgDashboardPage() {
               <h1 className="dash-h" style={{ marginBottom: 6 }}>Listing History</h1>
               <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>One-time listings whose end date has passed. Recurring listings always stay in My Listings.</p>
               <div className="cards-grid">
-                {historyOpps.length ? historyOpps.map((o) => listingCard(o, true)) : (
+                {loadError ? loadErrorPanel : historyOpps.length ? historyOpps.map((o) => listingCard(o, true)) : (
                   <div className="empty"><div className="empty-icon"><Archive size={40} strokeWidth={1.75} aria-hidden /></div>No expired listings yet.</div>
                 )}
               </div>

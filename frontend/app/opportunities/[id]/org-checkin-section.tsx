@@ -30,7 +30,10 @@ export function OrgCheckinSection({ opp }: { opp: Opportunity }) {
         setDates(keys);
         if (keys.length) setDate(keys[0]);
       })
-      .catch(() => undefined);
+      // Was `.catch(() => undefined)`: a failed dateSpots left dates=[] and date="",
+      // which silently disables Generate below with no explanation — the org sees a
+      // dead control for a real event happening that day (audit 2026-09-02).
+      .catch(() => setError("Couldn't load this listing's dates. Reload to try again."));
   }, [opp.id, opp.recurrence, opp.start_time]);
 
   async function generate() {

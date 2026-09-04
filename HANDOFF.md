@@ -10,199 +10,81 @@ frontend) of the proven v1 zero-dependency Node app (`../ServeLocal website`, Gi
 a deployable/scalable stack, preserving Evan's documented engineering process (this is a
 college-application portfolio piece — the process is the product).
 
-The work is driven by `PRD_ROADMAP.md` (a standing M1–M11 plan). Read that first, then this file.
+The work is driven by `PRD_ROADMAP.md` (a standing M1–M14 plan). Read that first, then this file.
 **Decided by Evan 2026-07-08: the finish line is a real public launch (new M11), not just
 launch-readiness.** M5 guardian consent remains the hard gate before any public exposure.
 
-## Current state — M1–M10 + M12 + M13 + v1 EXACT-COPY + portfolio + audits COMPLETE; frontier = M11 launch (BLOCKED-ON-EVAN)
+**Last updated: 2026-09-03 (22:20 CDT).**
 
-**Last updated: 2026-08-19.**
+## Current state (2026-09-03)
 
-> **2026-08-19 — cold audit of the memory docs; 13 findings, two critical.**
-> `/audit` scoped to both memory stores (the 12 `codebase-memory` bins and the
-> session memory), run by a fresh agent because this session had edited four of
-> the bins. **(1) `APP_BASE_URL` is a hard boot blocker that four documents
-> described as optional** — the guard is seven checks over six variables
-> (`config.py:145–169`), the bins said "six over five", and `DEPLOY_RAILWAY.md`
-> filed it under "should set". It would have crash-looped the first Railway
-> deploy, which is the only remaining frontier. **(2) `INDEX.md` still asserted
-> the audit log is never deleted**, which the 2026-08-13 retention purge
-> deliberately does — the third time in this batch that a fix swept its own call
-> site and not its siblings.
-> Also: the session memory had been five weeks stale while being injected into
-> every session's context; `security.md`'s audit-event register named 14 actions
-> and called them 12 (real figure **24**, derived by AST because two reach
-> `append_audit` only as a parameter); the public mirror's INDEX advertised seven
-> bins it does not ship.
-> **Four fixes are mechanisms, not text**: a boot-guard count test, three static
-> invariant guards, and a memory-store validator — each fed its own trigger to
-> prove it fires. **Two invariants remain UNENFORCEABLE and say so in the file.**
-> **327 pytest green** (323 → 327); ruff/eslint/tsc/build clean. No CVE run
-> (pip-audit absent), and Docker was down so the Postgres job and every
-> browser-verified claim stay unverified — not clean.
+**Done:** M1–M10, M12, M13.1–.5, **M14 complete** (site + org analytics), v1 EXACT-COPY,
+public-portfolio slice, and four cold audits. **378 backend tests** green on SQLite *and*
+on real Postgres (`TEST_DATABASE_URL`); migrations **0001–0026**; 17 route modules; 29
+frontend pages; 16 codebase-memory files.
 
-> **2026-08-13 — the open non-account items closed, and the 2026-08-12 limiter fix
-> turned out to have been only a third of itself.**
-> **(1) `min_age` grandfathering: closed by construction, not by a backfill.**
-> `min_age` is write-once: set at creation and by no other route. The three
-> PATCHes on `/opportunities` are `/featured` and `/active` (single-field toggles)
-> and `/exclude-date`, which writes `Application.excluded_dates` and never touches
-> the listing. So an org cannot raise the floor under people who
-> already applied, and every approved row traces back to a guarded apply. Rows
-> predating the guard exist only in the dev DB — production starts empty.
-> `tests/test_min_age_is_write_once.py` fails the day a route can change it on an
-> existing listing, which is the day existing applicants need re-checking.
-> **(2) Audit-log retention now exists.** `AUDIT_LOG_RETENTION_DAYS` (default 365)
-> + `purge_expired_audit_log` + `python -m scripts.purge_audit_log`, and the
-> privacy policy states **12 months** where it used to say only "retained".
-> Deletes by AGE ONLY — no path to remove a particular row, which is what keeps
-> append-only meaningful. **Nothing runs it automatically: the monthly job is a
-> launch item (see BLOCKED-ON-EVAN), and until it is scheduled the stated period
-> is a promise kept by hand.**
-> **(3) The consent-IP item was not a posture question — the value was wrong.**
-> `guardian_consent_ip` is the evidence a specific guardian decided; it was written
-> from `request.client.host`, which behind a proxy is the PROXY, so on Railway every
-> family would carry the same address and the proof-of-consent record would prove
-> nothing, silently. Same root cause as `92282c6`, which fixed the limiter's own
-> call site and swept no others: **two consent writes and the Turnstile `remoteip`
-> were still reading the socket.** All three now use `client_ip_or_none()`.
-> Proven red pre-fix (stored `'testclient'`, not the forwarded client).
-> **323 pytest green** (311 → 323); ruff/eslint/tsc/build clean. Docker was down
-> this session, so nothing was browser-verified — the privacy-copy change is text
-> only, and the purge CLI was instead run end to end against a scratch SQLite DB.
+**In flight:** **M13.6 SWR — 14 of 22 pages** converted (`portfolio/[id]` and
+`opportunities/[id]` landed 2026-09-03). Page by page, never a sweep: the frontend has no
+test runner, so each page's loading / error+retry / empty / data states are browser-verified
+individually. **Caveat carried forward: `applicants` counts in the 14 but is only
+fractionally converted** — its analytics call uses the hook, its three main loads do not.
 
-> **2026-08-12 — the rate limiter stopped keying on the proxy (`92282c6`), and
-> that hands Evan a REQUIRED production value.**
-> Behind a reverse proxy `request.client.host` is the proxy, so every user shared
-> one bucket: the auth cap was 30/min GLOBALLY and one abusive client could lock
-> out the whole user base. Trusting `X-Forwarded-For` unconditionally would have
-> been worse than the bug — any client can vary the header per request and mint a
-> fresh bucket, i.e. no limiter at all — so the header is ignored unless the
-> deploy declares its topology via **`TRUSTED_PROXY_HOPS` (default 0 = trust
-> nothing)**. `client_ip()` falls back to the socket address whenever the claim
-> can't be justified: hops unset, header absent, chain shorter than declared, or
-> an unparseable entry. **On Railway this must be set to 1 — left at 0 behind a
-> proxy the limiter is decorative and nothing errors** (see BLOCKED-ON-EVAN).
-> Documented in `backend/.env.example`, `docs/DEPLOY.md`, `docs/DEPLOY_RAILWAY.md`.
-> **311 pytest green** (306 → 311, five tests written red first, the load-bearing
-> one asserting the header is IGNORED by default); ruff check + format clean.
-> NOT fixed: the limiter is still in-memory and single-process, so a multi-replica
-> deploy multiplies every limit — **keep the api at one replica until it moves to
-> Redis**. This change fixed WHO gets counted, not WHERE the count lives.
+**CONTRADICTION PARTIALLY RESOLVED (2026-09-03 ~22:18 CDT, pre-mortem E1/E2).**
+`EVAN_CONTEXT.md` (compiled 2026-07-22) says ServeLocal is *on hold until 18 for legal
+reasons*; this file and the PRD say the finish line is a real public launch (Evan,
+2026-07-08). **Evan turns 18 ~2026-09-08 (stated 2026-09-03, 5 days out)** — the
+"hold until 18" half of the contradiction now has a near-term expiry rather than being
+an open question, and Evan's own person-vs-entity/contract-capacity blocker lifts on its
+own that date. **Still open, and NOT settled by the birthday:** the platform holds OTHER
+people's minors' data (students 12–17) regardless of the operator's age — whether Evan
+now WANTS that duty (guardian consent, breach response, data-subject requests, none of
+it pausable for exams) is a live one-line decision, tracked as pre-mortem E4. See
+`docs/premortem_2026-09-03_project.md`.
 
-> **2026-08-12 — the guardian kill switch is now retroactive, and guardians have
-> their own surface (three phases; record entries 2026-08-11/12).**
-> Evan's decision: a revoke must undo state, not merely block future actions.
-> **Phase 1** moves the minor's applications to a new **`withdrawn`** status —
-> one field that removes them from check-in, hours auto-log and self-report,
-> org-thread access, reviews and per-date spot counting at once, because every
-> one of those filters on `status == "approved"` — frees the one-time spot,
-> promotes the waitlist, and stops org broadcast email. It deliberately does NOT
-> reach the two ORG-FACING lists (`/applications/org` filters on ownership alone;
-> the org branch of `GET /hours` keys on Hours rows, so hours logged before the
-> revoke stay in the verify queue) — this text claimed them until 2026-08-12,
-> contradicting Phase 2 two sentences later.
-> **Phase 2** keeps the row visible to the org, greyed,
-> with "This account has been deactivated or deleted" on hover; `account_inactive()`
-> is ONE predicate covering deleted/deactivated/revoked that deliberately never
-> says WHICH, because an org has no business learning a family revoked consent.
-> **Phase 3** gives the guardian export + delete on the manage token, running the
-> EXISTING anonymize-in-place flow so the org keeps its verified-service record
-> and the privacy policy needs no rewrite; `_guardian_subject` bounds that token
-> to an active student under 18, since the token never rotates.
-> Alongside: the public portfolio ignored consent at READ time (a revoked minor's
-> transcript stayed served — the third sibling after the leaderboard fix missed
-> it), and `min_age` was stored, displayed and enforced NOWHERE.
-> **306 pytest green at that point** (323 now — see the blocks above);
-> ruff/eslint/tsc/build clean; dev DB restored to baseline.
-> **A landing-check then found the frontend had no rendering for the new
-> `withdrawn` status at all** — fixed. Applications approved BEFORE the `min_age`
-> guard remain grandfathered: a data question, still open at the time.
-> **(Closed 2026-08-13 — see the top block.)**
+**Frontier: M11 public launch, and it is almost entirely BLOCKED-ON-EVAN.** Phase 0
+(decisions) closed 2026-08-31. **Phase 1 (legal) is the critical path** — it blocks
+launch, nothing blocks it, and its clock belongs to other people. Phase 3 is partly built
+(Sentry wired and scrubbed but OFF without a DSN; uptime monitor unbuilt; the backup
+restore-drill has never been run for real). A 2026-09-01 pre-mortem found **all seven
+launch-blocking risks fail SILENTLY** — no error, no red build — and raised two questions
+for a responsible adult rather than a commit.
 
-> **2026-08-07 — Next 16 + nonce CSP, then the live M6/M8 audit (record entry of the same date).**
-> **The M5 launch gate has now been driven end to end on real Postgres, in both directions** —
-> the re-validation the 2026-08-05 block below demanded. A fresh minor lands in `pending` and
-> gets 403 `GUARDIAN_CONSENT_REQUIRED` on apply/check-in/auto-log/self-report and is absent
-> from the public leaderboard; after a real guardian approval through `POST /consent/{token}`
-> the same calls return 201/200. An adult on the identical endpoint returned 409 "Already
-> applied" — the control proving those 403s were the gate, not a broken route. Spent tokens
-> replay to 404; the guardian-facing context leaks only first name + last initial.
-> **Next 15.5.20 → 16.3.0** takes `npm audit` from 5 advisories to **0** (the `next` range
-> covered every 15.x, so there was no patch short of the major). It removes `next lint`, which
-> WAS the CI lint gate — `npm run lint` is now `eslint .` over a flat `eslint.config.mjs`.
-> **`script-src` no longer carries `'unsafe-inline'`**: `frontend/proxy.ts` mints a per-request
-> nonce, which cost `dynamic = "force-dynamic"` in the root layout (28 routes went from static
-> prerender to per-request render — a nonce cannot exist in build-time HTML). Verified in a
-> production build and through the standalone Docker image: an injected inline script is
-> refused by the browser. `style-src` KEEPS `'unsafe-inline'` deliberately — React's
-> `style={{...}}` prop compiles to a `style="..."` attribute, which no nonce can cover.
-> **Live M8 + M6 found no new code defects** (60+ checks; all six apparent failures were wrong
-> assumptions in my own probes). The bin sweep did find one that mattered:
-> **`backend/.env.example` still told operators `ADMIN_EMAILS` granted audit-log access.** It
-> grants nothing since 2026-08-06 — someone provisioning production would have listed their
-> address and believed they had admin. `security.md` was contradicting itself on the same
-> point, section to section. Both fixed.
-> **277 pytest green**; ruff/eslint/tsc/build clean; dev DB restored to its documented baseline.
+**Health:** ruff check + format clean; `tsc` clean; eslint **0 errors / 11 warnings** (the
+baseline — a 12th is a regression); `npm run build` clean; `npm audit` 0 vulnerabilities.
+Docker is available again, so the Redis and restore-drill work is no longer blocked on it.
 
-> **2026-08-05 — two-pass cold audit + P1/P2 fix batch (record entry of the same date).**
-> **The M5 guardian-consent gate was NOT functioning end to end and nobody knew.**
-> `ConsentBanner` was the only caller of the only guardian-email path and was never mounted
-> anywhere; `register` recorded `pending` and sent nothing. Every minor landed in a permanent
-> gate no guardian was ever told about, while three UI surfaces claimed an email had gone out.
-> All 215 tests were green throughout — they call the API directly. Fixed at the chokepoint
-> (`services/consent_invite.py`, fired server-side in `register`), so the launch gate no longer
-> depends on any UI being mounted. **M5 must be re-validated against this before M11 ships.**
-> 22+ other P1/P2 findings fixed in the same batch (production config guard failed OPEN on
-> `ENVIRONMENT=prod`; `role:"admin"` self-registerable; hours double-submit inflating verified
-> hours into an unearned award; org account deletion permanently unreachable). **256 pytest
-> green** (from 215), now under warnings-as-errors, and `ruff` is finally wired into CI — its
-> rules had been declared since M1 but were never installed or run.
-> Three decisions Evan made 2026-08-05: minimum age stays **12** (the PRD was the outlier, code
-> and both legal drafts always said 12 — PRD corrected in place); org-deactivate endpoint added;
-> declined/revoked consent stays terminal for the STUDENT per v1 ADR-0010, with a new
-> admin-only `POST /consent/admin/{user_id}/reopen` as the "until support/admin intervenes"
-> escape hatch that spec always assumed.
+## Recent history — pointers, not a pile
 
-**M13 launch-checklist hardening is COMPLETE** (5 commits
-`e5aa990`→`dcf87cc`, executed by Opus workers with orchestrator review — see the workstream row and
-record entries of 2026-07-15/16): production CSP restored (v1 ADR-0014 parity), GDPR/CCPA account
-deletion + data export live on both dashboards (E2E browser-verified incl. wrong-password 403 and
-post-delete 401; **200 backend tests**), sitemap/robots/OG metadata, skeletons + per-section
-error/Retry on discover+dashboard. Only M11 remains.
+**This file is the live snapshot. `docs/record_2026-07-16.md` is the history**, and the
+root `../docs/Project Record — Full Chronological History.md` is the cross-era arc. Until
+2026-09-03 this section was 432 lines of dated entries — 73% of the file — all of which
+were already in the record. They were removed after verifying record coverage for every
+one; nothing was lost.
 
-**Prior update (2026-07-15):** Since the 2026-07-13 snapshot below: **(a) 4-lens audit fixed**
-(security/scale/guardian/UX): dep bumps clearing PYSEC advisories (fastapi 0.139, starlette 1.3.1,
-pyjwt 2.13, pytest 9.1; pip-audit + npm audit clean), gzip, list pagination + selectinload,
-Cache-Control on public GETs, org-facing `student_name/email` (org branches only), name
-minimization on reviews/messages, migration **0022** `ix_hours_status` → **192 pytest green**;
-**(b) repo split**: `servelocal-v2` now **PRIVATE**; sanitized public mirror
-`Evan-Daruwalla/servelocal-portfolio` regenerated by `scripts/sync_portfolio.py` (fail-closed
-secret guard; `--commit`/`--push` opt-in); **(c)** graphify code graph refreshed + navigational
-comments (`598f9ed`); **(d) M13 "Launch-checklist hardening" added to the PRD (2026-07-15)** from
-Evan's 33-item checklist review — real gaps found: **no CSP** (v1 had one, ADR-0014), **no account
-deletion/data export** (GDPR/CCPA — M13.2–.3 must land before M11.6), no sitemap/OG metadata, no
-skeletons/per-section retry. CSRF verified moot (header JWT, zero cookies); stored-XSS surface
-clean (no `dangerouslySetInnerHTML`); CORS env-scoped. **Next open task: M13.1 (CSP + security
-headers).**
-
-**2026-07-13 snapshot** (big Evan-directed frontend+polish session, v2 `main` `0dfbaed`→`60495e4`, all pushed; backend **189 pytest green**, up from 175). Four threads, all live-verified via computed-style/DOM checks + zero console errors + clean build (the CDP **screenshot tool timed out the whole session** — proof is computed styles, not images; a background browser-pane tab is `visibility:hidden` so CSS animation clocks freeze at t=0, verify anims with `getAnimations().finish()`):
-1. **v1 EXACT-COPY COMPLETE** — "copy the v1 UI exactly, all screens." All **13 v1 screens** render in v2 with v1's pixel-for-pixel editorial UI via a scoped `.v1` architecture: `frontend/app/v1.css` (v1's raw CSS ported verbatim under a `.v1` root so it can't collide with shadcn's HSL tokens; **0 unscoped rules, keyframes `v1`-namespaced**) + shared `components/v1/V1Shell` nav/footer + `lib/v1-routes.ts` (`isV1Route()` suppresses the global chrome on converted routes, incl. dynamic `/opportunities/<id>` and `/portfolio/<id>`). Screens: landing, discover, opp-detail, student dash, **org dash = `/applicants`**, leaderboard, auth ×4, pricing, for-organizations, donate, privacy, terms, portfolio, admin.
-2. **Public-portfolio gap closed (real full-stack slice)** — `GET /portfolio/{id}` (opt-in via `User.portfolio_public`, migration **0021**, default OFF; single 404 for unknown/non-student/opted-out so nothing leaks). Frontend public `/portfolio/[id]` page + own-page toggle + copy-link. E2E-verified: self-report → org-Verify (real UI) → 🥇 leaderboard → transcript.
-3. **`/audit` → all 5 findings fixed** — minor-privacy gate (a minor can't publish a full-name transcript without verified guardian consent; minor public names minimized to first+last-initial), **Next 15.1.3→15.5.20 + postcss override → `npm audit` 0 vulns**, new `GET /opportunities/mine` (org sees inactive listings), student-only flag guard, lint clean.
-4. **UI polish (emil-design-eng + sourced research brief `docs/research/2026-07-13_ui-professional-polish.md`)** — `scale(.97)` `:active` press feedback on every pressable (v1 + shadcn Button), all 8 `transition:all` → explicit lists, branded 2px `:focus-visible` outline (white on dark bands), marquee paused under `prefers-reduced-motion`, `tabular-nums`/`text-wrap:balance`/`::selection`; round 2: `@starting-style` card entrance, hero mini-card stagger, opp-card `-2px` hover-lift (gated `hover:hover`+`no-preference`).
-
-**Remaining honest v2 gaps** (each a candidate backend task): no admin role/moderation endpoints (admin screen is an honest stub); no analytics endpoint (org Analytics tab = derived subset); ~~org applications+hours don't expose student name/email~~ (closed 2026-07-13, 4-lens audit — org branches only); no endorsements; no `school` field; no donations backend (donate is a demo stub); `PATCH /me` persists `email_notifications` + `portfolio_public` only; no account deletion/export (→ **M13.2–.3**); no CSP (→ **M13.1**). Seed data (demo org `greenroots@demo.com` + student `alex@demo.com`, pw `«redacted-local-demo-pw»`, 3 opps + 1 verified-hours transcript) lives in the Docker Postgres volume — **local only**. Prior: M12 visual parity (`67266d5`), M10 Docker boot verified. **Frontier: M11 public launch — BLOCKED-ON-EVAN.**
-
-The auth vertical slice shipped earlier (`ddd5b0a`). Since then a large batch ported the core
-domain and several community features from v1 to the v2 stack (`94c185e`): opportunities,
-applications, hours, awards, bookmarks, leaderboard, reviews, notifications, and per-opportunity
-messaging — each backend feature as model + migration + schema + routes + tests (66 pytest cases),
-with matching frontend pages, browser-verified end to end. This batch was built partly ahead of the
-PRD's `M1→M10` order (the PRD was adopted mid-stream, 2026-07-07); work is now realigning to that
-order. See `docs/record_2026-07-07.md` for the full trail, including the off-order note.
+| date | what changed | record |
+|---|---|---|
+| 2026-09-03 | Whole-project pre-mortem: 14 risks, **top finding is a contradiction between two of our own docs** | II.45 |
+| 2026-09-03 | M13.6 SWR 12 → **14 of 22**: `portfolio/[id]` + `opportunities/[id]`, both browser-verified | II.44 |
+| 2026-09-03 | `docs/LEGAL_REVIEW_PACKET.md` written for M11 Phase 1 (RED band; the review itself is still Evan's) | II.44 |
+| 2026-09-03 | Both cap decisions closed: `security.md` 183 → 150; INDEX cap 25 → 75 globally | II.43 |
+| 2026-09-03 | HANDOFF rewritten as a snapshot again | `record_2026-07-16.md`, II.42 |
+| 2026-09-03 | Bin caps: `security.md` 240→184 via a new `audit-log.md`; INDEX 53→49 | `49be7ee`, II.41 |
+| 2026-09-03 | All 14 bins swept; **`DIRECTORY.md` created** (the map the system required and never had) | `73cd677` |
+| 2026-09-03 | LICENSE, data export moved out of the tree, consent allowlist now checks its own reasons, `security.md` split | `b6a57b8`, II.41 |
+| 2026-09-03 | **M14.2 DONE** — org analytics; "retention" deleted from pricing rather than faked | `cf4e09f`, II.40 |
+| 2026-09-02 | **M14.1's admin section** — the half its done-check required and never got | `578ad70`, II.39 |
+| 2026-09-02 | Docs sweep D1–D4: ten findings, two MEDIUMs were our own from the day before | `b948e85` |
+| 2026-09-02 | Both-domains `/audit`, 27 findings fixed; **the pattern: our checks verify SHAPE, not TRUTH** | `71c8fbd`, II.37/II.38 |
+| 2026-09-02 | `repr(Settings)` leaked every secret — closed in three layers | `3e0ff52` |
+| 2026-09-01 | Pre-mortem on the M11 launch; fallback audit, 5 HIGHs | II.34 |
+| 2026-08-31 | Phase 0 closed (8 decisions); role-guard consolidation; SWR adopted | II.31/II.32 |
 
 ### Workstreams (mapped to PRD milestones)
+
+*(Restored 2026-09-03: the HANDOFF rewrite dropped this table along with the dated-entry
+pile it sat beside. It is NOT history — `CLAUDE.md`'s definition of done, `conventions.md`
+and `PRD_ROADMAP.md` all require updating it when a milestone's status changes, so four
+documents point at it.)*
 
 | Workstream | PRD | Status | Notes |
 |---|---|---|---|
@@ -225,10 +107,12 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
 | Deploy readiness | M10 | **Done** | M10.1 `docker compose up --build` VERIFIED by Evan 2026-07-12 — db+api+web all healthy, migrations 0001–0020 applied on real Postgres, uvicorn + Next serving (fixed a missing-`public/` build bug, `bd32540`). M10.2 boot guard + M10.3 runbook (`docs/DEPLOY.md`) + M10.4 docs sync done. Remaining: Evan's browser click-through of localhost:3000. |
 | Public launch | M11 | **Prep COMPLETE — all remaining steps BLOCKED-ON-EVAN** | Model-doable work done 2026-07-16 via opus-workers: M11.1a ADR 0001 token-storage (`1c81dc5`, Proposed — sign-off + TTL choice = Evan) + M11.1b Turnstile bot defense env-gated off-by-default (`83c3a06`, 209 tests; keys = Evan) + M11.2 Terms/Privacy DRAFTS (`ce3569c`; placeholders + legal sign-off = Evan) + M11.3-prep railway.json ×2 + DEPLOY_RAILWAY.md runbook (`b2ebb84`; account/domain/secrets = Evan) + M11.4 ADR 0002 billing free-tier-only (`9009382`, Proposed — decision = Evan). M11.5–.7 need accounts/deployment |
 | v1 visual parity | M12 | **Done** | Added 2026-07-12 (Evan: match v1's look). M12.1 foundation (`1cdeeea`) + M12.2/M12.3 per-page vocabulary (`67266d5`): opp-card accent bars, badge/status pills, section headers, uppercase form labels, form-box — applied across all 20 routes. Detail-page subcomponents inherit tokens but aren't individually v1-classed (minor follow-up) |
-| v1 EXACT-COPY + UI polish | off-roadmap | **Done** | 2026-07-13, Evan-directed. All 13 v1 screens rebuilt in the scoped `.v1` architecture; emil-design-eng polish rounds 1–2 (press feedback, `:focus-visible`, reduced-motion, entrance/stagger/hover). `0dfbaed`→`60495e4` |
+| v1 EXACT-COPY + UI polish | off-roadmap | **Done** | 2026-07-13, Evan-directed. All 17 v1 screens (named-screen count; 19 route patterns incl. 2 dynamic — see the snapshot above) rebuilt in the scoped `.v1` architecture; emil-design-eng polish rounds 1–2 (press feedback, `:focus-visible`, reduced-motion, entrance/stagger/hover). `0dfbaed`→`60495e4` |
 | Public portfolio (v1 parity) | off-roadmap | **Done (bonus)** | 2026-07-13. `GET /portfolio/{id}` opt-in (migration 0021, minor consent-gated + name-minimized) + public `/portfolio/[id]` page + `GET /opportunities/mine`. From the /audit follow-up. 189 tests |
 | 4-lens audit fixes + repo split | off-roadmap | **Done** | 2026-07-13. Dep bumps (PYSEC clean), gzip, pagination, cache headers, org student identity, name minimization, migration 0022 → 192 tests. v2 → PRIVATE + public `servelocal-portfolio` mirror via `scripts/sync_portfolio.py` |
-| Launch-checklist hardening | M13 | **Done** | 2026-07-16 via opus-workers (3 phases, orchestrator-reviewed). M13.1 CSP/headers (`e5aa990`) + M13.2 deletion/export API (`166fcab`, 200 tests) + M13.3 its UI, E2E-verified (`bd26052`) + M13.4 sitemap/OG (`4879068`) + M13.5 skeletons/retry/tooltips (`dcf87cc`). M13.6 SWR = skipped (Evan 2026-07-15, PRD default) |
+| Launch-checklist hardening | M13 | **M13.1–.5 Done; M13.6 REOPENED** | 2026-07-16 via opus-workers (3 phases, orchestrator-reviewed). M13.1 CSP/headers (`e5aa990`) + M13.2 deletion/export API (`166fcab`, 200 tests) + M13.3 its UI, E2E-verified (`bd26052`) + M13.4 sitemap/OG (`4879068`) + M13.5 skeletons/retry/tooltips (`dcf87cc`). ~~M13.6 SWR = skipped (Evan 2026-07-15, PRD default)~~ → **M13.6 REVERSED 2026-08-31 (Evan): ADOPT SWR**, and it is the fix for the load/error/retry duplication. **IN PROGRESS: 14 of 22 pages** (`swr@2.5.1` + `lib/use-api.ts`; `6d75394`→`58428b0`; `portfolio/[id]` + `opportunities/[id]` 2026-09-03). Remaining: dashboard, applicants (only its analytics call is converted), hours (its load starts with a WRITE — needs design, not a swap), and 4 components under `opportunities/[id]/`. The two consent-token pages are deliberately NOT converted |
+| Analytics (site + org), first-party cookieless | M14 | **M14 COMPLETE — M14.1 backend (`1c0b16e`) + admin section (2026-09-02); M14.2 org tab + view counter (2026-09-03)** | Added 2026-08-31 (Evan reversed the 2026-07-15 deferral). Shape (a): our own counters, no third-party script, no cookies, no stored IPs, no per-user browsing trail. M14.1 site counters → M14.2 backs the org Analytics tab (which today under-delivers what the pricing page advertises). Not a launch gate |
+| Duplication consolidation (role guards · status maps · data fetching) | off-roadmap | **2 of 3 done** | 2026-08-31. Role guards → `deps.py` `require_student`/`require_org` (`c56d5d9`, 15 checks, 18 routes proven); status maps → `lib/status.ts` (`55f1694`, 4 copies, 2 domains); data fetching → SWR `useAuthedQuery`/`usePublicQuery` (`6d75394`) **14 of 22 pages, in progress** (was "1 of 19" here — a stale figure from 2026-08-31 left in a LIVE table cell while four other places in this file said 11 of 22; recounted and corrected 2026-09-02: `grep -rl "useAuthedQuery\|usePublicQuery" app --include=*.tsx` returns exactly 11) |
 | Reviews (student→org ratings) | out of scope | **Done (bonus)** | `94c185e`; PRD marks reviews out of scope — kept at Evan's direction |
 | Guardian revoke made retroactive (3 phases) | M5 follow-on | **Done** | 2026-08-11/12, Evan-directed. Phase 1 `4ddaaef` roster withdrawal + spot release + broadcast stop; Phase 2 `5303931` org-side greying via `account_inactive()`; Phase 3 `18a0c6c` guardian export/delete on the manage token (anonymize-in-place). `test_consent_gate_coverage.py` now fails any new write route that is neither gated nor consciously allowlisted. Then `a45be67`: a landing-check found the new `withdrawn` status had NO frontend rendering (the type union type-checked while showing a raw word in a "pending"-coloured pill) — status labels/pills/messages added in both CSS systems. 306 tests at that point (323 now) |
 
@@ -273,69 +157,137 @@ order. See `docs/record_2026-07-07.md` for the full trail, including the off-ord
   consolidated chronological record, updated on every medium-or-larger change (rendered HTML twin via
   `python -m scripts.render_record_html` from the ServeLocal root). Read for the cross-era arc; the
   files below are the day-to-day v2 sources.
-- `PRD_ROADMAP.md` — the standing M1–M13 plan. Source of truth for what to build and in what order.
+- `PRD_ROADMAP.md` — the standing M1–M14 plan. Source of truth for what to build and in what order.
 - `docs/record_2026-07-07.md` — append-only, timestamped build log (the "why"/"how", bugs,
   abandoned approaches). Never edited retroactively. Point-in-time snapshots live inside it —
   the state-doc tier was retired 2026-07-08 (`state_2026-07-07.md` archived there, banner-marked,
   deletion pending Evan's approval); this HANDOFF is the only live snapshot.
-- `backend/README.md`, `frontend/README.md` — per-subproject stack + layout + scope-cut list.
+- `backend/README.md` (**private-tree only — not shipped to the public
+  `servelocal-portfolio` mirror**), `frontend/README.md` — per-subproject stack +
+  layout + scope-cut list.
 - `docs/API_KEYS.md` — single registry of every key/secret (env var, purpose, milestone, status,
   how to obtain). No real values; those live in gitignored `.env`. The "what Evan must provide" list.
 
-## BLOCKED-ON-EVAN (as of 2026-07-16 — the complete launch list)
-**Decline recourse — MECHANISM SHIPPED, procedure drafted (updated 2026-08-19).** The
-2026-07-16 warning here ("decline permanently bricks a minor's account with zero recourse")
-went stale on 2026-08-05 when `POST /consent/admin/{user_id}/reopen` shipped: admin-only,
-audited, re-invites the guardian ALREADY on file (never a new address — that would defeat the
-gate). The written procedure behind the "contact support" copy is now drafted too
-(`docs/SUPPORT_PROCEDURES.md` — needs your sign-off). What actually remains BLOCKED-ON-EVAN:
-the `SUPPORT_EMAIL` value, someone reading that inbox, and one promoted admin account.
+## BLOCKED-ON-EVAN (live list, as of 2026-09-03)
 
-**Decisions:**
-- ADR 0001 sign-off (token storage: keep localStorage-JWT). ~~The TTL choice~~ — STALE as
-  written: the TTL has been **24h** since the 2026-08-05 audit (`config.py:44`), not 7 days, so
-  there is no number left to pick — signing the ADR ratifies what already runs. Follow-ups #2
-  (server-side logout) and #3 (401 interceptor) shipped 2026-07-16 (`0573d69`).
-- ADR 0002 sign-off (billing: launch free-tier-only, PRD default) + the launch-UI choice for the
-  Pro upgrade surface (currently would 503 without keys — "coming soon" state vs leave).
-- Terms refund-policy default (drafted: cancel anytime, end-of-period, no proration).
-- Analytics decision (deferred 2026-07-15): must be cookieless/consent-aware — minors platform.
-- ~~Org-vetting claims~~ — RESOLVED 2026-07-16 (Evan picked "soften"): all six claims rewritten to
-  what's true (public student reviews + org-verified hours); the pricing FAQ's fabricated vetting
-  mechanism removed. OPEN REVERSAL PATH: if Evan later adopts manual org review as documented
-  policy, the copy can strengthen back — that's a product decision, note it here when made.
-- M13.6 DECIDE: SWR/React Query client caching (new dependency).
-**Values/accounts (all prepared up to the blocked step):**
-- Legal placeholders in the Terms/Privacy DRAFTS: [GOVERNING STATE] + [LEGAL ENTITY NAME]
-  (both on `terms/page.tsx:86`; ~~[CONTACT EMAIL]~~ resolved — the pages render `SUPPORT_EMAIL`
-  via `<SupportEmail/>`) — then adult/guardian + legal review sign-off (hard launch gate).
-  The entity question is real: operating as a person vs forming an entity has liability
-  consequences at 17 on a minors platform. Review must also check the policy's concrete
-  **12-month audit-retention promise** (added 2026-08-13) against reality.
-- Turnstile site + secret keys (feature ships off-by-default until set).
-- Railway account, Postgres provisioning, prod secret VALUES (SECRET_KEY, DATABASE_URL,
-  RESEND_API_KEY, STRIPE_*, TURNSTILE_*), domain purchase + DNS — runbook: docs/DEPLOY_RAILWAY.md.
-- **Schedule the monthly audit-log purge** (added 2026-08-13): `python -m scripts.purge_audit_log`
-  on the api service (Railway → Settings → Cron Schedule, e.g. `0 4 1 * *`). The privacy policy
-  now states audit entries are kept **12 months**; nothing enforces that until this runs, and a
-  stated retention limit you don't enforce is worse than stating none. `--dry-run` reports the
-  count without changing anything. Runbook: `docs/DEPLOY_RAILWAY.md` §Scheduled jobs.
-- **`TRUSTED_PROXY_HOPS=1` on the Railway service** (added 2026-08-12). Not a secret and not
-  optional: the default 0 trusts nothing, which is right locally and wrong behind Railway's TLS
-  proxy — leave it and every user shares one rate-limit bucket while NOTHING errors. Also keep the
-  api at **one replica** until the limiter moves to Redis; it is in-memory, so N replicas multiply
-  every limit by N.
-- Sentry/uptime accounts (M11.5) — plus the "Sentry vs host-native error tracking?" pick before
-  any code gets wired; soft-launch org outreach (M11.6).
-- Run one real backup restore-drill (`python scripts/backup_db.py`, then `--restore-drill` — see
-  docs/BACKUPS.md): needs Docker Desktop up (compose db) or Postgres client tools on PATH; this
-  box had neither on 2026-07-16, so the drill is verified-by-inspection only.
-- `stripe listen` webhook round-trip (M8.2 leftover; needs the CLI's `whsec_`).
-- ~~Stripe test keys / docker boot verification~~ — done 2026-07-09 / 2026-07-12.
-- ~~Stripe test keys (M8)~~ — supplied 2026-07-09, live in gitignored `backend/.env`.
-- ~~`docker compose up` boot verification (M10.1)~~ — done by Evan 2026-07-12, stack boots clean.
-- `stripe listen` hosted-page test payment round-trip (M8.2's last step; needs the CLI's `whsec_`).
-- Resend API key (M4 email — currently a logged no-op; needed for real delivery at M11).
-- M11 everything account-shaped: deploy host, domain/DNS, production secrets, CAPTCHA keys,
-  legal/guardian sign-off. Full secret inventory: `docs/API_KEYS.md`.
-- Everything downstream works against stubs/test mode until Evan supplies these.
+Only open items are listed. **Resolved blockers were removed on 2026-09-03** — their trail
+lives in the record and in the dated PRD/ADR entries, and keeping a strike-through history
+here is what made this section unreadable. Nothing downstream is guessed or worked around:
+everything is built up to the blocked step and stops there.
+
+**The launch critical path**
+
+- **Legal review (M11 Phase 1) — the hard gate.** `[GOVERNING STATE]` and
+  `[LEGAL ENTITY NAME]` are unfilled in the Terms/Privacy DRAFTS (both on
+  `terms/page.tsx:86`), then an adult/guardian + legal sign-off. The entity question is
+  real: operating as a person versus forming one has liability consequences at 17 on a
+  platform holding minors' data. **The reviewer must also see** the concrete 12-month
+  audit-retention promise (2026-08-13) and the **new sentence added 2026-09-03** saying an
+  organization can see totals for its own listings. **The packet that says all of this in
+  one place is now `docs/LEGAL_REVIEW_PACKET.md` (2026-09-03)** — routing decision, the
+  `cite-scan` output, and a claim-vs-code table. It does not answer anything; it is what the
+  reviewer reads. **Now also a boot blocker in code, not just a runbook item**
+  (2026-09-03): `LEGAL_SIGNOFF_COMPLETE` in `backend/.env` defaults `false`, and
+  production refuses to boot without it (`docs/DEPLOY_RAILWAY.md`
+  §check_production_config gotchas). Flip it only once sign-off is real.
+- **Answer pre-mortem E4**: now that E2 is resolved (birthday ~2026-09-08), does Evan
+  want the guardian-consent/breach/support duty of real minors' data, or does the
+  project stay a documented artifact? One line settles it.
+- **The public mirror is 15 days stale** (`e5a7235`, 2026-08-19) and still ships the
+  pre-fix `auth-context.tsx:52` that signs a user out on ANY network failure. One
+  `python scripts/sync_portfolio.py` + a gated push retires it. Pre-mortem T1.
+- **Two pre-mortem questions for a responsible adult** (2026-09-01), not for a commit:
+  Evan is 17 with no legal entity, and nobody has asked whether M11 needs real minors at
+  all when the stated goal is a portfolio piece.
+
+**Values and accounts**
+
+- Railway account, Postgres provisioning, domain purchase + DNS, and the production secret
+  VALUES — runbook: `docs/DEPLOY_RAILWAY.md`. **Seven boot blockers** must be set or
+  production refuses to start, including `APP_BASE_URL` and `TRUSTED_PROXY_HOPS`.
+- **`TRUSTED_PROXY_HOPS=1` on Railway.** Not a secret. At the default `0` behind a proxy
+  the whole user base shares one rate-limit bucket and the per-client limit does nothing.
+- Turnstile site + secret keys (signup bot defense ships off until set).
+- Resend API key + verified sender domain (email is a logged no-op without it, so the M5
+  consent invite would report success and deliver nothing).
+- `SUPPORT_EMAIL` — waits on the domain. Someone must also read that inbox, and one admin
+  account must be promoted by explicit SQL.
+- Sentry DSN (an 18+ ToS question, same class as live Stripe).
+- **Rotate the test-mode Stripe key** (added 2026-09-03): it rendered into agent output
+  during a reproduction. Test-mode, gitignored, never committed — rotating is still yours.
+- `stripe listen` round-trips: the webhook one and the hosted-page test payment (M8.2's
+  last steps; both need the CLI's `whsec_`).
+
+**Operational**
+
+- **Schedule the monthly audit-log purge** (`python -m scripts.purge_audit_log`). Nothing
+  runs it, so the policy's stated 12-month period is a promise kept by hand. Now also listed
+  as a claim-vs-reality gap in `docs/LEGAL_REVIEW_PACKET.md` §3 — the reviewer sees it.
+- **Run one real backup restore-drill** (`python scripts/backup_db.py --restore-drill`).
+  It has only ever been verified by inspection. Docker is back, so it can now be done.
+- The **Pro price disagreement**: the pricing page shows $19/mo, `STRIPE_PRO_PRICE_CENTS`
+  is $29 (ADR-0002 follow-up #2). Two numbers, one truth needed.
+
+**Decisions still open (small)**
+
+- None. Both bin-cap questions were answered by Evan on 2026-09-03 and are closed:
+  `repr(Settings)` compressed (`security.md` 183 → **150**, exactly at the ~150 cap, with
+  the full narrative left in the record), and the skill's `INDEX.md` cap raised **25 → 75
+  globally** (`project-memory/SKILL.md:304`, `templates.md:201`). Trading's INDEX is 22
+  lines, so no other project changed. Record II.43.
+
+---
+
+## Next session — paste this
+
+```
+ServeLocal v2 — D:\ClaudeCode\ServeLocal\servelocal-v2
+
+READ IN THIS ORDER, as claims to verify rather than as truth:
+  1. HANDOFF.md — the only live snapshot (this file)
+  2. PRD_ROADMAP.md — the standing M1–M14 plan; work its next open task
+  3. .claude/codebase-memory/INDEX.md, then ONLY the bins your task touches
+  4. .claude/codebase-memory/DIRECTORY.md — the map; run its staleness check FIRST
+  5. docs/record_2026-07-16.md — the last few entries are the useful context; the
+     append-only record beats every snapshot on historical fact
+
+WHERE THINGS STAND. M1–M10, M12, M13.1–.5 and M14 are done. M13.6 (SWR) is at 14 of 22
+pages and is the default next task. M11 public launch is the frontier and is almost
+entirely blocked on Evan — Phase 1 (legal) is the critical path. 378 backend tests green
+on SQLite and real Postgres; migrations 0001–0026.
+
+HARD CONSTRAINTS
+- Never push. Never sync the public mirror. Committing is authorized per green task.
+- Run `date` in its OWN call before writing any timestamp — never in the same command
+  as the write, which is how three entries got stamped wrong.
+- PowerShell 5.1 has no `&&` — use `;` or the Bash tool. Never rewrite JSON/data files
+  with PowerShell (encoding corruption). Avoid inline `node -e`.
+- Backend tests need `ENVIRONMENT=ci` — a test asserts the built-in default.
+- The frontend has NO test runner. lint + build is the whole automated gate, and it
+  CANNOT see this project's recurring bug: a failed load rendering an EMPTY state.
+  Browser-verify instead — `.claude/launch.json` (repo root) entries
+  `servelocal-v2-backend-sqlite` + `servelocal-v2-frontend-prod`. On a fresh clone,
+  create backend/.dev-sqlite/dev.env from backend/.env.dev-sqlite.example first.
+- THE single highest-value check: load a page, STOP the backend, press Retry. Every page
+  must show its error panel, never its empty copy, and every stat tile must read "—",
+  not 0.
+- Do NOT build byte-sensitive text through a `python - <<'EOF'` heredoc: it eats
+  backslash escapes into literal control bytes. Scan afterwards.
+- `git checkout -- <file>` is NOT a safe restore on a dirty tree. Copy aside first.
+
+NEXT ACTIONS, in priority order
+0. **BLOCKING PREMISE (updated 2026-09-03 ~22:18 CDT, pre-mortem E4):** Evan turns 18
+   ~2026-09-08, which lifts his own person-vs-entity blocker on its own. What's still
+   open: does he want the guardian-consent/breach/support duty of real minors' data, or
+   does the project stay an artifact? Get the one-line answer before more feature work.
+1. If the answer is "artifact, not a live minors platform": sync the stale mirror (T1),
+   decide whether `backend/` ships (T2), write ONE case study (T3). ~a week, no
+   money/accounts/adults. If the answer is "launch for real," earliest honest launch
+   date is ~2026-09-08 (Evan can't sign as operator before then).
+2. M13.6 SWR: convert the next unit (8 remain: dashboard, applicants' three main loads,
+   hours, and 4 components). One unit, browser-verified, per sitting.
+3. M14.2 follow-on: `Opportunity.views` is now live, so the org Analytics tab could gain
+   a per-listing trend if Evan wants one. Not started, not required.
+4. Evan-only and unchanged: M11 Phase 1 legal review is the launch critical path —
+   hand `docs/LEGAL_REVIEW_PACKET.md` to the adult reviewer.
+```

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { BILLING_LIVE } from "@/lib/flags";
 
 function BillingInner() {
   const { user, loading } = useAuth();
@@ -69,10 +70,15 @@ function BillingInner() {
             <p className="text-muted-foreground">
               Cancel any time from your Stripe receipt email. Cancelling drops you back to Free.
             </p>
-          ) : (
+          ) : BILLING_LIVE ? (
             <Button disabled={busy} onClick={upgrade} className="self-start">
               {busy ? "Starting…" : "Upgrade to Pro"}
             </Button>
+          ) : (
+            <p className="text-muted-foreground">
+              Pro upgrades aren’t open yet — every organization is on the free Community plan
+              while ServeLocal launches. Free covers up to 3 active listings.
+            </p>
           )}
           {error && <p className="text-destructive">{error}</p>}
         </CardContent>

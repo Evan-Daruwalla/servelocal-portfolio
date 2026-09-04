@@ -1,6 +1,6 @@
 # ADR 0001 — Token storage for launch: keep localStorage-JWT, do not switch to cookie sessions
 
-- **Status:** Proposed (Evan signs off) — 2026-07-16
+- **Status:** ACCEPTED (Evan, 2026-08-31) — proposed 2026-07-16
 - **Milestone:** M11 (launch hardening), task M11.1(a)
 - **Scope:** v2 only. This is v2's first ADR; v1's 15 ADRs live in the separate v1 repo.
 
@@ -13,13 +13,22 @@ include minors, or whether we should switch to HttpOnly-cookie sessions before M
 
 Verified reality of the current scheme in **this** codebase:
 
+> **Line numbers below were accurate when this ADR was written (2026-07-16) and
+> have since drifted; the file and symbol names still hold.** Verified 2026-09-03:
+> the TTL is `ACCESS_TOKEN_EXPIRE_MINUTES` in `config.py` (cited `:29`, now `:57`),
+> and rate limits are `RATE_LIMIT_AUTH_PER_MIN` (cited `:50`, now `:104`). **One is
+> wrong about the FILE, not just the line:** `TOKEN_KEY` is no longer defined in
+> `frontend/lib/auth-context.tsx` — it moved to `frontend/lib/api.ts` and is only
+> imported and re-exported there. Prefer the symbol over the line when following
+> any citation in this document.
+
 - **Token minting / TTL.** HS256 JWT via PyJWT, claims `sub` + `tv` + `exp`
   (`backend/app/core/security.py:35`). TTL is **7 days**:
   `ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days`
   (`backend/app/core/config.py:29`). There is **no refresh token**.
 - **Storage + transport (client).** Token is written to `localStorage` under
   `servelocal_token` (`frontend/lib/auth-context.tsx:16`, set at `:58`, read at
-  `:44`/`:69`) and attached as `Authorization: Bearer ${token}` in the fetch
+  `:44`/`:68`) and attached as `Authorization: Bearer ${token}` in the fetch
   wrapper (`frontend/lib/api.ts:48`). Every authed API method takes the token as an
   explicit argument.
 - **Server-side invalidation.** `token_version` (int on `User`) is embedded as JWT
@@ -190,8 +199,8 @@ Each line below was checked against the source, not against HANDOFF.
 | # | Follow-up | Status |
 |---|---|---|
 | 1 | Tighten access-token TTL | **DONE** — 7 days → **24h**, `config.py` `ACCESS_TOKEN_EXPIRE_MINUTES = Field(default=60 * 24, ge=1)` (2026-08-05 audit). The `ge=1` bound is new too: a 0/negative value minted already-expired tokens. |
-| 2 | Server-side logout invalidation | **DONE** — `POST /auth/logout` bumps `token_version` (`auth.py:174`), checked in `get_current_user` (`deps.py`). Logging out now genuinely kills the token, which was the shared-machine gap. |
-| 3 | Logout-on-401 interceptor | **DONE** — `frontend/lib/api.ts:65` clears the token and routes to login on a 401 that carried a token. Tokenless 401s (a failed login) correctly clear nothing. |
+| 2 | Server-side logout invalidation | **DONE** — `POST /auth/logout` bumps `token_version` (`logout` in `auth.py`), checked in `get_current_user` (`deps.py`). Logging out now genuinely kills the token, which was the shared-machine gap. |
+| 3 | Logout-on-401 interceptor | **DONE** — `frontend/lib/api.ts:66` clears the token and routes to login on a 401 that carried a token. Tokenless 401s (a failed login) correctly clear nothing. |
 | 4 | Refresh-token rotation | **NOT DONE, post-launch by design.** Unchanged. |
 | 5 | Shared-store rate limiter | **NOT DONE.** Still single-process in-memory (`core/rate_limit.py`). A key-eviction sweep was added 2026-08-05 (an IPv6 /64 scan grew `_hits` without bound), but a multi-process deploy still needs Redis. **Relevant to Railway: more than one replica silently multiplies every rate limit by the replica count.** |
 
@@ -253,3 +262,10 @@ moved from static prerender to per-request render. Cheap for this app — every
 page is a client shell that fetches from the API in the browser, so no
 server-side data work was being cached — but it does mean the HTML is no longer
 CDN-cacheable.
+
+## Accepted (appended 2026-08-31 ~22:12 CDT)
+
+Evan signed off: keep localStorage-JWT with the 24h TTL that has been live
+since 2026-08-05. Nothing changes in code — this ratifies what runs. The
+Proposed-era sections above are left as written per this file's own
+convention.
