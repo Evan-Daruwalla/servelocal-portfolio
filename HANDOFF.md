@@ -14,7 +14,7 @@ The work is driven by `PRD_ROADMAP.md` (a standing M1–M14 plan). Read that fir
 **Decided by Evan 2026-07-08: the finish line is a real public launch (new M11), not just
 launch-readiness.** M5 guardian consent remains the hard gate before any public exposure.
 
-**Last updated: 2026-09-05 (18:04 CDT).**
+**Last updated: 2026-09-05 (18:39 CDT).**
 
 ## Current state (2026-09-03)
 
@@ -275,13 +275,19 @@ READ IN THIS ORDER, as claims to verify rather than as truth:
   5. docs/record_2026-07-16.md — the last few entries are the useful context; the
      append-only record beats every snapshot on historical fact
 
-WHERE THINGS STAND. M1–M10, M12, M13.1–.5 and M14 are done. M13.6 (SWR) is at 14 of 22
-pages and is the default next task. M11 public launch is the frontier and is almost
-entirely blocked on Evan — Phase 1 (legal) is the critical path. 394 backend tests green
-on SQLite and real Postgres; migrations 0001–0026.
+WHERE THINGS STAND. M1–M10, M12, M13.1–.5 and M14 are done — **18/23 PRD success criteria
+(78.3%)**, and every one of the 5 open items is M11 launch itself (`PRD_ROADMAP.md:176-192`:
+prod deploy, signed legal pages, bot defense, monitoring/backups, a real cohort). M13.6
+(SWR) is at 14 of 22 pages and is the default next task when no direction is given. 394
+backend tests green on SQLite (395 on real Postgres); migrations 0001–0026. CI green on
+main (`8bfbe56..737b231`, run 33998733167). Public mirror IN SYNC as of `a3eb658`. Bin cap
+raised 150→200 (skill-wide, 2026-09-05); three ServeLocal v2 bins compressed under it.
 
 HARD CONSTRAINTS
-- Never push. Never sync the public mirror. Committing is authorized per green task.
+- **Push and mirror-sync are NOT blanket-forbidden — they need Evan's instruction each
+  time**, same as commit. (Corrected 2026-09-05: this line used to say "never," which had
+  gone stale — both happen routinely now on his word, most recently `737b231` / `a3eb658`.
+  Don't push or sync unprompted; don't refuse when asked.)
 - Run `date` in its OWN call before writing any timestamp — never in the same command
   as the write, which is how three entries got stamped wrong.
 - PowerShell 5.1 has no `&&` — use `;` or the Bash tool. Never rewrite JSON/data files
@@ -294,24 +300,32 @@ HARD CONSTRAINTS
   create backend/.dev-sqlite/dev.env from backend/.env.dev-sqlite.example first.
 - THE single highest-value check: load a page, STOP the backend, press Retry. Every page
   must show its error panel, never its empty copy, and every stat tile must read "—",
-  not 0.
+  not 0. **On an already-visited URL this can pass for the wrong reason** — the browser
+  replays a cached `200` from a dead server; use a record it has never fetched.
+- **`FOR UPDATE` (row locking) is a no-op on SQLite.** A concurrency test against the
+  default suite proves nothing — gate it on `TEST_DATABASE_URL`, run it for real.
 - Do NOT build byte-sensitive text through a `python - <<'EOF'` heredoc: it eats
   backslash escapes into literal control bytes. Scan afterwards.
 - `git checkout -- <file>` is NOT a safe restore on a dirty tree. Copy aside first.
 
 NEXT ACTIONS, in priority order
-0. **BLOCKING PREMISE (updated 2026-09-03 ~22:18 CDT, pre-mortem E4):** Evan turns 18
-   ~2026-09-08, which lifts his own person-vs-entity blocker on its own. What's still
-   open: does he want the guardian-consent/breach/support duty of real minors' data, or
-   does the project stay an artifact? Get the one-line answer before more feature work.
-1. If the answer is "artifact, not a live minors platform": sync the stale mirror (T1),
-   decide whether `backend/` ships (T2), write ONE case study (T3). ~a week, no
-   money/accounts/adults. If the answer is "launch for real," earliest honest launch
-   date is ~2026-09-08 (Evan can't sign as operator before then).
+0. **BLOCKING PREMISE (pre-mortem E4, still open):** Evan turns 18 ~2026-09-08, which
+   lifts his own person-vs-entity blocker on its own — that half is settled. What is
+   NOT settled: does he want the guardian-consent/breach/support duty of REAL minors'
+   data, or does the project stay a documented artifact? One line from him decides
+   whether the 5 open PRD criteria above are next month's work or get struck. Ask before
+   more feature work.
+1. If "artifact, not a live minors platform": T1 (stale mirror) is DONE. Left: T2 —
+   decide whether `backend/` ships to the mirror (currently 0 files there); T3 — write
+   ONE case study (`portfolio-case-study` skill). ~a few days, no money/accounts/adults.
+   If "launch for real": earliest honest launch date is ~2026-09-08.
 2. M13.6 SWR: convert the next unit (8 remain: dashboard, applicants' three main loads,
-   hours, and 4 components). One unit, browser-verified, per sitting.
-3. M14.2 follow-on: `Opportunity.views` is now live, so the org Analytics tab could gain
-   a per-listing trend if Evan wants one. Not started, not required.
-4. Evan-only and unchanged: M11 Phase 1 legal review is the launch critical path —
+   hours, and 4 components under `opportunities/[id]/`). One unit, browser-verified, per
+   sitting.
+3. M15 (added 2026-09-03): org review before listings publish — buildable now, does not
+   gate launch. M15.1 schema+gate is the first task.
+4. M14.2 follow-on: `Opportunity.views` is live, so the org Analytics tab could gain a
+   per-listing trend if Evan wants one. Not started, not required.
+5. Evan-only and unchanged: M11 Phase 1 legal review is the launch critical path —
    hand `docs/LEGAL_REVIEW_PACKET.md` to the adult reviewer.
 ```

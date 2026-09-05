@@ -160,7 +160,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii44--two-pages-that-showed-the-wrong-screen-on-failure-and-a-legal-packet-whose-value-is-that-it-concludes-nothing-2026-09-03-2033-cdt">II.44 — two pages that showed the wrong screen on failure, and a legal packet whose value is that it concludes nothing (2026-09-03, ~20:33 CDT)</a><br />
 - <a href="#ii45--a-pre-mortem-on-the-whole-project-whose-top-risk-is-that-two-of-our-own-documents-disagree-2026-09-03-2214-cdt">II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)</a><br />
 - <a href="#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt">II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)</a><br />
-- <a href="#ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt">II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)</a></p>
+- <a href="#ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt">II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)</a><br />
+- <a href="#ii48--three-legal-page-updates-and-a-count-from-our-own-index-that-did-not-survive-checking-2026-09-05-1846-cdt">II.48 — three legal-page updates, and a count from our own INDEX that did not survive checking (2026-09-05, ~18:46 CDT)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -2867,6 +2868,43 @@ locking feature sits in the same working tree; not a legal-pages finding).<br />
 <code>gh run list</code>: the push containing <code>8bfbe56</code> is CI-green after four prior<br />
 reds. No code changed this session -- the register ends in an action plan<br />
 for Evan, matching the 2026-09-03 pre-mortem's own shape.</p>
+<h2 id="ii48--three-legal-page-updates-and-a-count-from-our-own-index-that-did-not-survive-checking-2026-09-05-1846-cdt">II.48 — three legal-page updates, and a count from our own INDEX that did not survive checking (2026-09-05, ~18:46 CDT)</h2>
+<p>Evan asked to update the Privacy Policy and Terms of Service without naming<br />
+the content, so the pages were diffed against what the code actually does.<br />
+Three gaps, all the same class and all in the SAFE direction: <strong>the documents<br />
+understated protections the code already provides</strong>, each created by a fix<br />
+that landed 2026-08-11 -&gt; 2026-09-05 without the prose following it.</p>
+<p><strong>The one that matters is the guardian-rights paragraph.</strong> It described<br />
+revoke as forward-only -- "re-blocks the student from applying, messaging<br />
+..." -- when revoke has been retroactive since 2026-08-11 and got wider on<br />
+2026-09-05: an active application is withdrawn and its spot released to the<br />
+next student waiting, and the student's name and reviews stop appearing<br />
+publicly, <strong>including the organization's public review count and average<br />
+rating, recalculated without them</strong>. A guardian reading the old text would<br />
+have learned that revoking stops future actions and nothing about what it<br />
+pulls back. The new text says both, plus the honest limit: the organization<br />
+keeps its record of hours it already verified, shown as a deactivated<br />
+participant without saying why.</p>
+<p>The other two: the name-minimization sentence listed the leaderboard and<br />
+portfolio and missed reviews; the Terms' content-license paragraph named<br />
+deletion as the only way the display license ends, when guardian revocation<br />
+is a second trigger for a minor.</p>
+<p><strong>A number from our own bins did not survive being checked.</strong> The options put<br />
+to Evan said FOUR public surfaces, quoting <code>INDEX.md</code>. Before writing that<br />
+into a privacy policy: <code>grep -rn "first_last_initial" backend/app</code> returns<br />
+leaderboard, portfolio, reviews, and <code>sender_display_name</code> (messages).<br />
+Org-facing lists run the same consent predicate but <strong>deliberately still show<br />
+identity</strong> -- the org keeps its record -- so they are not public surfaces at<br />
+all. The policy says three, named individually rather than counted, and<br />
+<code>INDEX.md</code> was corrected in the same commit. This is the fourth time a<br />
+count in this project's own documentation has been wrong in the direction of<br />
+sounding more thorough (cf. II.46's boot-guard undercount).</p>
+<p><strong>VERIFY.</strong> <code>LEGAL_LAST_REVISED</code> bumped 2026-09-03 -&gt; 2026-09-05, the first<br />
+real use of the constant added hours earlier: one edit moved the date in all<br />
+four rendered spots, which is what it was built for. <code>tsc --noEmit</code> clean;<br />
+<code>test_legal_pages_are_publishable.py</code> 3 passed; both pages browser-verified<br />
+on a fresh dev server with each new passage located by its own text. The two<br />
+open placeholders and the sign-off flag were not touched.</p>
 </div>
 </body>
 </html>

@@ -125,6 +125,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)](#ii45--a-pre-mortem-on-the-whole-project-whose-top-risk-is-that-two-of-our-own-documents-disagree-2026-09-03-2214-cdt)
 - [II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)](#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt)
 - [II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)](#ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt)
+- [II.48 — three legal-page updates, and a count from our own INDEX that did not survive checking (2026-09-05, ~18:46 CDT)](#ii48--three-legal-page-updates-and-a-count-from-our-own-index-that-did-not-survive-checking-2026-09-05-1846-cdt)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -2811,3 +2812,46 @@ locking feature sits in the same working tree; not a legal-pages finding).
 `gh run list`: the push containing `8bfbe56` is CI-green after four prior
 reds. No code changed this session -- the register ends in an action plan
 for Evan, matching the 2026-09-03 pre-mortem's own shape.
+
+## II.48 — three legal-page updates, and a count from our own INDEX that did not survive checking (2026-09-05, ~18:46 CDT)
+
+Evan asked to update the Privacy Policy and Terms of Service without naming
+the content, so the pages were diffed against what the code actually does.
+Three gaps, all the same class and all in the SAFE direction: **the documents
+understated protections the code already provides**, each created by a fix
+that landed 2026-08-11 -> 2026-09-05 without the prose following it.
+
+**The one that matters is the guardian-rights paragraph.** It described
+revoke as forward-only -- "re-blocks the student from applying, messaging
+..." -- when revoke has been retroactive since 2026-08-11 and got wider on
+2026-09-05: an active application is withdrawn and its spot released to the
+next student waiting, and the student's name and reviews stop appearing
+publicly, **including the organization's public review count and average
+rating, recalculated without them**. A guardian reading the old text would
+have learned that revoking stops future actions and nothing about what it
+pulls back. The new text says both, plus the honest limit: the organization
+keeps its record of hours it already verified, shown as a deactivated
+participant without saying why.
+
+The other two: the name-minimization sentence listed the leaderboard and
+portfolio and missed reviews; the Terms' content-license paragraph named
+deletion as the only way the display license ends, when guardian revocation
+is a second trigger for a minor.
+
+**A number from our own bins did not survive being checked.** The options put
+to Evan said FOUR public surfaces, quoting `INDEX.md`. Before writing that
+into a privacy policy: `grep -rn "first_last_initial" backend/app` returns
+leaderboard, portfolio, reviews, and `sender_display_name` (messages).
+Org-facing lists run the same consent predicate but **deliberately still show
+identity** -- the org keeps its record -- so they are not public surfaces at
+all. The policy says three, named individually rather than counted, and
+`INDEX.md` was corrected in the same commit. This is the fourth time a
+count in this project's own documentation has been wrong in the direction of
+sounding more thorough (cf. II.46's boot-guard undercount).
+
+**VERIFY.** `LEGAL_LAST_REVISED` bumped 2026-09-03 -> 2026-09-05, the first
+real use of the constant added hours earlier: one edit moved the date in all
+four rendered spots, which is what it was built for. `tsc --noEmit` clean;
+`test_legal_pages_are_publishable.py` 3 passed; both pages browser-verified
+on a fresh dev server with each new passage located by its own text. The two
+open placeholders and the sign-off flag were not touched.
