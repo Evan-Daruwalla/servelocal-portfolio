@@ -14,12 +14,12 @@ The work is driven by `PRD_ROADMAP.md` (a standing M1–M14 plan). Read that fir
 **Decided by Evan 2026-07-08: the finish line is a real public launch (new M11), not just
 launch-readiness.** M5 guardian consent remains the hard gate before any public exposure.
 
-**Last updated: 2026-09-03 (22:20 CDT).**
+**Last updated: 2026-09-03 (23:40 CDT).**
 
 ## Current state (2026-09-03)
 
 **Done:** M1–M10, M12, M13.1–.5, **M14 complete** (site + org analytics), v1 EXACT-COPY,
-public-portfolio slice, and four cold audits. **378 backend tests** green on SQLite *and*
+public-portfolio slice, and four cold audits. **383 backend tests** green on SQLite *and*
 on real Postgres (`TEST_DATABASE_URL`); migrations **0001–0026**; 17 route modules; 29
 frontend pages; 16 codebase-memory files.
 
@@ -63,6 +63,10 @@ one; nothing was lost.
 
 | date | what changed | record |
 |---|---|---|
+| 2026-09-03 | **Legal pages: the org-vetting claim was FALSE and is rewritten**; age floor 12 → **13** (COPPA); banner now honours the sign-off flag; placeholder guard added | II.46 |
+| 2026-09-03 | Legal-pages pre-mortem: 14 risks, T1 (false vetting claim) found by it | II.46 |
+| 2026-09-03 | CI was red 3 runs on `anyio` 4.15.0 vs warnings-as-errors; pinned `anyio==4.14.1` | II.46 |
+| 2026-09-03 | CI's 2nd red: `pip-audit` failed on the runner's own pip (PYSEC-2026-3721); added an `Upgrade pip` step | II.46 |
 | 2026-09-03 | Whole-project pre-mortem: 14 risks, **top finding is a contradiction between two of our own docs** | II.45 |
 | 2026-09-03 | M13.6 SWR 12 → **14 of 22**: `portfolio/[id]` + `opportunities/[id]`, both browser-verified | II.44 |
 | 2026-09-03 | `docs/LEGAL_REVIEW_PACKET.md` written for M11 Phase 1 (RED band; the review itself is still Evan's) | II.44 |
@@ -193,6 +197,13 @@ everything is built up to the blocked step and stops there.
 - **Answer pre-mortem E4**: now that E2 is resolved (birthday ~2026-09-08), does Evan
   want the guardian-consent/breach/support duty of real minors' data, or does the
   project stay a documented artifact? One line settles it.
+- **The legal pages now say ServeLocal does NOT vet organizations** (2026-09-03) —
+  the previous claim that an admin reviewed them was false. Roadmap **M15** builds the
+  review; until it ships, the reviewer and any guardian sees the honest sentence.
+- **`LEGAL_SIGNOFF_COMPLETE` is now TWO flags** — backend (boot guard) and
+  `NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE` (removes the draft banner, build-time inlined).
+  **Set both or neither**; `backend/tests/test_legal_pages_are_publishable.py` fails if
+  either is set while `[… — Evan]` placeholders survive in the pages.
 - **The public mirror is 15 days stale** (`e5a7235`, 2026-08-19) and still ships the
   pre-fix `auth-context.tsx:52` that signs a user out on ANY network failure. One
   `python scripts/sync_portfolio.py` + a gated push retires it. Pre-mortem T1.

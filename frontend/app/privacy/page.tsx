@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { V1Shell } from "@/components/v1/v1-shell";
 import { SupportEmail } from "@/components/support-email";
+import { LEGAL_SIGNOFF_COMPLETE } from "@/lib/flags";
 
 export const metadata = { title: "Privacy Policy — ServeLocal" };
 
@@ -22,15 +23,19 @@ export default function PrivacyPage() {
       <div className="section" style={{ maxWidth: 760 }}>
         <div className="sec-tag">Legal</div>
         <h2 className="sec-title" style={{ marginBottom: 6 }}>Privacy Policy</h2>
-        <p className="sec-sub" style={{ marginBottom: 20 }}>Draft dated: July 16, 2026 &middot; last revised 2026-09-03</p>
+        <p className="sec-sub" style={{ marginBottom: 20 }}>
+          {LEGAL_SIGNOFF_COMPLETE ? "In effect · last revised 2026-09-03" : "Draft dated: July 16, 2026 · last revised 2026-09-03"}
+        </p>
 
-        <div style={draftBanner} role="note">
-          <strong style={{ display: "block", fontSize: ".95rem", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".03em" }}>
-            Draft: pending legal review and sign-off
-          </strong>
-          This document is a working draft. It has <strong>not</strong> been reviewed by counsel and is
-          <strong> not yet in effect</strong>. Draft dated July 16, 2026, last revised 2026-09-03.
-        </div>
+        {!LEGAL_SIGNOFF_COMPLETE && (
+          <div style={draftBanner} role="note">
+            <strong style={{ display: "block", fontSize: ".95rem", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".03em" }}>
+              Draft: pending legal review and sign-off
+            </strong>
+            This document is a working draft. It has <strong>not</strong> been reviewed by counsel and is
+            <strong> not yet in effect</strong>. Draft dated July 16, 2026, last revised 2026-09-03.
+          </div>
+        )}
 
         <div className="legal-body">
           <p>ServeLocal connects students with community-service opportunities and is <strong>free forever for students</strong>. This policy explains what we collect, why, who can see it, and the choices you have. We collect the minimum needed to run the service, we do not use advertising or third-party analytics, and <strong>we never sell your data</strong>.</p>
@@ -42,11 +47,11 @@ export default function PrivacyPage() {
             <li><strong>Activity.</strong> Opportunities you create or apply to, applications, verified volunteer hours, awards, reviews, endorsements, saved opportunities, in-app notifications, and messages you send through the platform.</li>
             <li><strong>Approximate location (optional).</strong> If you enter a ZIP code or choose &ldquo;use my location,&rdquo; we use it to estimate distances to opportunities. Precise device coordinates are rounded in your browser and are <strong>not stored</strong>.</li>
             <li><strong>Aggregate usage counts.</strong> We count how many times each part of the site is used per day &mdash; for example &ldquo;the opportunity page was opened 40 times today.&rdquo; These counts are <strong>totals only</strong>: they record no account, no IP address, no device or session identifier, and no time more precise than the day, so they cannot show what any individual person looked at. We use them to see which features are worth keeping and where the service is breaking. An organization can also see totals for <em>its own</em> listings &mdash; how many times a listing was opened, how many people it approved, and hours it verified &mdash; on the same terms: totals only, with no record of who looked.</li>
-            <li><strong>What we do <em>not</em> collect.</strong> No advertising or tracking identifiers, <strong>no third-party analytics</strong> (the counts above are our own, and no data about your visit is sent to any analytics company), and <strong>no cookies</strong>. Payment card details for organization subscriptions are handled by our payment processor (Stripe) and never touch our servers.</li>
+            <li><strong>What we do <em>not</em> collect.</strong> No advertising or tracking identifiers, <strong>no third-party analytics</strong> (the counts above are our own, and no data about your visit is sent to any analytics company), and <strong>no cookies of our own</strong> &mdash; ServeLocal itself sets none. The bot-check on the sign-up and password-reset forms is run by Cloudflare, whose script may set its own cookie in your browser to remember that the challenge was solved; that is Cloudflare&rsquo;s, not ours, and we do not read it. Payment card details for organization subscriptions are handled by our payment processor (Stripe) and never touch our servers.</li>
           </ul>
 
           <h3>Sign-in mechanism (no cookies)</h3>
-          <p>ServeLocal does <strong>not</strong> use cookies. When you log in, your browser stores a sign-in token in <code>localStorage</code>, which is sent with your requests to keep you logged in; a small number of interface preferences may also be stored there. Nothing in <code>localStorage</code> is used for tracking or advertising. You can clear it any time by logging out or clearing your browser&rsquo;s site data.</p>
+          <p>ServeLocal does <strong>not</strong> use cookies to sign you in or to track you (see the Cloudflare bot-check note above for the one cookie we do not control). When you log in, your browser stores a sign-in token in <code>localStorage</code>, which is sent with your requests to keep you logged in; a small number of interface preferences may also be stored there. Nothing in <code>localStorage</code> is used for tracking or advertising. You can clear it any time by logging out or clearing your browser&rsquo;s site data.</p>
 
           <h3>Why we use it</h3>
           <ul>
@@ -82,7 +87,7 @@ export default function PrivacyPage() {
           <p>We keep your data while your account is active and remove personal data when you delete your account, subject to the anonymized-service-record caveat above. The <strong>security audit log</strong> — the record of logins, consent decisions, password resets and deletions — is kept for <strong>12 months</strong> and then deleted by age; entries are never removed individually, because a log anyone can edit is not a record. Passwords are stored using a strong one-way hash (Argon2), never in plain text, and traffic is encrypted in transit (HTTPS). No system is perfectly secure, but we follow industry practices to protect your information.</p>
 
           <h3>Children&rsquo;s privacy</h3>
-          <p>ServeLocal is used by students who may be minors, and we build for that. Students under <strong>12</strong> are not permitted to register. Students aged 12&ndash;17 may create an account, but a <strong>parent or guardian must verify consent before the student takes any real-world-contact action</strong>: applying, messaging, checking in, submitting or appealing hours, leaving a review, or making a portfolio public. We collect only what&rsquo;s needed for volunteer matching and hour tracking, and we minimize minors&rsquo; names on all public surfaces. If you believe a child under our minimum age has provided information, or a minor is using the service without appropriate guardian consent, contact us at <SupportEmail /> and we will address it.</p>
+          <p>ServeLocal is used by students who may be minors, and we build for that. Students under <strong>13</strong> are not permitted to register. Students aged 13&ndash;17 may create an account, but a <strong>parent or guardian must verify consent before the student takes any real-world-contact action</strong>: applying, messaging, checking in, submitting or appealing hours, leaving a review, or making a portfolio public. We collect only what&rsquo;s needed for volunteer matching and hour tracking, and we minimize minors&rsquo; names on all public surfaces. If you believe a child under our minimum age has provided information, or a minor is using the service without appropriate guardian consent, contact us at <SupportEmail /> and we will address it.</p>
 
           <h3>Your regional rights (CCPA / GDPR)</h3>
           <p>Depending on where you live, you may have rights to <strong>access</strong> the personal data we hold about you, request its <strong>deletion</strong>, and obtain a <strong>portable copy</strong>. ServeLocal supports all three directly: access and portability through the data export, and deletion through account deletion, both in your dashboard&rsquo;s Account section. We do not sell personal information or use it for targeted advertising. To exercise a right you can&rsquo;t complete in-app, or to ask a question, contact us at <SupportEmail />.</p>

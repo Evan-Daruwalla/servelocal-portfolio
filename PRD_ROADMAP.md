@@ -252,6 +252,7 @@ The plan is complete when every box checks. Verify each with the command given.
 | M12 | v1 visual parity | Frontend adopts v1's editorial design system end to end. Added 2026-07-12 (Evan: "make the frontend look like the servelocal v1 frontend"). M12.2–.3 land BEFORE M11.6's soft launch. |
 | M13 | Launch-checklist hardening | CSP/security headers, account deletion + data export (GDPR/CCPA), SEO/share metadata, per-section resilience UX. Added 2026-07-15 from Evan's 33-item checklist review; M13.2–.3 land BEFORE M11.6. *(2026-09-02: M13.1–.5 done; M13.6 SWR REOPENED 2026-08-31 by Evan, 11 of 22 pages — does not gate M11.)* |
 | M14 | Analytics, first-party and cookieless | Aggregate-only site counters + an org-facing tab, no cookies, no IPs, no per-user trail. Added 2026-08-31 (Evan reversed the 2026-07-15 deferral). Interleaves with M11 like M12/M13; neither part gates launch. *(Row added 2026-09-02 — the milestone had a §6 section since 2026-08-31 but no row here.)* |
+| M15 | Organization review before listings publish | An admin gate so a new organization's listings are not public until a human approves them. **Added 2026-09-03**: the Terms claimed this review already existed and it never did (`terms/page.tsx:44`, pre-mortem `docs/premortem_2026-09-03_legal-pages.md` T1). The claim was corrected the same day — the Terms now say plainly that ServeLocal does not vet organizations — so this milestone BUILDS a capability rather than closing a doc bug. Does not gate M11: launching honestly un-vetted is a stated position, launching while claiming otherwise was not. |
 
 Order is deliberate: M2–M3 before consent because consent gating must cover check-in and
 recurring signups (building it first would mean re-touching it every milestone). M4 before M5–M6
@@ -753,6 +754,36 @@ promises exactly that. Browser-verified on the SQLite stack, including the failu
 frontend's lint+build gate cannot see: with the backend stopped the tile reads "—" (not 0),
 the error panel and Retry appear, the table and bars are absent, and the "no requests"
 empty copy is correctly NOT shown; restarting recovers without a reload.
+
+### M15 — Organization review before listings publish (added 2026-09-03, from the legal-pages pre-mortem)
+
+**Why this exists.** `terms/page.tsx:44` told every reader "A ServeLocal administrator
+reviews organizations before their listings go live." Nothing did: `create_opportunity`
+(`app/api/routes/opportunities.py:139`) checks role and the free-plan cap and nothing else,
+`Opportunity.active` defaults `True`, and the public list filters on `active` alone. An org
+registered and its listing was visible in the same minute. **The sentence was rewritten on
+2026-09-03 to say what is true**, which closed the false claim and left the capability
+unbuilt — this milestone is the capability, tracked so it is not quietly dropped.
+
+**Not a launch gate.** Launching with un-vetted organizations, said plainly, is a position
+Evan can take. Launching while telling guardians a review happens was not.
+
+- **M15.1 — schema + gate.** `Opportunity.review_status` (`pending` / `approved` /
+  `rejected`, default `pending`) or an org-level `is_approved` flag; the public list and
+  detail routes must exclude unapproved listings the same way they exclude inactive ones.
+  Decide which level (per-org is fewer decisions for the admin; per-listing catches an
+  approved org posting something unsafe later). Migration, then tests that a brand-new
+  org's listing is invisible to `GET /opportunities` and returns 404 by id.
+- **M15.2 — admin surface.** Approve/reject in the existing `/admin` section, admin-only via
+  `users.is_admin` (the one authorization fact in `security.md §Admin authorization`), with
+  an audit-log event per decision (`audit-log.md` names the wired set).
+- **M15.3 — the honest copy change.** Only after .1 and .2 ship: restore a vetting sentence
+  to the Terms describing what the gate actually does. **Do not restore it earlier** — that
+  is the exact failure this milestone came from.
+- **Operational cost, stated before it is chosen:** every new organization then waits on one
+  person, and that person is in school. A gate nobody clears is worse for orgs than no gate,
+  and the 2026-09-01 pre-mortem already found every BLOCKED-ON-EVAN item routes to Evan
+  alone. Decide the queue-response commitment as part of M15.1, not after launch.
 
 ## 7. HANDOFF NOTES
 
