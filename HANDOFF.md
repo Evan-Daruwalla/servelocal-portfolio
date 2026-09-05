@@ -14,13 +14,13 @@ The work is driven by `PRD_ROADMAP.md` (a standing M1–M14 plan). Read that fir
 **Decided by Evan 2026-07-08: the finish line is a real public launch (new M11), not just
 launch-readiness.** M5 guardian consent remains the hard gate before any public exposure.
 
-**Last updated: 2026-09-03 (23:40 CDT).**
+**Last updated: 2026-09-05 (18:04 CDT).**
 
 ## Current state (2026-09-03)
 
 **Done:** M1–M10, M12, M13.1–.5, **M14 complete** (site + org analytics), v1 EXACT-COPY,
-public-portfolio slice, and four cold audits. **383 backend tests** green on SQLite *and*
-on real Postgres (`TEST_DATABASE_URL`); migrations **0001–0026**; 17 route modules; 29
+public-portfolio slice, and four cold audits. **394 backend tests** green on SQLite (+1 Postgres-only capacity-race test =
+**395 on real Postgres**, `TEST_DATABASE_URL`); migrations **0001–0026**; 17 route modules; 29
 frontend pages; 16 codebase-memory files.
 
 **In flight:** **M13.6 SWR — 14 of 22 pages** converted (`portfolio/[id]` and
@@ -63,6 +63,11 @@ one; nothing was lost.
 
 | date | what changed | record |
 |---|---|---|
+| 2026-09-05 | NT1/NT2 verified by mutation + sentinel build; bins updated with the 4th public surface, the capacity lock, the SQLite no-op | II.48 |
+| 2026-09-05 | **Reviews leaked a revoked minor's name** — the 3rd public surface had no live consent re-check | II.47 |
+| 2026-09-05 | Capacity oversell: 4 spots-mutating fetches now row-locked. **The lock is a NO-OP on SQLite** — race test is Postgres-gated | II.47 |
+| 2026-09-05 | 3 check-then-act throttles → one atomic `core/throttle.py`; old shape let **50 of 50 pass a cap of 10** | II.47 |
+| 2026-09-05 | Leaderboard said "Vetted Orgs" while Terms said the opposite (the 2026-09-03 fix missed it) | II.47 |
 | 2026-09-03 | **Legal pages: the org-vetting claim was FALSE and is rewritten**; age floor 12 → **13** (COPPA); banner now honours the sign-off flag; placeholder guard added | II.46 |
 | 2026-09-03 | Legal-pages pre-mortem: 14 risks, T1 (false vetting claim) found by it | II.46 |
 | 2026-09-03 | CI was red 3 runs on `anyio` 4.15.0 vs warnings-as-errors; pinned `anyio==4.14.1` | II.46 |
@@ -183,7 +188,8 @@ everything is built up to the blocked step and stops there.
 
 - **Legal review (M11 Phase 1) — the hard gate.** `[GOVERNING STATE]` and
   `[LEGAL ENTITY NAME]` are unfilled in the Terms/Privacy DRAFTS (both on
-  `terms/page.tsx:86`), then an adult/guardian + legal sign-off. The entity question is
+  `terms/page.tsx:91` — moved from `:86` by the 2026-09-05 flag-gating edit;
+  line, not substance, changed), then an adult/guardian + legal sign-off. The entity question is
   real: operating as a person versus forming one has liability consequences at 17 on a
   platform holding minors' data. **The reviewer must also see** the concrete 12-month
   audit-retention promise (2026-08-13) and the **new sentence added 2026-09-03** saying an
@@ -203,7 +209,14 @@ everything is built up to the blocked step and stops there.
 - **`LEGAL_SIGNOFF_COMPLETE` is now TWO flags** — backend (boot guard) and
   `NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE` (removes the draft banner, build-time inlined).
   **Set both or neither**; `backend/tests/test_legal_pages_are_publishable.py` fails if
-  either is set while `[… — Evan]` placeholders survive in the pages.
+  either is set while `[… — Evan]` placeholders survive in the pages. **NT1 fixed
+  2026-09-05**: a forced `LEGAL_SIGNOFF_COMPLETE=true` CI step was the obvious fix and
+  the wrong one — tested locally first, it failed CI permanently since the real
+  placeholders are still open. Instead `_assert_none_survive_if_signed_off` is now
+  exercised every run against a planted fake placeholder, decoupled from today's real
+  content — no CI workflow change needed. Pre-mortem re-run 2026-09-05
+  (`docs/premortem_2026-09-05_legal-pages.md`) also **closed T3 for real** — raising `MINIMUM_AGE` to 13 means no
+  registrant is a COPPA "child" at all, not just a reworded floor.
 - **The public mirror is 15 days stale** (`e5a7235`, 2026-08-19) and still ships the
   pre-fix `auth-context.tsx:52` that signs a user out on ANY network failure. One
   `python scripts/sync_portfolio.py` + a gated push retires it. Pre-mortem T1.
@@ -214,7 +227,7 @@ everything is built up to the blocked step and stops there.
 **Values and accounts**
 
 - Railway account, Postgres provisioning, domain purchase + DNS, and the production secret
-  VALUES — runbook: `docs/DEPLOY_RAILWAY.md`. **Seven boot blockers** must be set or
+  VALUES — runbook: `docs/DEPLOY_RAILWAY.md`. The boot guard's **9 checks over 8 variables** must be satisfied or
   production refuses to start, including `APP_BASE_URL` and `TRUSTED_PROXY_HOPS`.
 - **`TRUSTED_PROXY_HOPS=1` on Railway.** Not a secret. At the default `0` behind a proxy
   the whole user base shares one rate-limit bucket and the per-client limit does nothing.
@@ -264,7 +277,7 @@ READ IN THIS ORDER, as claims to verify rather than as truth:
 
 WHERE THINGS STAND. M1–M10, M12, M13.1–.5 and M14 are done. M13.6 (SWR) is at 14 of 22
 pages and is the default next task. M11 public launch is the frontier and is almost
-entirely blocked on Evan — Phase 1 (legal) is the critical path. 378 backend tests green
+entirely blocked on Evan — Phase 1 (legal) is the critical path. 394 backend tests green
 on SQLite and real Postgres; migrations 0001–0026.
 
 HARD CONSTRAINTS

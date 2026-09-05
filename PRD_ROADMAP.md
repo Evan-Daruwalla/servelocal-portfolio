@@ -55,7 +55,9 @@ Phase 3 partly built (Sentry wired, OFF without a DSN; uptime monitor and the re
 open); Phases 1–2 BLOCKED-ON-EVAN and unchanged. A both-domains audit on 2026-09-02 (27 findings,
 fixed, `71c8fbd` + `7e2ad20`) found no scope change — it found the project's checks verify SHAPE,
 not TRUTH (record entry of that date). 364 backend tests green on SQLite AND real Postgres;
-migrations 0001–0026; boot blockers now SEVEN. Docker is back on the dev box. Everything pushed.
+migrations 0001–0026; boot guard now **9 checks over 8 variables** (was written as SEVEN
+three times running — corrected 2026-09-05; `.claude/codebase-memory/INDEX.md` had it right).
+Docker is back on the dev box. Everything pushed.
 Frontier unchanged: M11 Phase 1 (legal) is the critical path; model-doable next = M13.6 page by page
 (11 of 22 converted).**
 
@@ -486,7 +488,13 @@ must do. Nothing in this milestone is guessed, faked, or worked around.
    (corrected 2026-08-05 by Evan: the floor is 12, not 13.** The 2026-08-05 audit found this
    line was the only place claiming 13 — `app/core/consent.py` has always shipped
    `MINIMUM_AGE = 12` and both legal drafts say 12, so the PRD was the outlier, not the code.
-   Nothing was changed in the code or the drafts.**)** (the register flow must enforce
+   Nothing was changed in the code or the drafts.**)** *(Follow-up 2026-09-03: the floor
+   moved again, 12 → **13**, and this whole paragraph is now historical. COPPA's protected
+   class is everyone UNDER 13, so a 12-year-old registrant sat inside it. `MINIMUM_AGE = 13`
+   in `app/core/consent.py`; `terms/page.tsx` says "at least 13 years old"; `privacy/page.tsx`
+   says under-13s may not register. A legal reviewer reading this section for the M11 Phase-1
+   gate should take **13** as current — the text above records what was true on 2026-08-05,
+   not today. Evidence: `docs/premortem_2026-09-03_legal-pages.md` T3.)* (the register flow must enforce
    the minimum age the policy states). Mark the drafts DRAFT — final review/signoff is
    BLOCKED-ON-EVAN (and a guardian/adult — Evan is a minor operating a service for minors; that
    review is not optional). Done: pages render, linked, drafts flagged for review in HANDOFF.
@@ -558,7 +566,7 @@ clock belongs to other humans. Start it first; Phases 2–3 run in parallel behi
   reopen endpoint [MODEL can draft].
 - **Phase 2 — infrastructure [EVAN drives; runbook = DEPLOY_RAILWAY.md]:** domain →
   Railway + Postgres → Turnstile keys → Resend key + domain verification (needs
-  DNS) → set all **SEVEN** boot blockers incl. `APP_BASE_URL` (four docs called it
+  DNS) → satisfy the boot guard's **9 checks over 8 variables** incl. `APP_BASE_URL` (four docs called it
   optional until 2026-08-19) and `TRUSTED_PROXY_HOPS`, which became the seventh blocker 2026-09-01 → ONE replica, monthly
   `purge_audit_log` cron → deploy, DNS/TLS, `/api/v1/health` green.
 - **Phase 3 — monitoring + data safety [MODEL builds after the Phase-0 pick]:**

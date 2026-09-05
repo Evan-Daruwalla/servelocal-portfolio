@@ -38,6 +38,20 @@ types in `lib/types.ts` → calls in `lib/api.ts` → **fetch through `lib/use-a
   whether a student acting there reaches a real organization, a public surface, or their hours —
   do NOT add the route to the allowlist to go green.
 
+## Capacity: never `db.get(Opportunity, ...)` on a path that moves spots (2026-09-05)
+
+- Use **`enrollment.get_opportunity_for_update(db, id)`**. `spots_remaining` is a
+  read-modify-write, and six sites did it unlocked: two concurrent applies to a
+  one-spot listing both read `> 0`, both wrote `0`, both committed an approved
+  application — two students holding one physical seat, with a counter that looks
+  plausible afterwards so nothing alerts.
+- Four fetch sites are locked (apply, withdraw, org decide, guardian revoke) and
+  `tests/test_capacity_locking.py` pins that count at 4, so a fifth spots-touching
+  path cannot quietly skip it. `promote_from_waitlist` is NOT one of them — it
+  receives an already-loaded `opp`, so its caller owns the lock.
+- **`FOR UPDATE` is a no-op on SQLite**, so the race is still reproducible in the
+  default suite; see `testing.md`.
+
 ## Data fetching: `useAuthedQuery` / `usePublicQuery` (2026-08-31, M13.6)
 - **Never hand-roll `useEffect` + `useState(loading)` + `useState(error)` again.** Use
   `useAuthedQuery(key, fetcher)` for token-bearing endpoints and `usePublicQuery(key, fetcher)` for
@@ -114,21 +128,15 @@ types in `lib/types.ts` → calls in `lib/api.ts` → **fetch through `lib/use-a
   test trap that made the first reproduction attempt falsely pass** — it matters
   more than this entry, because it is why the fix was briefly weakened.
 - Any future client-side cache (React Query, a service worker, `sessionStorage`)
-  inherits this rule: identity change ⇒ drop everything.
-
-*(Moved verbatim from `security.md` 2026-09-03: it is a frontend data-fetching rule, not a codebase-security one, and it belongs beside the cache-key convention above.)*
+  inherits this rule: identity change ⇒ drop everything. (Moved verbatim from
+  `security.md` 2026-09-03 — a frontend rule, not a codebase-security one.)
 
 ## Hard rules
-- Response schemas strip secrets (see `security.md`). Students free forever — no plan gate on a
-  student feature.
-- Editorial visual language: solid color fills, tight border radii, calm/minimal motion; no
-  gradient-heavy heroes, no glassmorphism, no bounce. When in doubt, plainer is better.
-- Surgical changes only — every changed line traces to the current task; match existing style.
-- **Definition of done:** backend `pytest` green (+ new migration up/down/up) AND frontend
-  `npm run lint` + `npm run build` clean AND browser-verify UI AND a record entry AND HANDOFF
-  workstream row updated if a milestone's status changed.
-- Commit after each completed green task (the PRD authorizes it). **NEVER push without Evan.**
-- BLOCKED-ON-EVAN (keys/accounts/purchases/legal) is reported, never worked around or faked.
+**Definition of done, commit/push, and BLOCKED-ON-EVAN live in `CLAUDE.md` (always loaded) —
+not restated here, so there is one copy to keep current.** Convention-specific only: response
+schemas strip secrets (`security.md`); students free forever, no plan gate on a student
+feature; editorial visual language is solid fills/tight radii/calm motion, plainer over
+generic-AI-looking.
 
 ## Verification reality → `testing.md`; status codes → `data.md`
 Browser/CDP verification reality (Docker available, CDP screenshot times out,

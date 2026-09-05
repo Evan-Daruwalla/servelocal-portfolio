@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { V1Shell } from "@/components/v1/v1-shell";
 import { SupportEmail } from "@/components/support-email";
-import { LEGAL_SIGNOFF_COMPLETE } from "@/lib/flags";
+import { LEGAL_LAST_REVISED, LEGAL_SIGNOFF_COMPLETE } from "@/lib/flags";
 
 export const metadata = { title: "Privacy Policy — ServeLocal" };
 
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         <div className="sec-tag">Legal</div>
         <h2 className="sec-title" style={{ marginBottom: 6 }}>Privacy Policy</h2>
         <p className="sec-sub" style={{ marginBottom: 20 }}>
-          {LEGAL_SIGNOFF_COMPLETE ? "In effect · last revised 2026-09-03" : "Draft dated: July 16, 2026 · last revised 2026-09-03"}
+          {LEGAL_SIGNOFF_COMPLETE ? `In effect · last revised ${LEGAL_LAST_REVISED}` : `Draft dated: July 16, 2026 · last revised ${LEGAL_LAST_REVISED}`}
         </p>
 
         {!LEGAL_SIGNOFF_COMPLETE && (
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
               Draft: pending legal review and sign-off
             </strong>
             This document is a working draft. It has <strong>not</strong> been reviewed by counsel and is
-            <strong> not yet in effect</strong>. Draft dated July 16, 2026, last revised 2026-09-03.
+            <strong> not yet in effect</strong>. Draft dated July 16, 2026, last revised {LEGAL_LAST_REVISED}.
           </div>
         )}
 

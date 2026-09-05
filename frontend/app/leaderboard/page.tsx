@@ -57,7 +57,7 @@ export default function LeaderboardPage() {
             <div className="lb-band">
               <div className="lb-stat"><div className="lb-stat-num">{community.totalHours.toLocaleString()}</div><div className="lb-stat-label">Verified Hours</div></div>
               <div className="lb-stat"><div className="lb-stat-num">{community.students.toLocaleString()}</div><div className="lb-stat-label">Students</div></div>
-              <div className="lb-stat"><div className="lb-stat-num">{community.orgs}</div><div className="lb-stat-label">Vetted Orgs</div></div>
+              <div className="lb-stat"><div className="lb-stat-num">{community.orgs}</div><div className="lb-stat-label">Organizations</div></div>
               <div className="lb-stat"><div className="lb-stat-num">{community.events.toLocaleString()}</div><div className="lb-stat-label">Service Entries</div></div>
             </div>
 

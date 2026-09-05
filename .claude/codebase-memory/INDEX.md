@@ -14,7 +14,7 @@ website`, zero-dependency Node) is a DIFFERENT stack — its facts never apply h
 Core bins (last-updated):
 - `architecture.md` — layout, **two visual systems (`.v1` scoped + shadcn)**, backend/frontend structure, **`proxy.ts` + force-dynamic**, message/template shapes, deploy shape. (deps→dependencies.md, migrations→data.md)
 - `features.md` — milestone status (**M1–M10, M12, M13.1–.5, v1-copy, public-portfolio done; M13.6 SWR reopened 14/22 pages; M14 analytics COMPLETE (M14.1 site + M14.2 org); M11 launch BLOCKED-ON-EVAN**) + feature semantics.
-- `conventions.md` — feature-slice pattern, **role guards (`require_student`/`require_org`, decorator-vs-signature on consent-gated routes)**, **data fetching via `useAuthedQuery`/`usePublicQuery`**, **`lib/status.ts`**, hard rules. (visual/UI-polish→ui.md, verification→testing.md, status codes→data.md)
+- `conventions.md` — feature-slice pattern, **role guards (`require_student`/`require_org`, decorator-vs-signature on consent-gated routes)**, **data fetching via `useAuthedQuery`/`usePublicQuery`**, **capacity paths MUST use `enrollment.get_opportunity_for_update`**, **`lib/status.ts`**, hard rules. (visual/UI-polish→ui.md, verification→testing.md, status codes→data.md)
 - `gotchas.md` — **anim-clock freeze in hidden pane**, **plain `<a>` = full page load (invalidates in-tab tests)**, **heredocs eating `\b` into control bytes**, `git checkout` unsafe on a dirty tree, route order, include_router, SQLite tz loss, raw-body webhook, middleware order, .next clobber.
 - `performance.md` — test/dev DB split, single-process throttles, broadcast fan-out, occurrence recompute.
 

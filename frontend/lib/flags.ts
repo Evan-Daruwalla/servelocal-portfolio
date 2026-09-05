@@ -19,3 +19,11 @@ export const BILLING_LIVE = process.env.NEXT_PUBLIC_BILLING_LIVE === "true";
 // (audit finding F1, pre-mortem T2). Set BOTH at launch, or neither.
 export const LEGAL_SIGNOFF_COMPLETE =
   process.env.NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE === "true";
+
+// Single source for the Terms/Privacy "last revised" date. Was hardcoded
+// separately in 4 places (2 pages x 2 banner branches each) — every one had to
+// be bumped together on a content edit and nothing enforced that, so the "date
+// tracks material changes" promise both pages make (their own Changes section)
+// could go stale in up to 3 of the 4 spots silently (pre-mortem 2026-09-05, NT2).
+// Bump this ONE constant, not the pages, on any content edit to either page.
+export const LEGAL_LAST_REVISED = "2026-09-03";

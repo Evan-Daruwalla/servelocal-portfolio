@@ -124,6 +124,7 @@ files — that tier is retired (Evan's decision, 2026-07-08).
 - [II.44 — two pages that showed the wrong screen on failure, and a legal packet whose value is that it concludes nothing (2026-09-03, ~20:33 CDT)](#ii44--two-pages-that-showed-the-wrong-screen-on-failure-and-a-legal-packet-whose-value-is-that-it-concludes-nothing-2026-09-03-2033-cdt)
 - [II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)](#ii45--a-pre-mortem-on-the-whole-project-whose-top-risk-is-that-two-of-our-own-documents-disagree-2026-09-03-2214-cdt)
 - [II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)](#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt)
+- [II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)](#ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt)
 
 - [Current state snapshot](#current-state-snapshot) · [Summary timeline](#summary-timeline) · [What's not in this record](#whats-not-in-this-record-honest-gaps)
 
@@ -2769,3 +2770,44 @@ before appending: 45 top-level `## II.N` headings, 45 TOC lines (three
 `II.35.N` sub-headings inside one entry accounted for, not orphaned). No
 commit made this session; commit hash not yet available — cite as "this
 entry" per this table's own convention for uncommitted rows.
+
+## II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)
+
+servelocal-v2 ran `/pre-mortem on the legal docs` — the re-run
+`docs/premortem_2026-09-03_legal-pages.md`'s own Follow-up section asked for,
+after Evan's `8bfbe56` acted on its T1-T5. Output:
+`servelocal-v2/docs/premortem_2026-09-05_legal-pages.md`. Read cold against
+the current tree, not the prior document: the age floor, the flag-gated JSX,
+the CI workflow's env vars, the M15 roadmap entry and the placeholder set were
+each re-checked, not recalled.
+
+**Two of the four prior launch-blocking Tigers are genuinely closed, not
+reworded.** T3 (COPPA): raising `MINIMUM_AGE` 12->13 means no honestly-
+registered user is a COPPA "child" (under 13) at all, so the verifiable-
+parental-consent question T3 raised no longer attaches to anyone the site
+admits -- checked against the 2026-09-03 research brief's own FTC FAQ A.12
+finding, not asserted. T1 (the false organization-vetting claim): closed, and
+checked for leakage -- grepped the rest of the frontend for the same claim,
+found none.
+
+**The new finding is about the safety net, not the pages.** `test_
+signed_off_pages_have_no_placeholders_left` exists specifically to stop
+`LEGAL_SIGNOFF_COMPLETE=true` from shipping with a bracket still in the
+governing-law clause. `.github/workflows/ci.yml` never sets that variable in
+either pytest step, so every CI run to date has hit the test's early-return,
+never its assertion -- the only thing that has ever verified "flag true, no
+placeholders" is one manual local run. A green pipeline and a working safety
+net are not the same fact. Classified launch-blocking, one CI step to fix.
+
+**The Elephant did not move.** No adult reviewer has been named; both
+`[GOVERNING STATE -- Evan]` and `[LEGAL ENTITY NAME -- Evan]` are exactly where
+they were on 2026-09-03. Two rounds of real, careful fixes have now landed
+around that gap without closing it -- restated as this project's E3/E1,
+escalated again.
+
+**VERIFY.** `ENVIRONMENT=ci pytest -q --collect-only`: 394 tests collected
+(higher than HANDOFF's stated 388 -- an unrelated, uncommitted capacity-
+locking feature sits in the same working tree; not a legal-pages finding).
+`gh run list`: the push containing `8bfbe56` is CI-green after four prior
+reds. No code changed this session -- the register ends in an action plan
+for Evan, matching the 2026-09-03 pre-mortem's own shape.

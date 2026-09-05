@@ -159,7 +159,8 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii43--both-cap-decisions-closed-one-section-compressed-one-cap-raised-for-every-project-2026-09-03-2022-cdt">II.43 — both cap decisions closed: one section compressed, one cap raised for every project (2026-09-03, ~20:22 CDT)</a><br />
 - <a href="#ii44--two-pages-that-showed-the-wrong-screen-on-failure-and-a-legal-packet-whose-value-is-that-it-concludes-nothing-2026-09-03-2033-cdt">II.44 — two pages that showed the wrong screen on failure, and a legal packet whose value is that it concludes nothing (2026-09-03, ~20:33 CDT)</a><br />
 - <a href="#ii45--a-pre-mortem-on-the-whole-project-whose-top-risk-is-that-two-of-our-own-documents-disagree-2026-09-03-2214-cdt">II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)</a><br />
-- <a href="#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt">II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)</a></p>
+- <a href="#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt">II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)</a><br />
+- <a href="#ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt">II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -2831,6 +2832,41 @@ before appending: 45 top-level <code>## II.N</code> headings, 45 TOC lines (thre
 <code>II.35.N</code> sub-headings inside one entry accounted for, not orphaned). No<br />
 commit made this session; commit hash not yet available — cite as "this<br />
 entry" per this table's own convention for uncommitted rows.</p>
+<h2 id="ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt">II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)</h2>
+<p>servelocal-v2 ran <code>/pre-mortem on the legal docs</code> — the re-run<br />
+<code>docs/premortem_2026-09-03_legal-pages.md</code>'s own Follow-up section asked for,<br />
+after Evan's <code>8bfbe56</code> acted on its T1-T5. Output:<br />
+<code>servelocal-v2/docs/premortem_2026-09-05_legal-pages.md</code>. Read cold against<br />
+the current tree, not the prior document: the age floor, the flag-gated JSX,<br />
+the CI workflow's env vars, the M15 roadmap entry and the placeholder set were<br />
+each re-checked, not recalled.</p>
+<p><strong>Two of the four prior launch-blocking Tigers are genuinely closed, not<br />
+reworded.</strong> T3 (COPPA): raising <code>MINIMUM_AGE</code> 12-&gt;13 means no honestly-<br />
+registered user is a COPPA "child" (under 13) at all, so the verifiable-<br />
+parental-consent question T3 raised no longer attaches to anyone the site<br />
+admits -- checked against the 2026-09-03 research brief's own FTC FAQ A.12<br />
+finding, not asserted. T1 (the false organization-vetting claim): closed, and<br />
+checked for leakage -- grepped the rest of the frontend for the same claim,<br />
+found none.</p>
+<p><strong>The new finding is about the safety net, not the pages.</strong> <code>test_
+signed_off_pages_have_no_placeholders_left</code> exists specifically to stop<br />
+<code>LEGAL_SIGNOFF_COMPLETE=true</code> from shipping with a bracket still in the<br />
+governing-law clause. <code>.github/workflows/ci.yml</code> never sets that variable in<br />
+either pytest step, so every CI run to date has hit the test's early-return,<br />
+never its assertion -- the only thing that has ever verified "flag true, no<br />
+placeholders" is one manual local run. A green pipeline and a working safety<br />
+net are not the same fact. Classified launch-blocking, one CI step to fix.</p>
+<p><strong>The Elephant did not move.</strong> No adult reviewer has been named; both<br />
+<code>[GOVERNING STATE -- Evan]</code> and <code>[LEGAL ENTITY NAME -- Evan]</code> are exactly where<br />
+they were on 2026-09-03. Two rounds of real, careful fixes have now landed<br />
+around that gap without closing it -- restated as this project's E3/E1,<br />
+escalated again.</p>
+<p><strong>VERIFY.</strong> <code>ENVIRONMENT=ci pytest -q --collect-only</code>: 394 tests collected<br />
+(higher than HANDOFF's stated 388 -- an unrelated, uncommitted capacity-<br />
+locking feature sits in the same working tree; not a legal-pages finding).<br />
+<code>gh run list</code>: the push containing <code>8bfbe56</code> is CI-green after four prior<br />
+reds. No code changed this session -- the register ends in an action plan<br />
+for Evan, matching the 2026-09-03 pre-mortem's own shape.</p>
 </div>
 </body>
 </html>
