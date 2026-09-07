@@ -2,9 +2,6 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY } from "@/lib/auth-context";
 import type { Message } from "@/lib/types";
@@ -59,39 +56,59 @@ export function MessagesSection({ opportunityId }: { opportunityId: string }) {
 
   if (loadError && !visible) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-between gap-3 py-4">
-          <p className="text-sm text-muted-foreground">Couldn&apos;t load messages.</p>
-          <Button type="button" size="sm" variant="outline" onClick={load}>
+      <div className="modal-card">
+        <div
+          className="mbody"
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}
+        >
+          <p className="progress-label" style={{ marginTop: 0 }}>Couldn&apos;t load messages.</p>
+          <button
+            className="btn-s"
+            type="button"
+            onClick={load}
+            style={{ padding: "9px 18px", fontSize: ".83rem" }}
+          >
             Retry
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
     );
   }
   if (!visible) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Messages</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
+    <div className="modal-card">
+      <div className="mbody" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 className="mtitle" style={{ marginBottom: 0 }}>Messages</h2>
         {messages && messages.length === 0 && (
-          <p className="text-sm text-muted-foreground">No messages yet. Start the conversation.</p>
+          <p className="progress-label" style={{ marginTop: 0 }}>No messages yet. Start the conversation.</p>
         )}
         {messages?.map((m) => (
-          <div key={m.id} className="text-sm">
-            <span className="font-medium">{m.sender_name}:</span> <span>{m.body}</span>
+          <div key={m.id} style={{ fontSize: ".84rem", color: "var(--text)" }}>
+            <span style={{ fontWeight: 600 }}>{m.sender_name}:</span> <span>{m.body}</span>
           </div>
         ))}
-        <form onSubmit={onSubmit} className="flex gap-2 border-t pt-3">
-          <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write a message…" />
-          <Button type="submit" size="sm" disabled={submitting || !body.trim()}>
+        <form
+          onSubmit={onSubmit}
+          style={{ display: "flex", gap: 8, borderTop: "1px solid var(--border)", paddingTop: 14 }}
+        >
+          <input
+            className="fsel"
+            style={{ flex: 1, cursor: "text" }}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Write a message…"
+          />
+          <button
+            className="btn-p"
+            type="submit"
+            disabled={submitting || !body.trim()}
+            style={{ padding: "9px 18px", fontSize: ".83rem" }}
+          >
             Send
-          </Button>
+          </button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

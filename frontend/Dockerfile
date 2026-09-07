@@ -25,6 +25,18 @@ ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 # address exists, and never guessed; the pages render a visible placeholder.
 ARG NEXT_PUBLIC_SUPPORT_EMAIL=
 ENV NEXT_PUBLIC_SUPPORT_EMAIL=$NEXT_PUBLIC_SUPPORT_EMAIL
+# The two lib/flags.ts flags (added 2026-09-07). Docker forwards a build arg ONLY
+# for a declared ARG, and Next inlines NEXT_PUBLIC_* at build time — so while
+# these were undeclared, setting them in Railway and rebuilding (what
+# docs/DEPLOY_RAILWAY.md Step 6 instructs) baked in `undefined`, the `=== "true"`
+# comparison in flags.ts went false, and the "pending legal review / not yet in
+# effect" banner stayed on /terms and /privacy with NO error anywhere. The launch
+# step whose whole point is clearing that banner could not clear it.
+# Both default to empty = flag OFF, which is the safe state for each.
+ARG NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE=
+ENV NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE=$NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE
+ARG NEXT_PUBLIC_BILLING_LIVE=
+ENV NEXT_PUBLIC_BILLING_LIVE=$NEXT_PUBLIC_BILLING_LIVE
 RUN npm run build
 
 FROM node:20-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0 AS runner

@@ -26,4 +26,4 @@ export const LEGAL_SIGNOFF_COMPLETE =
 // tracks material changes" promise both pages make (their own Changes section)
 // could go stale in up to 3 of the 4 spots silently (pre-mortem 2026-09-05, NT2).
 // Bump this ONE constant, not the pages, on any content edit to either page.
-export const LEGAL_LAST_REVISED = "2026-09-05";
+export const LEGAL_LAST_REVISED = "2026-09-07";

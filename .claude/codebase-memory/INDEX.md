@@ -13,10 +13,10 @@ website`, zero-dependency Node) is a DIFFERENT stack — its facts never apply h
 
 Core bins (last-updated):
 - `architecture.md` — layout, **two visual systems (`.v1` scoped + shadcn)**, backend/frontend structure, **`proxy.ts` + force-dynamic**, message/template shapes, deploy shape. (deps→dependencies.md, migrations→data.md)
-- `features.md` — milestone status (**M1–M10, M12, M13.1–.5, v1-copy, public-portfolio done; M13.6 SWR reopened 14/22 pages; M14 analytics COMPLETE (M14.1 site + M14.2 org); M11 launch BLOCKED-ON-EVAN**) + feature semantics.
-- `conventions.md` — feature-slice pattern, **role guards (`require_student`/`require_org`, decorator-vs-signature on consent-gated routes)**, **data fetching via `useAuthedQuery`/`usePublicQuery`**, **capacity paths MUST use `enrollment.get_opportunity_for_update`**, **`lib/status.ts`**, hard rules. (visual/UI-polish→ui.md, verification→testing.md, status codes→data.md)
-- `gotchas.md` — **anim-clock freeze in hidden pane**, **plain `<a>` = full page load (invalidates in-tab tests)**, **heredocs eating `\b` into control bytes**, `git checkout` unsafe on a dirty tree, route order, include_router, SQLite tz loss, raw-body webhook, middleware order, .next clobber.
-- `performance.md` — test/dev DB split, single-process throttles, broadcast fan-out, occurrence recompute.
+- `features.md` — milestone status (**M1–M10, M12, M13.1–.5, v1-copy, public-portfolio done; M13.6 SWR reopened 16/22 pages; M14 analytics COMPLETE (M14.1 site + M14.2 org); M11 launch BLOCKED-ON-EVAN**) + feature semantics.
+- `conventions.md` — feature-slice pattern, **role guards (`require_student`/`require_org`, decorator-vs-signature on consent-gated routes)**, **data fetching via `useAuthedQuery`/`usePublicQuery`, and a WRITE in a loader never goes inside a fetcher**, **NO blocking I/O in an `async` middleware/route (threadpool 40, DB pool 15, `pool_timeout` 30s)**, **capacity paths MUST use `enrollment.get_opportunity_for_update`**, **`lib/status.ts`**, hard rules. (visual/UI-polish→ui.md, verification→testing.md, status codes→data.md)
+- `gotchas.md` — **a `NEXT_PUBLIC_*` var needs 3 edits and fails SILENTLY if you miss the Dockerfile `ARG`**, **anim-clock freeze in hidden pane**, **plain `<a>` = full page load (invalidates in-tab tests)**, **heredocs eating `\b` into control bytes**, `git checkout` unsafe on a dirty tree, route order, include_router, SQLite tz loss, raw-body webhook, middleware order, .next clobber.
+- `performance.md` — test/dev DB split, **NO per-process limit state left; the ONE-replica constraint is LIFTED (0027 + 0028)**, limiter/throttle cost, **the autouse session-redirect fixture (a 68s→381s trap)**, broadcast fan-out, occurrence recompute.
 
 Standards bins (the codebase's committed choices, one home each):
 *(Per-bin dates were removed 2026-08-19: they disagreed with 5 of 11 bins' own
@@ -34,5 +34,7 @@ reasoning lives in the bin named after it; this list is the rule, not the argume
 - **Error reports must not carry user data** (`scrub_event`). → security
 - **Site analytics are aggregate-only** — no user, IP, session or user-agent column. → architecture
 - **The audit log is append-only**, deleted only by AGE, never a particular row. → audit-log
+- **Account erasure empties FREE TEXT, not just names** — a retained row's prose is PII. → consent
+- **Nothing leaves this project by pattern-match** — publication is an explicit per-file list. → disclosure
 
 > *Public mirror: this index is filtered. `DIRECTORY.md`, `audit-log.md`, `consent.md`, `data.md`, `dependencies.md`, `disclosure.md`, `security.md`, `testing.md`, `tooling.md`, `ui.md` are not published — the security bin deliberately so, the rest simply out of scope for the mirror. The private repo carries all of them. Prose CROSS-REFERENCES to those files still appear throughout the bins below: the published bins are byte-identical copies, not rewrites, and silently editing their text to hide the gap would make the public copy disagree with the private one — a worse failure than a dead pointer.*

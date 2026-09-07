@@ -14,8 +14,8 @@ Last updated 2026-09-03.
   routed every reader here for milestone status — so a session following INDEX's own
   instruction found no mention of the two most launch-relevant milestones (audit
   2026-09-02). Current: **M13.1–.5 done**; **M13.6 REOPENED** — Evan reversed the
-  skip 2026-08-31 and adopted SWR, now **14 of 22 pages** converted (`lib/use-api.ts`,
-  `useAuthedQuery`/`usePublicQuery`); **M14.1 site analytics DONE** (`route_hits`,
+  skip 2026-08-31 and adopted SWR, now **16 of 22 pages** converted (`lib/use-api.ts`,
+  `useAuthedQuery`/`usePublicQuery`; `dashboard` 2026-09-05, `applicants` 2026-09-06); **M14.1 site analytics DONE** (`route_hits`,
   migration 0025, admin-only `GET /analytics/traffic`, and the `/admin` "Site
   traffic" section that reads it — 2026-09-02; it had no frontend consumer at all
   until then); **M14.2 org analytics DONE 2026-09-03** — `GET /analytics/org` scoped
@@ -23,8 +23,8 @@ Last updated 2026-09-03.
   `Opportunity.views` that skips the owning org, and `returning_volunteers` as a
   COUNT (never names). Fill rate is shown only for one-time listings: the backend
   maintains `spots_remaining` for those alone, so a whole-listing percentage on a
-  recurring listing would be fabricated. **364 pytest
-  green; migrations 0001–0026.** HANDOFF.md remains the live snapshot; this line
+  recurring listing would be fabricated. **409 pytest
+  green; migrations 0001–0028.** HANDOFF.md remains the live snapshot; this line
   exists so INDEX's routing is not a dead end.
 - **Public portfolio (2026-07-13):** `GET /portfolio/{id}` — public verified-service transcript
   (name, verified hours, hours-by-org, awards) for opted-in students only; opt-in via
@@ -37,10 +37,13 @@ Last updated 2026-09-03.
 - **`GET /opportunities/mine` (2026-07-13):** org-only; returns the org's OWN listings INCLUDING
   inactive/expired (the public list filters `active`). Declared BEFORE `/{opportunity_id}` so "mine"
   isn't captured as an id. Powers the org dashboard's My Listings + Listing History.
-- Hardening (M9): (M9.1) `RateLimitMiddleware` (`app/core/rate_limit.py`) — in-memory sliding-60s
-  window per (IP, bucket): `/auth/*` 30/min + other writes 120/min; reads free; 429 + Retry-After;
-  config `RATE_LIMIT_*`; added before CORS; `reset()` called per test in conftest; SINGLE-PROCESS
-  (Redis for multi-proc, M11). (M9.2) `audit_log` table (migration 0020) + `append_audit()` on
+- Hardening (M9): (M9.1) `RateLimitMiddleware` (`app/core/rate_limit.py`) — 60s window per
+  (IP, bucket): `/auth/*` 30/min + other writes 120/min; reads free; 429 + Retry-After;
+  config `RATE_LIMIT_*`; added before CORS; `reset()` called per test in conftest.
+  **SHARED STORE since 2026-09-05** (migration 0027, `rate_limit_hits`): fixed windows with a
+  weighted look-back, so instances share one view instead of each keeping its own count and
+  doubling the effective limit. Postgres, not Redis — no new service. Costs ~4 ms on auth/write
+  requests only; FAILS OPEN on a store error, by design. (M9.2) `audit_log` table (migration 0020) + `append_audit()` on
   login/password_reset/consent_*/plan_*/hours_* events; admin-only `GET /audit-log`; admin =
   the `User.is_admin` column ONLY (2026-08-06; supersedes "seeded from ADMIN_EMAILS at register
   OR email in ADMIN_EMAILS at request time" — with no email verification anywhere, that handed

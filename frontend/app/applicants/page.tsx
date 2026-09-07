@@ -11,7 +11,7 @@ import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { useAuthedQuery } from "@/lib/use-api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
-import type { ApplicationWithOpportunity, HoursWithOpportunity, Opportunity } from "@/lib/types";
+import type { Opportunity } from "@/lib/types";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -42,26 +42,42 @@ export default function OrgDashboardPage() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("listings");
-  // M14.2. One SWR hook alongside this page's older hand-rolled refresh(): the full
-  // conversion is M13.6's job for this page, and doing it here would make a milestone
-  // commit carry an unrelated migration. Key held null until the user is an org, so a
-  // student never sends a request the server would 403 anyway.
+  // Every key is held null until the user is an org, so a student never sends a
+  // request the server would 403 anyway.
+  const isOrg = user?.role === "org";
   const {
     data: orgStats,
     error: orgStatsError,
     loading: orgStatsLoading,
     retry: retryOrgStats,
-  } = useAuthedQuery(user?.role === "org" ? "analytics/org" : null, (t) => api.orgAnalytics(t));
-  const [opps, setOpps] = useState<Opportunity[]>([]);
-  const [apps, setApps] = useState<ApplicationWithOpportunity[]>([]);
-  const [hours, setHours] = useState<HoursWithOpportunity[]>([]);
+  } = useAuthedQuery(isOrg ? "analytics/org" : null, (t) => api.orgAnalytics(t));
+  const oppsQ = useAuthedQuery(isOrg ? "opportunities/mine" : null, (t) => api.myOpportunities(t));
+  const appsQ = useAuthedQuery(isOrg ? "applications/org" : null, (t) => api.orgApplications(t));
+  // `hours/org-queue`, NOT a new spelling: /verify-hours already reads this exact
+  // data under that key with the same fetcher (verify-hours/page.tsx). `GET /hours`
+  // branches on role, so the org queue and a student's own ledger are different
+  // answers and correctly hold different keys — but there must not be a third.
+  // Sharing it means this page's `verify()` and that page's decisions now see one
+  // cache entry instead of two that drift.
+  const hoursQ = useAuthedQuery(isOrg ? "hours/org-queue" : null, (t) => api.listHours(t));
+  // Memoized because `activeOpps`/`historyOpps` below memo over `opps`; a fresh []
+  // each render would make their deps change every time (the lint warning the
+  // dashboard conversion hit).
+  const opps = useMemo(() => oppsQ.data ?? [], [oppsQ.data]);
+  const apps = useMemo(() => appsQ.data ?? [], [appsQ.data]);
+  const hours = useMemo(() => hoursQ.data ?? [], [hoursQ.data]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Distinguishes a genuinely empty tab from a failed initial load (audit
-  // finding 2026-08-25) — dashboard/page.tsx and hours/page.tsx already do
-  // this on the identical load pattern; this page's refresh() silently
-  // swallowed the failure instead.
-  const [loadError, setLoadError] = useState(false);
+  // finding 2026-08-25) — this page's old refresh() silently swallowed the
+  // failure instead. Combined across the three queries, matching the pre-SWR
+  // shape: one inline error covers every tab. Per-panel errors are now possible
+  // and deliberately NOT done here.
+  const loadError = Boolean(oppsQ.error || appsQ.error || hoursQ.error);
+  // NEW: there was no loading flag at all before. Without one, a slow load
+  // rendered "No listings yet." / "No applicants yet." before the fetch had
+  // resolved — the flash-of-false-empty this milestone exists to remove.
+  const loadPending = oppsQ.loading || appsQ.loading || hoursQ.loading;
 
   // Broadcast composer state.
   const [msgOpp, setMsgOpp] = useState<string>("");
@@ -80,24 +96,22 @@ export default function OrgDashboardPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Re-read all three. Every caller is a WRITE that can move more than one of them:
+  // approving an application changes the roster AND the listing's spots, and
+  // verifying hours changes the queue AND the counts the Listings tab shows. Fanning
+  // out to all three is what the old refresh() did and is still the honest answer.
   function refresh() {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || !user) return;
-    setLoadError(false);
-    Promise.all([api.myOpportunities(token), api.orgApplications(token), api.listHours(token)])
-      .then(([o, a, h]) => {
-        setOpps(o);
-        setApps(a);
-        setHours(h);
-      })
-      .catch(() => setLoadError(true));
+    oppsQ.retry();
+    appsQ.retry();
+    hoursQ.retry();
   }
 
+  // Only the profile form still needs an effect; the three loads are the queries'
+  // own job now. Seeding a form field from `user` is not a fetch, so it does not
+  // belong in a query.
   useEffect(() => {
     if (loading || !user) return;
     setEmailNotifs(user.email_notifications);
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, user]);
 
   const now = new Date();
@@ -262,6 +276,20 @@ export default function OrgDashboardPage() {
     </div>
   );
 
+  // Same skeleton as dashboard/page.tsx, so a slow tab shows "still loading"
+  // rather than an empty state that reads as "you have nothing".
+  const skelPanel = (
+    <div className="skel-card" aria-busy="true">
+      <div className="skel skel-line" style={{ width: "55%", height: 16, marginBottom: 14 }} />
+      <div className="skel skel-line" style={{ width: "100%", marginBottom: 8 }} />
+      <div className="skel skel-line" style={{ width: "92%", marginBottom: 8 }} />
+      <div className="skel skel-line" style={{ width: "78%" }} />
+    </div>
+  );
+
+  // Error wins over loading: a failed load must never look like a slow one.
+  const panelState = loadError ? loadErrorPanel : loadPending ? skelPanel : null;
+
   function listingCard(o: Opportunity, inHistory: boolean) {
     const loc = (o.location || "").toLowerCase();
     const fmt = (o.format || "").toLowerCase();
@@ -331,13 +359,13 @@ export default function OrgDashboardPage() {
             <div className="plan-usage" style={{ marginBottom: 14 }}>
               {/* `—` not 0 while the load is failed: these sit in the sidebar on
                   every tab, including next to loadErrorPanel (landing-check 2026-09-01). */}
-              <strong>{planLabel}</strong> plan · {loadError ? "—" : activeOpps.filter((o) => o.active).length}/{maxActive} active listings
+              <strong>{planLabel}</strong> plan · {loadError || loadPending ? "—" : activeOpps.filter((o) => o.active).length}/{maxActive} active listings
               {user.plan !== "pro" && <><br /><Link href="/billing" style={{ color: "var(--green)" }}>Upgrade to Pro →</Link></>}
             </div>
             <hr className="ds-divider" />
-            <div className="ds-stat"><span className="ds-stat-label">Active Listings</span><span className="ds-stat-val big">{loadError ? "—" : activeOpps.filter((o) => o.active).length}</span></div>
-            <div className="ds-stat"><span className="ds-stat-label">Total Volunteers</span><span className="ds-stat-val">{loadError ? "—" : apps.length}</span></div>
-            <div className="ds-stat"><span className="ds-stat-label">Pending Approvals</span><span className="ds-stat-val">{loadError ? "—" : pending.length}</span></div>
+            <div className="ds-stat"><span className="ds-stat-label">Active Listings</span><span className="ds-stat-val big">{loadError || loadPending ? "—" : activeOpps.filter((o) => o.active).length}</span></div>
+            <div className="ds-stat"><span className="ds-stat-label">Total Volunteers</span><span className="ds-stat-val">{loadError || loadPending ? "—" : apps.length}</span></div>
+            <div className="ds-stat"><span className="ds-stat-label">Pending Approvals</span><span className="ds-stat-val">{loadError || loadPending ? "—" : pending.length}</span></div>
             <hr className="ds-divider" />
             <div className="ds-nav">
               {TABS.map((t) => (
@@ -359,9 +387,9 @@ export default function OrgDashboardPage() {
                 <Link className="btn-p" style={{ padding: "10px 20px", fontSize: ".85rem" }} href="/opportunities/new">＋ Add Listing</Link>
               </div>
               <div className="cards-grid">
-                {loadError ? loadErrorPanel : activeOpps.length ? activeOpps.map((o) => listingCard(o, false)) : (
+                {panelState ?? (activeOpps.length ? activeOpps.map((o) => listingCard(o, false)) : (
                   <div className="empty"><div className="empty-icon"><ClipboardList size={40} strokeWidth={1.75} aria-hidden /></div>No listings yet. Hit ＋ Add Listing to post your first.</div>
-                )}
+                ))}
               </div>
             </div>
           )}
@@ -455,7 +483,7 @@ export default function OrgDashboardPage() {
           {tab === "calendar" && (
             <div className="tab-panel on">
               <h1 className="dash-h">Events Calendar</h1>
-              {loadError && loadErrorPanel}
+              {panelState}
               <div className="cal-wrap">
                 <div className="cal-hdr"><span className="cal-title">{now.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</span></div>
                 <div className="cal-grid">
@@ -503,7 +531,7 @@ export default function OrgDashboardPage() {
                 </div>
               </div>
 
-              {loadError ? loadErrorPanel : apps.length ? (
+              {panelState ?? (apps.length ? (
                 <table className="tbl">
                   <thead><tr><th>Student</th><th>Opportunity</th><th>Status</th><th>Applied</th><th></th></tr></thead>
                   <tbody>
@@ -527,7 +555,7 @@ export default function OrgDashboardPage() {
                 </table>
               ) : (
                 <div className="empty"><div className="empty-icon"><Users size={40} strokeWidth={1.75} aria-hidden /></div>No applicants yet.</div>
-              )}
+              ))}
             </div>
           )}
 
@@ -538,7 +566,7 @@ export default function OrgDashboardPage() {
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                 <button className="btn-s" style={{ padding: "9px 18px", fontSize: ".82rem" }} onClick={exportRoster}><Download size={15} strokeWidth={1.75} aria-hidden /> Export Volunteer Roster (CSV)</button>
               </div>
-              {loadError ? loadErrorPanel : hours.length ? (
+              {panelState ?? (hours.length ? (
                 <table className="tbl">
                   <thead><tr><th>Student</th><th>Opportunity</th><th>Date</th><th>Hours</th><th>Status</th><th></th></tr></thead>
                   <tbody>
@@ -563,7 +591,7 @@ export default function OrgDashboardPage() {
                 </table>
               ) : (
                 <div className="empty"><div className="empty-icon"><BadgeCheck size={40} strokeWidth={1.75} aria-hidden /></div>No pending hour requests.</div>
-              )}
+              ))}
             </div>
           )}
 
@@ -572,9 +600,9 @@ export default function OrgDashboardPage() {
               <h1 className="dash-h" style={{ marginBottom: 6 }}>Listing History</h1>
               <p style={{ fontSize: ".83rem", color: "var(--muted)", fontWeight: 300, marginBottom: 18 }}>One-time listings whose end date has passed. Recurring listings always stay in My Listings.</p>
               <div className="cards-grid">
-                {loadError ? loadErrorPanel : historyOpps.length ? historyOpps.map((o) => listingCard(o, true)) : (
+                {panelState ?? (historyOpps.length ? historyOpps.map((o) => listingCard(o, true)) : (
                   <div className="empty"><div className="empty-icon"><Archive size={40} strokeWidth={1.75} aria-hidden /></div>No expired listings yet.</div>
-                )}
+                ))}
               </div>
             </div>
           )}

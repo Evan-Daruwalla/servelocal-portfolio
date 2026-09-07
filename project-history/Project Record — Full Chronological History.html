@@ -106,13 +106,16 @@ state snapshot consolidates what used to live in the per-project <code>state_&lt
 files — that tier is retired (Evan's decision, 2026-07-08).</p>
 <hr />
 <h2 id="table-of-contents">Table of Contents</h2>
-<p><strong>Part I — v1 (zero-dep Node)</strong><br />
-- <a href="#i0--pre-git-origin-portfolio-brief-compliance-scaffolding">I.0 — Pre-git origin (portfolio brief, compliance scaffolding)</a><br />
-- <a href="#i1--initial-platform-commit-2026-07-02">I.1 — Initial platform commit (2026-07-02)</a><br />
-- <a href="#i2--guardian-consent--in-memory-indexes--editorial-restyle-2026-07-03">I.2 — Guardian consent + in-memory indexes + editorial restyle (2026-07-03)</a><br />
-- <a href="#i3--scaling-sqlite-migration-pagination-securityperf-batch-ci-2026-07-04">I.3 — Scaling: SQLite migration, pagination, security/perf batch, CI (2026-07-04)</a><br />
-- <a href="#i4--graph-audit-batch--csp-lockdown-2026-07-05">I.4 — Graph-audit batch + CSP lockdown (2026-07-05)</a><br />
-- <a href="#i5--claudemd-upgrade-v1-freeze-as-v2-reference-2026-07-07">I.5 — CLAUDE.md upgrade; v1 freeze as v2 reference (2026-07-07)</a></p>
+<ul>
+<li><a href="#appendix-a---scheduled-daily-audit-an-internal-coppa-gap-analysis-is-public-and-the-legal-signoff-flag-can-never-reach-the-build-that-would-clear-the-banner-2026-09-07-0723-cdt">A — Scheduled daily-audit: an internal COPPA gap analysis is public, and the legal-signoff flag can never reach the build that would clear the banner</a> (09-07)<br />
+<strong>Part I — v1 (zero-dep Node)</strong></li>
+<li><a href="#i0--pre-git-origin-portfolio-brief-compliance-scaffolding">I.0 — Pre-git origin (portfolio brief, compliance scaffolding)</a></li>
+<li><a href="#i1--initial-platform-commit-2026-07-02">I.1 — Initial platform commit (2026-07-02)</a></li>
+<li><a href="#i2--guardian-consent--in-memory-indexes--editorial-restyle-2026-07-03">I.2 — Guardian consent + in-memory indexes + editorial restyle (2026-07-03)</a></li>
+<li><a href="#i3--scaling-sqlite-migration-pagination-securityperf-batch-ci-2026-07-04">I.3 — Scaling: SQLite migration, pagination, security/perf batch, CI (2026-07-04)</a></li>
+<li><a href="#i4--graph-audit-batch--csp-lockdown-2026-07-05">I.4 — Graph-audit batch + CSP lockdown (2026-07-05)</a></li>
+<li><a href="#i5--claudemd-upgrade-v1-freeze-as-v2-reference-2026-07-07">I.5 — CLAUDE.md upgrade; v1 freeze as v2 reference (2026-07-07)</a></li>
+</ul>
 <p><strong>Part II — v2 (production rewrite)</strong><br />
 - <a href="#ii1--monorepo-scaffold--auth-slice-2026-07-07">II.1 — Monorepo scaffold + auth slice (2026-07-07)</a><br />
 - <a href="#ii2--core-domain--community-features-ported-from-v1-2026-07-07">II.2 — Core domain + community features ported from v1 (2026-07-07)</a><br />
@@ -161,7 +164,15 @@ files — that tier is retired (Evan's decision, 2026-07-08).</p>
 - <a href="#ii45--a-pre-mortem-on-the-whole-project-whose-top-risk-is-that-two-of-our-own-documents-disagree-2026-09-03-2214-cdt">II.45 — a pre-mortem on the whole project, whose top risk is that two of our own documents disagree (2026-09-03, ~22:14 CDT)</a><br />
 - <a href="#ii46--a-research-brief-a-docs-audit-and-the-one-artifact-of-the-three-that-actually-blocks-something-2026-09-03-2249-cdt">II.46 — a research brief, a docs audit, and the one artifact of the three that actually blocks something (2026-09-03, ~22:49 CDT)</a><br />
 - <a href="#ii47--the-pre-mortem-re-run-two-tigers-genuinely-closed-one-new-one-about-the-safety-net-that-was-supposed-to-catch-the-next-mistake-2026-09-05-1628-cdt">II.47 — the pre-mortem re-run: two Tigers genuinely closed, one new one about the safety net that was supposed to catch the next mistake (2026-09-05, ~16:28 CDT)</a><br />
-- <a href="#ii48--three-legal-page-updates-and-a-count-from-our-own-index-that-did-not-survive-checking-2026-09-05-1846-cdt">II.48 — three legal-page updates, and a count from our own INDEX that did not survive checking (2026-09-05, ~18:46 CDT)</a></p>
+- <a href="#ii48--three-legal-page-updates-and-a-count-from-our-own-index-that-did-not-survive-checking-2026-09-05-1846-cdt">II.48 — three legal-page updates, and a count from our own INDEX that did not survive checking (2026-09-05, ~18:46 CDT)</a><br />
+- <a href="#ii49--the-dashboard-converts-to-swr-and-the-write-hiding-in-its-loader-2026-09-05-1904-cdt">II.49 — the dashboard converts to SWR, and the write hiding in its loader (2026-09-05, ~19:04 CDT)</a><br />
+- <a href="#ii50--the-backup-nobody-had-run-and-a-monitor-that-isnt-on-the-box-it-watches-2026-09-05-1915-cdt">II.50 — the backup nobody had run, and a monitor that isn't on the box it watches (2026-09-05, ~19:15 CDT)</a><br />
+- <a href="#ii51--two-failures-the-app-handled-badly-one-of-which-the-browser-caught-in-the-fix-itself-2026-09-05-2219-cdt">II.51 — two failures the app handled badly, one of which the browser caught in the fix itself (2026-09-05, ~22:19 CDT)</a><br />
+- <a href="#ii52--a-security-control-that-got-weaker-without-erroring-and-an-off-switch-built-to-expire-2026-09-05-2314-cdt">II.52 — a security control that got weaker without erroring, and an off switch built to expire (2026-09-05, ~23:14 CDT)</a><br />
+- <a href="#ii53--the-last-per-process-counter-goes-shared-and-a-slow-test-suite-turns-out-to-be-a-correctness-bug-wearing-a-costume-2026-09-06-0055-cdt">II.53 — the last per-process counter goes shared, and a slow test suite turns out to be a correctness bug wearing a costume (2026-09-06, ~00:55 CDT)</a><br />
+- <a href="#ii54--a-page-that-had-never-been-able-to-say-still-loading-and-a-list-of-remaining-work-that-was-quietly-wrong-2026-09-06-1324-cdt">II.54 — a page that had never been able to say "still loading", and a list of remaining work that was quietly wrong (2026-09-06, ~13:24 CDT)</a><br />
+- <a href="#ii55--the-one-screen-that-was-written-in-two-design-languages-at-once-2026-09-06-1344-cdt">II.55 — the one screen that was written in two design languages at once (2026-09-06, ~13:44 CDT)</a><br />
+- <a href="#ii56--three-silent-failures-fixed-and-an-internal-legal-brief-pulled-off-the-public-mirror-2026-09-07-1041-cdt">II.56 — three silent failures fixed, and an internal legal brief pulled off the public mirror (2026-09-07, ~10:41 CDT)</a></p>
 <ul>
 <li><a href="#current-state-snapshot">Current state snapshot</a> · <a href="#summary-timeline">Summary timeline</a> · <a href="#whats-not-in-this-record-honest-gaps">What's not in this record</a></li>
 </ul>
@@ -2905,6 +2916,592 @@ four rendered spots, which is what it was built for. <code>tsc --noEmit</code> c
 <code>test_legal_pages_are_publishable.py</code> 3 passed; both pages browser-verified<br />
 on a fresh dev server with each new passage located by its own text. The two<br />
 open placeholders and the sign-off flag were not touched.</p>
+<h2 id="ii49--the-dashboard-converts-to-swr-and-the-write-hiding-in-its-loader-2026-09-05-1904-cdt">II.49 — the dashboard converts to SWR, and the write hiding in its loader (2026-09-05, ~19:04 CDT)</h2>
+<p>The student dashboard was the largest page still on the old hand-rolled fetch<br />
+shape — the <code>useEffect</code> + <code>useState(loading)</code> + <code>useState(error)</code> idiom that<br />
+nineteen pages each wrote slightly differently, and that has already shipped two<br />
+real bugs of the same kind. It now uses <code>useAuthedQuery</code>. M13.6 goes <strong>14 → 15<br />
+of 22 pages</strong>.</p>
+<p>The mechanical half was easy: four <code>Promise.all</code> fetches become four queries,<br />
+reusing keys the other pages already own, so the dashboard and <code>/portfolio</code> now<br />
+share one cache entry for hours and awards rather than each fetching them.</p>
+<p>The interesting half was a write hiding inside a read. <code>refresh()</code> began with<br />
+<code>POST /hours/auto-log</code> — the call that mints pending hours rows for past events<br />
+a student was approved for — and only then fetched the four lists. That cannot<br />
+go inside an SWR fetcher, because SWR revalidates on window focus and on<br />
+reconnect, and each of those would replay the POST. The endpoint is idempotent<br />
+(it skips any occurrence date that already has a row), so nothing would<br />
+duplicate; but every replay still costs a request against the rate limiter and<br />
+writes an audit row on any run that mints something.</p>
+<p>The fix is to stop treating it as part of the load at all. It runs once per<br />
+mount in its own effect behind a ref guard, and forces a re-read of exactly the<br />
+two keys it can affect — hours and awards — and only when the server reports it<br />
+actually created something. The common answer is <code>{"created": 0}</code>, and in that<br />
+case nothing refetches, which makes the new page strictly cheaper than the old<br />
+one that always wrote and then always fetched.</p>
+<p>Two things were deliberately not done. The combined loading and error flags stay<br />
+combined, so every tab still shows one skeleton and one inline error with a<br />
+Retry — splitting to per-panel errors is now free but it is a UX change, not a<br />
+conversion. And a stale comment that described the old single-<code>refresh()</code> shape<br />
+was rewritten rather than left to quietly become false.</p>
+<p>Verification ran against the real stack and produced the exact predicted network<br />
+signature: one GET per key on mount, one auto-log POST, then — because the<br />
+fixture had an un-logged past event — a revalidation of hours and awards <em>only</em>,<br />
+with applications and saved untouched. A tab switch produced zero requests. A<br />
+self-report submitted through the form produced its POST, then the four GETs,<br />
+and no second auto-log. The stat tiles tracked it: 0/0/0, then 0/6/6 after<br />
+auto-log minted two past occurrences, then 0/7/7 after a one-hour self-report. A<br />
+clean tab logged no console messages at all. <code>pytest</code> stayed at 394 passed, 1<br />
+skipped; the frontend's lint count went down by one, because the first draft of<br />
+this change introduced a warning and it was fixed rather than copied from the<br />
+page that already carries the identical one.</p>
+<p>One limit is worth stating rather than smoothing. The focus-revalidation path<br />
+was not observed. A synthetic focus event produced no requests, because SWR<br />
+gates that path on the tab's visibility state and the automation tab is hidden —<br />
+the same shape as the cached-200 trap already recorded in the testing bin. That<br />
+the write never replays on revalidation rests on where the code puts it, plus<br />
+the self-report run above, not on a watched focus revalidation.</p>
+<h2 id="ii50--the-backup-nobody-had-run-and-a-monitor-that-isnt-on-the-box-it-watches-2026-09-05-1915-cdt">II.50 — the backup nobody had run, and a monitor that isn't on the box it watches (2026-09-05, ~19:15 CDT)</h2>
+<p>Evan chose the real launch over the portfolio artifact, and gave a fact that<br />
+quietly removes the blocker the last session had built its plan around: he turns<br />
+18 on «redacted-date». The objection was never about competence — it was that a<br />
+seventeen-year-old cannot be the party offering a binding contract, so someone<br />
+else had to be named as operator on the Terms. In three days that is simply no<br />
+longer true. What does not move is the duty. The platform still holds minors'<br />
+names, guardian emails and activity, so guardian consent, breach notification<br />
+and a support channel are the same obligations they were the day before.</p>
+<p>Two rows of the launch sequence were unblocked and got done.</p>
+<p>The first was a backup script that had existed for weeks and had never once been<br />
+run. That is a worse position than having no script, because it reads on every<br />
+status page as a solved problem. It now has real output: a 34,040-byte dump,<br />
+restored into a throwaway database, three tables counted, the throwaway dropped,<br />
+exit zero. Two checks after the fact, because a drill that leaves debris behind<br />
+has failed quietly — the database list showed the throwaway gone, and the source<br />
+database's own counts matched the restored copy exactly, which is the actual<br />
+claim a restore drill makes.</p>
+<p>Getting there required refusing an easier road. The Postgres client tools are<br />
+not on this Windows machine, and the script exits loudly rather than guessing —<br />
+correct behaviour that nonetheless blocks the run. The tempting move was to<br />
+shell into the database container and dump from inside it. That would have<br />
+produced a valid backup and proved nothing whatsoever about the script, which<br />
+was the artifact under test. Instead: a throwaway image with the matching client<br />
+tools and Python, attached to the compose network, repo mounted. The version<br />
+match is not incidental — an older client refuses to dump a newer server, so<br />
+grabbing <code>postgresql-client</code> off a generic Python image would have failed in a<br />
+confusing way.</p>
+<p>The second row was uptime monitoring, and the interesting part is a constraint<br />
+that rules out the obvious answer. A checker running on the app host proves<br />
+nothing, because the failure it exists to catch is that host being gone. Every<br />
+hosted monitor worth having needs an account, and accounts are Evan's to create.<br />
+The way through was noticing the project already owns external infrastructure:<br />
+the checks now run from GitHub Actions on a fifteen-minute schedule — off the<br />
+app host, no new account, no spend.</p>
+<p>The probe is deliberately stricter than a ping, for one specific reason. A<br />
+response of 200 whose body reports the database as down is treated as an<br />
+outage. Load balancers route on the status code, so a monitor that reads only<br />
+the code would call a live process over a dead database perfectly healthy — the<br />
+exact failure this project already fixed once inside the health endpoint itself.<br />
+It also rejects a 200 carrying a non-JSON body, which is what a proxy or<br />
+maintenance page looks like when it answers in the app's place.</p>
+<p>Two smaller choices are worth naming because both are about a monitor being<br />
+trusted rather than merely existing. Before launch, with no production URL<br />
+configured, the job explains itself and exits green instead of red; a check that<br />
+fails every fifteen minutes for a site that does not exist yet is one that gets<br />
+muted well before the day it starts mattering. And the decision logic is split<br />
+from the network code, so seven cases run as assertions with no site to call.</p>
+<p>The verification included the failure path, not just the happy one: with the API<br />
+killed, the probe reported the refused connection and exited non-zero. One case<br />
+was left unproven and labelled as such — the 503 branch was not exercised<br />
+against a running API with a stopped database, because stopping the shared<br />
+database container would have disrupted another session working against it.</p>
+<p>The documentation says plainly what this does not buy, which for a monitoring<br />
+page matters more than what it does. The schedule is best-effort, not an SLA.<br />
+Scheduled workflows switch themselves off after sixty days of repository<br />
+inactivity, so a live but quiet project silently stops being watched and nothing<br />
+announces it. The entire alert chain is one email to the repository owner. It is<br />
+a smoke alarm, not a pager, and the upgrade trigger is written down so replacing<br />
+it is a decision rather than a discovery.</p>
+<p>The milestone checkbox stays unticked. It bundles error tracking, uptime and<br />
+scheduled backups; two of those are now real, and the Sentry key and the<br />
+production host's backup schedule both still wait on Evan.</p>
+<h2 id="ii51--two-failures-the-app-handled-badly-one-of-which-the-browser-caught-in-the-fix-itself-2026-09-05-2219-cdt">II.51 — two failures the app handled badly, one of which the browser caught in the fix itself (2026-09-05, ~22:19 CDT)</h2>
+<p>A walk through how the app behaves when its dependencies fail turned up two<br />
+things worth fixing before real users arrive, and both are the same kind of<br />
+problem: a failure path nobody had exercised.</p>
+<p>The first is a small piece of code with an outsized blast radius. The request<br />
+counter that powers the analytics page runs as middleware, and that middleware<br />
+is asynchronous while the database library underneath it is not. The write was<br />
+therefore happening on the single event loop that serves every concurrent<br />
+request — measured at three and a half milliseconds on a healthy local database,<br />
+and potentially thirty seconds if the connection pool is exhausted, since that is<br />
+how long a request waits for a connection before giving up. Blocking that loop<br />
+does not slow one request; it stalls all of them, including requests that never<br />
+touch the database at all. The irony is on the record: this module's own<br />
+documentation promises that analytics must never cost a user their request, and<br />
+it was the piece most able to freeze the whole server. The fix moves the write<br />
+to a worker thread, which is one import and one keyword.</p>
+<p>One measurement along the way was wrong in a way worth preserving. The first<br />
+timing run reported hundredths of a millisecond and would have closed the<br />
+investigation as a false alarm. It was invalid: the route being probed was the<br />
+health endpoint, which is deliberately excluded from counting, so the function<br />
+returned before doing any database work. The cheap measurement agreed with<br />
+"nothing to see here," and only re-running it against a counted route showed the<br />
+real cost. The regression test got the same treatment — it was proved to fail<br />
+against the old code before being trusted, by temporarily putting the blocking<br />
+call back and watching the assertion fire.</p>
+<p>The second finding needed no measurement at all. The application had no error<br />
+page and no page-not-found page of its own — not anywhere. Any unhandled error,<br />
+and any mistyped address, dropped the visitor onto the framework's built-in<br />
+default: no navigation, no footer, no route back into the site. This had already<br />
+been seen earlier in the same session without being recognised for what it was,<br />
+when a stale build produced exactly that bare screen. For a service whose users<br />
+are students and the parents approving their accounts, it was the one moment of<br />
+failure with no design applied to it whatsoever.</p>
+<p>Three pages now cover it, and a deliberate decision runs through all three:<br />
+none of them display the underlying error text. A thrown error can carry a web<br />
+address, a record identifier, or a fragment of somebody's data, and the people<br />
+using this service are minors. A short reference code is shown instead, which is<br />
+enough to match the incident against the server's own log.</p>
+<p>The fix then produced a bug of its own, caught by looking at it rather than by<br />
+reasoning about it. Wrapping the not-found page in the site's standard shell put<br />
+two navigation bars and two footers on the screen, because the layout only hides<br />
+its own chrome on pages it recognises — and an unknown address is by definition<br />
+not one of those. The correction splits the two cases along the same rule the<br />
+layout already uses, and all four resulting combinations were then driven in a<br />
+browser against a production build and counted element by element: exactly one<br />
+header and one footer in every case.</p>
+<p>Two findings from the same analysis were deliberately left alone and are written<br />
+down as open. The rate limiter still keeps its counters in one process's memory,<br />
+which means a second copy of the application would double every limit and any<br />
+deployment resets them all. And the signup bot check still refuses every<br />
+registration when the verification service is unreachable — correct for a bot<br />
+gate, but there is no manual override if that service has a bad day.</p>
+<h2 id="ii52--a-security-control-that-got-weaker-without-erroring-and-an-off-switch-built-to-expire-2026-09-05-2314-cdt">II.52 — a security control that got weaker without erroring, and an off switch built to expire (2026-09-05, ~23:14 CDT)</h2>
+<p>The last two items from the failure walk are closed, and they are opposite<br />
+problems: one control that would have quietly stopped working, and one that<br />
+worked so absolutely it could take the whole signup flow down with it.</p>
+<p>The rate limiter kept its counters in one process's memory. That is correct<br />
+while exactly one copy of the application is running and silently wrong the<br />
+moment there are two, because each copy keeps its own tally and the effective<br />
+limit doubles. Nothing errors. Nothing logs. The control just protects half as<br />
+much as everyone believes it does, and the only way to find out is to look. Every<br />
+deployment also wiped every window. The counters now live in a table in the<br />
+database, so all copies share one view.</p>
+<p>Redis is the textbook answer here and was rejected on purpose. It would mean a<br />
+new service, a new account, and one more thing waiting on Evan for a launch that<br />
+already has several. The database is a hard dependency of every endpoint the<br />
+limiter guards, so putting the counters there costs no new infrastructure at all.</p>
+<p>The exact sliding window became an approximation — two fixed sixty-second<br />
+buckets, with the older one weighted by how much of it is still in view. That is<br />
+the standard trade, and it holds the limit tightly enough across a boundary<br />
+while replacing a growing list of timestamps with two integers.</p>
+<p>Two behaviour changes came with it, and both deserve saying out loud because<br />
+neither is neutral. Attempts now count even when they are refused, so hammering<br />
+an already-blocked endpoint is no longer free. And if the limiter cannot reach<br />
+its store, it lets the request through rather than blocking it. That direction<br />
+was chosen deliberately: the limiter sits in front of signing in and resetting a<br />
+password, both of which need the very same database, so refusing everything<br />
+during a database incident would lock out every user — including a parent<br />
+halfway through approving their child's account — while protecting nothing at<br />
+all.</p>
+<p>There is a trap in a control that fails open, and it applies to the tests as much<br />
+as to production: a limiter aimed at a table that does not exist would let<br />
+everything through, and every test asserting that a burst gets refused would pass<br />
+by never limiting anything. So one test now asserts the counter rows actually<br />
+exist and add up, and another writes a row by hand — exactly what a second copy<br />
+of the application would leave behind — and requires this copy to honour it.</p>
+<p>The second fix runs the other way. The signup bot check refuses anything it<br />
+cannot verify, which is correct for a bot gate and means an outage at the<br />
+verification provider stops all registration with no way out but a code change.<br />
+It now has a break-glass, and the shape of it is the interesting part: it is a<br />
+deadline, not a switch. An override you have to remember to turn off is one that<br />
+gets left on, so this one expires on its own, and the application refuses to<br />
+start in production if the deadline reaches more than a day out — a short window<br />
+is incident response, a long one is the gate quietly disabled.</p>
+<p>The first version of that override was too clever and would have rescued nothing.<br />
+It only covered the case where the server could not reach the verification<br />
+service. But a real outage takes the browser widget down too, so the visitor<br />
+never receives a token to send, and the request is refused before any network<br />
+call happens. Covering that case means admitting what the override actually is<br />
+for its duration: an off switch. It still never overrides an explicit rejection —<br />
+if the service answers and says this token is bad, that is a fact about the<br />
+request, not an outage.</p>
+<p>Fixing the limiter also broke a piece of documentation, which is worth recording<br />
+because it is the ordinary way documents rot. A neighbouring module's comments<br />
+described its own limitation by pointing at the rate limiter as having the same<br />
+one. That sentence was true when written and false the moment the limiter was<br />
+fixed. It now says the reverse, plainly: that module is the one still stuck in<br />
+process memory, so the application must keep running as a single copy until it<br />
+gets the same treatment. That work was left undone rather than half-done<br />
+quietly.</p>
+<p>One more near-miss belongs here. The first performance measurement of the new<br />
+limiter came back at two seconds per request, a number that would have killed the<br />
+design outright. The database container had stopped; what the measurement<br />
+actually captured was a connection timeout, and incidentally proved the<br />
+fail-open path works. Restarted, re-measured, four milliseconds. That is the<br />
+second time in one sitting that a cheap measurement agreed confidently with the<br />
+wrong conclusion.</p>
+<h2 id="ii53--the-last-per-process-counter-goes-shared-and-a-slow-test-suite-turns-out-to-be-a-correctness-bug-wearing-a-costume-2026-09-06-0055-cdt">II.53 — the last per-process counter goes shared, and a slow test suite turns out to be a correctness bug wearing a costume (2026-09-06, ~00:55 CDT)</h2>
+<p>The three remaining anti-abuse counters — the cooldown on resending a guardian's<br />
+approval email, the lockout after repeated wrong check-in codes, and the cap on<br />
+password-reset requests — moved out of one process's memory and into the<br />
+database. That finishes what the rate limiter started the day before, and it<br />
+removes the last reason the application had to run as a single copy.</p>
+<p>The interesting part is why the previous fix was not enough. An audit a day<br />
+earlier had found these counters checking a limit and recording an attempt as two<br />
+separate steps, with database work in between, which meant fifty simultaneous<br />
+callers could all pass a cap of ten. That was fixed with a lock, correctly, and<br />
+the lock did exactly what a lock does: it made the counter safe inside one<br />
+process. It could never have done more. Two copies of the application each held<br />
+their own lock and their own tally, so every limit was quietly worth double.<br />
+Atomicity now comes from a single database update statement instead, which both<br />
+database engines serialise on their own.</p>
+<p>There is a real trade in the new shape and it belongs in the record. The window<br />
+is now pinned to the event that opened it rather than sliding forward one<br />
+timestamp at a time. For the five-minute resend cooldown the two behave<br />
+identically. For a cap of several attempts, the new one frees the whole budget at<br />
+once when the window ends rather than freeing slots one by one. What survives<br />
+exactly is the property that mattered: someone who is already blocked cannot push<br />
+their own lockout further out by hammering, because the anchor never moves while<br />
+the window is open.</p>
+<p>The concurrency test that caught the original bug had to be rewritten, and<br />
+rewriting it surfaced something worth knowing. It had been running against the<br />
+suite's shared in-memory database, which hands every thread the same connection —<br />
+so a test about fifty threads competing was, underneath, fifty threads politely<br />
+queueing. It now uses a real file so each thread gets its own connection. Then the<br />
+old broken shape was deliberately put back to confirm the test still catches it:<br />
+fourteen of fifty callers passed a cap of ten. Restored, exactly ten pass.</p>
+<p>The most expensive lesson came from a number that looked like a performance<br />
+problem. After the move, the test suite went from sixty-eight seconds to three<br />
+hundred and eighty-one. The timing breakdown pointed at four seconds spent in<br />
+<em>setup</em>, over and over, in two test files. Both declared their own automatic<br />
+cleanup step that did not depend on the fixture which redirects database access<br />
+to the test database — so it ran first, reached for the real production database,<br />
+and spent four seconds failing to find it. Twice per test, once going in and once<br />
+coming out.</p>
+<p>The narrow fix was to make two fixtures wait for one other fixture. The real fix<br />
+was to make the redirect automatic for every test, covering all four components<br />
+that open their own database connections, so ordering stops mattering at all. The<br />
+suite now runs in fifty-four seconds — faster than before any of this work<br />
+started, because tests that never asked for a web client were also paying that<br />
+cost.</p>
+<p>Underneath the slowness was a correctness problem, and this is the part worth<br />
+carrying forward. These guards are built to fail open: if they cannot reach their<br />
+store, they let the request through, because they sit in front of signing in and<br />
+resetting a password, which need the same database anyway. That is the right<br />
+call in production and a trap in testing. Aimed at a database that is not there,<br />
+the throttle allows everything — and every test asserting that a limit engages<br />
+passes without any limit ever engaging. A suite can be green and prove nothing.<br />
+The automatic redirect is what makes those assertions mean something, which makes<br />
+it a correctness fixture that merely happened to show up as a stopwatch reading.</p>
+<p>The single-replica restriction is now lifted, and checked rather than assumed: a<br />
+sweep of the application code for module-level state, locks and caches comes back<br />
+empty. One counter survives, an integer that decides when to clean up expired<br />
+rows — it affects housekeeping timing and never a decision about whether someone<br />
+is allowed through. The deployment runbook's warning has been struck through and<br />
+replaced with a table of what now backs each protection.</p>
+<h2 id="ii54--a-page-that-had-never-been-able-to-say-still-loading-and-a-list-of-remaining-work-that-was-quietly-wrong-2026-09-06-1324-cdt">II.54 — a page that had never been able to say "still loading", and a list of remaining work that was quietly wrong (2026-09-06, ~13:24 CDT)</h2>
+<p>The organization dashboard moved onto the shared data-fetching helper, taking the<br />
+migration to sixteen of twenty-two screens. Most of it was mechanical. Two<br />
+things about it were not.</p>
+<p>The first was found before any code changed. The handoff document said seven<br />
+units of work remained and then listed six. The missing one was the site header,<br />
+whose unread-notification count is still fetched the old way — and the arithmetic<br />
+only balances with it included. That kind of error is cheap to write and<br />
+expensive to inherit: the next session would have converted the six named items,<br />
+declared the milestone finished, and been wrong. It is corrected in place, and<br />
+the correction is the reason to count rather than trust a list.</p>
+<p>The second was a gap hiding in the page itself. It had a way to say "something<br />
+went wrong" but no way to say "still loading". Until data arrived, its three<br />
+lists were empty arrays, so every tab confidently displayed "No listings yet",<br />
+"No applicants yet", "No pending hour requests". An organization opening its<br />
+dashboard on a slow connection was told, briefly and incorrectly, that it had<br />
+nothing. That is precisely the failure this whole migration exists to remove, and<br />
+it had been sitting in the page the entire time — the error state had been added<br />
+months earlier by an audit, and the loading state simply never was. The page now<br />
+shows a loading placeholder, and a failure takes precedence over it, so a broken<br />
+load can never be mistaken for a slow one.</p>
+<p>There was also a cache key worth getting right rather than convenient. One of the<br />
+three loads asks for volunteer hours, and a different screen already asks for the<br />
+same data under an established name. The project's own rule says a key names the<br />
+data, not the page asking for it, and warns against inventing a third spelling.<br />
+Reusing the existing name means the two organization screens now share one cached<br />
+copy, so approving hours on either is immediately true on the other rather than<br />
+leaving two views to drift apart.</p>
+<p>Verification was by counting network requests rather than by looking at the<br />
+screen: one request per kind of data on arrival, zero when switching between<br />
+tabs, and after approving an hours entry, one write followed by exactly the three<br />
+reads it can affect — while the analytics request, which that action cannot<br />
+change, stayed untouched. The row then flipped from pending to verified in the<br />
+interface, which is what proves the refreshed data actually arrived rather than<br />
+merely being requested. The new loading placeholder was caught by sampling the<br />
+page every sixty milliseconds during load, which is the only way to observe<br />
+something that exists for a fraction of a second.</p>
+<p>Two claims are deliberately not made. The shared-key benefit is structural — the<br />
+same name in both files — and was not watched happening, because no link connects<br />
+those two screens for a click to travel along. And the failure state was not<br />
+re-driven, because switching off the backend also switches off the check that<br />
+identifies the user, so the page stops at its role guard before any data state<br />
+can render; that trap was already hit and recorded during the previous screen's<br />
+conversion.</p>
+<p>One self-inflicted break belongs here too. Rewriting four display branches by<br />
+text substitution opened a bracket in each without closing it, and the type<br />
+checker rejected all four within seconds. Cheap to fix, and a fair reminder that<br />
+editing structured markup by find-and-replace trades a minute of reading for a<br />
+minute of debugging.</p>
+<h2 id="ii55--the-one-screen-that-was-written-in-two-design-languages-at-once-2026-09-06-1344-cdt">II.55 — the one screen that was written in two design languages at once (2026-09-06, ~13:44 CDT)</h2>
+<p>The question that started this was whether the project should adopt a popular<br />
+component library to keep the interface consistent. It already had it. The<br />
+library was installed months ago, sixteen files were using it, and the stack<br />
+description in the project's own instructions lists it. So the real situation was<br />
+not a choice between having a system and not having one — it was two systems<br />
+running side by side, one built from that library and one hand-built to match the<br />
+original version of the site.</p>
+<p>That second system is not decoration. Making every screen match the original<br />
+site's editorial look is a completed milestone with a checkbox next to it, and the<br />
+project's standing instructions explicitly rule out the generic modern-app<br />
+appearance the library ships by default. For a portfolio piece, looking like<br />
+every other portfolio piece is the failure mode. So the answer to "should we<br />
+standardise on the library" is no, and the interesting follow-up is which screens<br />
+are on the wrong side of the line.</p>
+<p>One screen was on both sides at once. The opportunity detail page wrapped itself<br />
+in the editorial shell, rendered one panel in the editorial card style, and then<br />
+mounted four child sections built entirely from library components — three visual<br />
+languages on a single screen, and the only file in the project importing from both<br />
+systems. It has now been converted whole: all five files, zero library imports<br />
+left in that directory, and the project-wide count of files using the library<br />
+drops from sixteen to eleven.</p>
+<p>The mapping was taken from the page rather than invented for it. The card style<br />
+chosen was the one the page's own Featured panel already used — because two card<br />
+styles on one screen is precisely the defect being removed, and picking a<br />
+different-but-nicer third would have reproduced it. Buttons, inputs, error text<br />
+and muted helper text each had an existing editorial equivalent. One deliberate<br />
+exception is recorded in the code: the editorial label style is uppercase and<br />
+full-width, which is right above a form field and wrong beside a radio button, so<br />
+the two radio rows keep their own inline layout.</p>
+<p>Verification was by computed style rather than by screenshot, since the<br />
+screenshot tool times out in this environment. The Apply button resolves to the<br />
+exact green from the palette definition, the card border to the exact border<br />
+colour, and the section headings to the display typeface — all confirmed in the<br />
+browser, for both a student's view and the owning organisation's view, with no<br />
+leftover library utility classes in the rendered page and no console errors. A<br />
+check-in code was generated through one of the converted panels to confirm the<br />
+controls still drive their writes rather than merely looking right.</p>
+<p>Two honest limits. The container platform stopped partway through, taking the<br />
+database with it, so the visual check ran against a temporary file-based database<br />
+instead — irrelevant to a change that touches only markup and styling, but worth<br />
+saying rather than implying a full-stack run. And the reviews panel still<br />
+swallows a failed load entirely, showing a blank card where it should show either<br />
+reviews or a message; that is a data-fetching defect belonging to a different<br />
+piece of work, and widening this change to catch it would have been the kind of<br />
+scope creep the project's own rules forbid.</p>
+<p>The remaining eleven files still use the library. They are at least internally<br />
+consistent, which the converted screen was not.</p>
+<h1 id="appendix-a---scheduled-daily-audit-an-internal-coppa-gap-analysis-is-public-and-the-legal-signoff-flag-can-never-reach-the-build-that-would-clear-the-banner-2026-09-07-0723-cdt">Appendix A - Scheduled daily-audit: an internal COPPA gap analysis is public, and the legal-signoff flag can never reach the build that would clear the banner (2026-09-07 07:23 CDT)</h1>
+<p>Scheduled <code>daily-audit</code> cold sweep of <code>servelocal-v2</code> (320 files) plus the public<br />
+<code>servelocal-portfolio</code> mirror, 9 parallel workers. Findings only — nothing was<br />
+changed. Classified ACTIVE: no audit entry inside the 7-day window, 14 commits.</p>
+<h2 id="the-public-mirror-is-the-worst-of-it">The public mirror is the worst of it</h2>
+<p><code>servelocal-portfolio</code> is pushed (<code>main...origin/main</code>, no divergence) to<br />
+<code>github.com/Evan-Daruwalla/servelocal-portfolio</code> under Evan's real name.</p>
+<ul>
+<li><strong><code>docs/research/2026-09-03_ccpa-gdpr-coppa-state-minors-privacy-background.md</code><br />
+  is public.</strong> 32,128 bytes of internal gap analysis naming which<br />
+  children's-privacy-law questions are open on a live product holding<br />
+  12-to-17-year-olds' data, written explicitly for the adult legal reviewer —<br />
+  i.e. it says on its face that legal review has not happened.<br />
+<code>LEGAL_REVIEW_PACKET.md</code> and the Strix pentest runbook it references were<br />
+  correctly withheld, so containment is partial, not absent.</li>
+<li><strong>Root cause, <code>scripts/sync_portfolio.py:139-145</code>.</strong> The outer structure is a<br />
+  real allowlist (<code>MANAGED_DIRS</code>, <code>MANAGED_ROOT_FILES</code>, <code>PUBLIC_BINS</code>), but<br />
+<code>docs/research/*.md</code> and <code>docs/adr/*.md</code> are copied by flat glob. Inside those<br />
+  two folders the policy degrades to "publish anything unless it matches one of<br />
+  five credential regexes" — which is exactly how a document containing no<br />
+  credentials got out.</li>
+<li><strong><code>scripts/sync_portfolio.py:53</code> vs <code>:135-151</code> — the mirror has never had a<br />
+  LICENSE.</strong> <code>MANAGED_ROOT_FILES</code> lists it; there is no <code>copy2</code> call for it, and<br />
+<code>promote_managed()</code> skips what does not exist. <code>git log --all --full-history</code><br />
+  on LICENSE in the mirror is empty, across every sync since the 2026-09-03<br />
+  comment claiming it was added.</li>
+<li><strong>Date of birth, prospective.</strong> The literal <code>«redacted-dob»</code> is in the private<br />
+  HANDOFF.md and PRD_ROADMAP.md and matches neither <code>REDACTIONS</code> (demo password,<br />
+  gmail addresses) nor <code>SECRET_PATTERNS</code> (JWT/Stripe shapes). <code>git grep</code> in the<br />
+  mirror returns nothing today; the next sync publishes it. Mirror<br />
+<code>HANDOFF.md:35</code> and <code>:312</code> already say "Evan turns 18 ~«redacted-date»", which<br />
+  fixes the date by arithmetic.</li>
+</ul>
+<h2 id="a-launch-gate-whose-removal-mechanism-cannot-fire">A launch gate whose removal mechanism cannot fire</h2>
+<p><code>frontend/Dockerfile</code> declares ARG/ENV for 4 of the 6 <code>NEXT_PUBLIC_*</code> vars the<br />
+code reads. <code>NEXT_PUBLIC_BILLING_LIVE</code> and <code>NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE</code><br />
+have none. Next.js inlines these at build time and Docker forwards a build arg<br />
+only for a declared ARG, so setting <code>NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE=true</code> as<br />
+a Railway variable and rebuilding — what <code>docs/DEPLOY_RAILWAY.md:299</code> instructs<br />
+— bakes in <code>undefined</code>. The Terms/Privacy non-binding-draft banner that flag<br />
+exists to remove would never go away, after doing everything the runbook says.</p>
+<h2 id="head-does-not-pass-its-own-ci">HEAD does not pass its own CI</h2>
+<p><code>HANDOFF.md:52</code> claims "ruff check + format clean". Run at HEAD with the pinned<br />
+<code>ruff==0.14.2</code>: <code>ruff check .</code> prints "All checks passed!", but<br />
+<code>ruff format --check .</code> prints "3 files would be reformatted" —<br />
+<code>app/core/rate_limit.py</code>, <code>app/services/checkin.py</code>, <code>tests/test_turnstile.py</code>,<br />
+all three touched by the current HEAD commit. <code>ci.yml:41</code> runs both, so HEAD<br />
+would fail CI. HANDOFF's own cited green range ends 4 commits before HEAD.</p>
+<h2 id="minors-data-three-findings">Minors' data, three findings</h2>
+<ul>
+<li><code>backend/app/services/account.py:125-172</code> — <code>anonymize_account</code> scrubs the user<br />
+  row, deletes SavedOpportunity/Notification, and blanks <code>Message.sender_name</code><br />
+  and <code>Review.author_name</code>. It never touches <code>backend/app/models/hours.py:46-49</code><br />
+  (<code>note</code>, <code>supervisor_name</code>, <code>deny_note</code>, <code>appeal_note</code>), so free text a minor<br />
+  typed survives "delete my account" verbatim against the tombstoned id.<br />
+<code>Message.body</code> is likewise retained; only identity is scrubbed. A worker also<br />
+  named <code>Application</code>; that half is wrong — it has no free-text column.</li>
+<li><code>docs/SUPPORT_PROCEDURES.md:76,79</code> — the admin runbook for a credible underage<br />
+  report says "A child under 12" / "if under 12".<br />
+<code>backend/app/core/consent.py:21</code> is <code>MINIMUM_AGE = 13</code> and<br />
+<code>frontend/app/terms/page.tsx:46</code> says 13. A genuinely underage 12-year-old is<br />
+  not "under 12", so the procedure as written would not flag them for erasure.</li>
+<li><code>docs/DEPLOY_RAILWAY.md:341</code> — the Scheduled jobs section lists exactly one<br />
+  job, <code>purge_audit_log</code>. Nothing schedules a backup; grepping <code>backup_db</code> across<br />
+<code>.github/</code>, that runbook and <code>railway.json</code> returns nothing. The only backup<br />
+  ever taken was hand-run on 2026-09-05.</li>
+</ul>
+<h2 id="counts-that-disagree-with-each-other-and-with-disk">Counts that disagree with each other and with disk</h2>
+<p>The project's own 2026-09-03 pre-mortem said its top risk was its docs<br />
+contradicting each other. Tested directly, and it is right.</p>
+<ul>
+<li>SWR page count: <code>README.md:17</code> says 11, <code>DIRECTORY.md:54</code> says 14,<br />
+<code>INDEX.md:20</code> and <code>features.md:17</code> say 16, <code>HANDOFF.md:26</code> says 16 while<br />
+<code>HANDOFF.md:131,133,290</code> say 14 in the same file. Disk says 15<br />
+  (files importing <code>@/lib/use-api</code> under <code>frontend/app</code>). Five claims, three<br />
+  values, none correct.</li>
+<li>The boot guard has THREE stated counts and none of the docs agree.<br />
+<code>app/core/config.py</code> has 10 <code>problems.append</code> sites over 9 variables, of which<br />
+  at most 9 can fire together (two SECRET_KEY checks are if/elif). <code>DEPLOY.md</code><br />
+  says 8 checks over 7 variables and omits <code>LEGAL_SIGNOFF_COMPLETE</code> entirely, so<br />
+  an operator following only it hits a production crash-loop. <code>HANDOFF.md:239</code><br />
+  and <code>PRD_ROADMAP.md:58-59,596</code> say 9 over 8. <code>tooling.md</code> gets the 10-over-9<br />
+  count right but then says at most EIGHT fire at once at <code>:73</code>. Only<br />
+<code>security.md:87</code> states both halves correctly.</li>
+<li><code>docs/adr/0001-token-storage-for-launch.md:205</code> runs the other way — it still<br />
+  says the shared-store rate limiter is NOT DONE and warns that "more than one<br />
+  replica silently multiplies every rate limit". <code>core/rate_limit.py</code> and<br />
+<code>core/throttle.py</code> both write shared DB tables now (migrations 0027, 0028), so<br />
+  the ADR advertises a launch-blocking multi-replica risk that was closed on<br />
+  2026-09-05/06. A stale open risk is as costly here as a stale closed one: it<br />
+  argues against a deploy shape that is now safe.</li>
+<li><code>DIRECTORY.md</code> fails its own staleness check: the command it prints returns 10<br />
+  added files since commit <code>b6a57b8</code>, and nothing flags it. Downstream:<br />
+  "11 SQLAlchemy models" (13), "38 test files" (41), the <code>app/core/</code> list omits<br />
+<code>throttle.py</code>. "16 Pydantic shapes" (15) is a plain miscount, not drift.</li>
+<li>Migration chain: <code>architecture.md:68</code> says 0001-0024, <code>backend/README.md:77</code><br />
+  says 26 revisions, <code>HANDOFF.md:24,291</code> and <code>PRD_ROADMAP.md:57</code> say 0001-0026.<br />
+  Disk and <code>data.md</code> say 0001-0028.</li>
+<li>Test count: <code>backend/README.md:81</code> says 364, <code>HANDOFF.md:22,291</code> says 394. A<br />
+  real run gives 409 passed, 1 skipped, 410 collected.</li>
+<li><code>HANDOFF.md:29-31</code> carries a caveat that the applicants page is "only<br />
+  fractionally converted" and "its three main loads do not" use the hook. All<br />
+  four loads in <code>frontend/app/applicants/page.tsx:47-63</code> use <code>useAuthedQuery</code>;<br />
+  the caveat outlived the commit that fixed it, two paragraphs above that<br />
+  commit's own record line.</li>
+<li><code>HANDOFF.md:52</code> polices the eslint baseline as a regression trigger at<br />
+  "11 warnings"; <code>npm run lint</code> gives 10.</li>
+<li><code>docs/API_KEYS.md:60</code> ships a self-check command that proves completeness. Run<br />
+  now it prints <code>['TURNSTILE_FAIL_OPEN_UNTIL']</code>, not <code>[]</code>.</li>
+<li><code>docs/LEGAL_REVIEW_PACKET.md:32,86,93</code> date three code changes to 2026-09-03;<br />
+  git puts all three in <code>8bfbe56</code>, 2026-09-05 16:01 CDT — the same commit that<br />
+  wrote those sentences, stamping the premortem's date instead of its own.</li>
+</ul>
+<h2 id="guards-checked-and-the-two-that-matter-most-held">Guards checked, and the two that matter most HELD</h2>
+<p>No document anywhere claims the Strix pentest was run, and none claims legal<br />
+review was completed — both are consistently represented as not yet done. That<br />
+was the pair most damaging to get wrong here. <code>[GOVERNING STATE — Evan]</code> and<br />
+<code>[LEGAL ENTITY NAME — Evan]</code> are still literally present at<br />
+<code>frontend/app/terms/page.tsx:91</code>, exactly as the docs say.</p>
+<p>Every id-taking route re-checks ownership, not just authentication (24 route<br />
+modules walked). Role checks are centralised in <code>api/deps.py:82-100</code>. The JWT<br />
+algorithm is pinned and logout genuinely revokes via <code>token_version</code>. The<br />
+production boot guard was run and really refuses to start on the dev SECRET_KEY.<br />
+Zero raw SQL outside a literal <code>SELECT 1</code> health check. The migration chain is a<br />
+single linear 0001-0028 with one head and no <code>pass</code>-only downgrade. Every<br />
+requirement is <code>==</code>-pinned; CI has no <code>continue-on-error</code> or <code>|| true</code>; the<br />
+Postgres-gated capacity race really does run — <code>ci.yml:102</code> sets<br />
+<code>TEST_DATABASE_URL</code>. <code>test_consent_gate_coverage.py</code> mechanically fails any new<br />
+write route that is neither gated nor allowlisted. <code>npm audit</code>, <code>pip-audit</code> and<br />
+<code>tsc --noEmit</code> are all clean. <code>MINIMUM_AGE = 13</code> matches terms and privacy<br />
+exactly. The org-vetting false claim is genuinely gone — zero hits for "vetted"<br />
+in the frontend.</p>
+<p>Two gaps in that coverage: no test proves an EXPIRED access JWT is rejected<br />
+(only a garbage one, <code>test_auth.py:85</code>), and there is no mechanical sweep proving<br />
+every protected route carries an auth dependency — the consent-gate walker<br />
+pattern exists and could be reused for it.</p>
+<h2 id="frontend">Frontend</h2>
+<p><code>frontend/app/opportunities/[id]/reviews-section.tsx:18</code> — <code>.catch</code> discarding<br />
+the error leaves <code>data</code> null, so a backend 500 renders identically to an org with<br />
+zero reviews. II.55 admitted this on 2026-09-06 as out of scope; still open, and<br />
+the three sibling files in that directory all have the branch it lacks.<br />
+<code>dashboard/page.tsx:118-127</code> and <code>hours/page.tsx:86-95</code> have no in-flight guard,<br />
+so a double-click fires two POSTs.</p>
+<p>Landing-check on II.55 passed clean: 11 files import <code>@/components/ui</code>, and the<br />
+five files in <code>opportunities/[id]</code> contain zero such imports.</p>
+<h2 id="repo-hygiene">Repo hygiene</h2>
+<p><code>scripts/git-hooks/pre-commit:30</code> (ServeLocal root) warns and commits UNSCANNED<br />
+when the delegated secret scanner is missing. The Autonomous Car copy of the same<br />
+hook fails closed at <code>:35</code> with an explicit <code>CAR_ALLOW_UNGATED_COMMIT</code> opt-out.<br />
+Same gate, opposite policy, and <code>.claude/</code> is gitignored so nothing<br />
+version-controls the difference.</p>
+<p>This record has 58 <code>## II.</code> heading lines against 55 TOC entries. The balance is<br />
+intact — II.35 carries three subsections at <code>##</code> level rather than <code>###</code>, so any<br />
+tool counting entries by that pattern over-counts by three.</p>
+<h2 id="not-swept">Not swept</h2>
+<p><code>ServeLocal website/</code> (v1, 3917 files) excluded as FROZEN per the root CLAUDE.md.<br />
+It has no <code>core.hooksPath</code> set, so commits there are ungated — noted, not<br />
+audited. The "22" denominator behind the SWR fraction is never enumerated<br />
+anywhere on disk, so which pages remain could not be adjudicated.</p>
+<h2 id="ii56--three-silent-failures-fixed-and-an-internal-legal-brief-pulled-off-the-public-mirror-2026-09-07-1041-cdt">II.56 — three silent failures fixed, and an internal legal brief pulled off the public mirror (2026-09-07, ~10:41 CDT)</h2>
+<p>The audit sections above this entry found the defects; this entry is what was done<br />
+about them, the same day. Every one shared a shape: <strong>a promise recorded in a doc or<br />
+a published policy that no code enforced, failing with no error anywhere.</strong></p>
+<p><strong>The launch gate that could not be opened.</strong> <code>frontend/Dockerfile</code> gained <code>ARG</code>+<code>ENV</code><br />
+for <code>NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE</code> and <code>NEXT_PUBLIC_BILLING_LIVE</code>, plus matching<br />
+entries in <code>docker-compose.yml</code>'s <code>web.build.args</code> and in both runbooks<br />
+(<code>DEPLOY_RAILWAY.md</code> Step 6, <code>DEPLOY.md</code> §4, which had also said "all four are<br />
+build-time" and now says six). Proven with two real Next builds and a served page<br />
+rather than by reasoning: with the flag set, <code>/terms</code> returns<br />
+"In effect · last revised 2026-09-07" and no banner; rebuilt with it unset, the same<br />
+URL returns "Draft: pending legal review and sign-off". The control run is the half<br />
+that makes the first one mean anything. <strong>Unproven and stated as such:</strong> that the<br />
+<code>ARG</code> forwards under a real <code>docker build</code> — Docker's daemon has been down since<br />
+2026-09-06 ~13:40 CDT.</p>
+<p><strong>Deletion now erases what a minor actually wrote.</strong> <code>anonymize_account()</code> scrubs the<br />
+four <code>Hours</code> free-text columns (<code>note</code>, <code>supervisor_name</code>, <code>deny_note</code>, <code>appeal_note</code>)<br />
+and, by a decision taken here rather than deferred, <code>Message.body</code> as well. The hours<br />
+rows are kept on purpose so an organization's verified-service record survives, which<br />
+is precisely the argument for emptying their prose: the row outlives the account. The<br />
+privacy page had already promised this — "with your name and identifying details<br />
+removed" — so the code had been contradicting the published text, not merely lagging<br />
+it. Two clauses were added to <code>privacy/page.tsx</code> so the page describes what now<br />
+happens, and <code>LEGAL_LAST_REVISED</code> moved to 2026-09-07. The new test was sentinel-run<br />
+against the pre-fix code and failed alone, on the planted phone number in <code>Hours.note</code>.</p>
+<p><strong>The mirror was publishing analysis written for a lawyer who has not read it.</strong> The<br />
+32,128-byte children's-privacy background brief reached the public repo because<br />
+<code>sync_portfolio.py</code> copied <code>docs/research/</code> and <code>docs/adr/</code> by flat glob — so inside<br />
+those two folders a real allowlist degraded into "publish anything that does not match<br />
+one of five credential regexes". No credential regex catches a document whose problem<br />
+is that it holds no credentials, only open questions about minors' data on a live<br />
+platform. Both globs are now explicit per-file lists. The same pass found that<br />
+<code>LICENSE</code> had been listed as mirrored since 2026-09-03 while no code ever copied it<br />
+(the mirror has never carried a license, so it read as all-rights-reserved), and that<br />
+Evan's date of birth would have ridden the next sync out — now redacted, while the<br />
+separate question of whether the «redacted-date» birthday stays public was left for him<br />
+rather than answered on his behalf.</p>
+<p>Also: the support runbook's P4 procedure was policing an age floor of 12 against a<br />
+<code>MINIMUM_AGE</code> of 13, and three backend files failed <code>ruff format --check</code> while<br />
+HANDOFF claimed format-clean — on a repo whose CI runs that check as a blocking step.</p>
+<p>410 backend tests pass (up one), <code>tsc</code> clean, eslint 0 errors. Two things are<br />
+deliberately not done and are Evan's: the push that actually unpublishes the brief<br />
+(committed as <code>5eac677</code>, blocked by the publish guard by design, <strong>so the file is<br />
+still live on GitHub until he pushes</strong>), and the decision on whether to rewrite the<br />
+mirror's published history, where a force-push would still not evict the blob from<br />
+GitHub's cache without contacting Support.</p>
 </div>
 </body>
 </html>

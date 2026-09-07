@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 
 import { V1Shell } from "@/components/v1/v1-shell";
-import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import { usePublicQuery } from "@/lib/use-api";
@@ -157,13 +156,19 @@ export default function OpportunityDetailPage() {
                   </div>
                 </div>
                 {user.plan === "pro" ? (
-                  <Button size="sm" variant={opp.featured ? "outline" : "default"} disabled={featuring} onClick={toggleFeatured}>
+                  <button
+                    className={opp.featured ? "btn-s" : "btn-p"}
+                    type="button"
+                    disabled={featuring}
+                    onClick={toggleFeatured}
+                    style={{ padding: "9px 18px", fontSize: ".83rem", whiteSpace: "nowrap" }}
+                  >
                     {opp.featured ? "Unfeature" : "Feature"}
-                  </Button>
+                  </button>
                 ) : (
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href="/billing">Upgrade</Link>
-                  </Button>
+                  <Link className="btn-s" href="/billing" style={{ padding: "9px 18px", fontSize: ".83rem", whiteSpace: "nowrap", textDecoration: "none" }}>
+                    Upgrade
+                  </Link>
                 )}
               </div>
             </div>

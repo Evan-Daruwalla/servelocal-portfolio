@@ -61,6 +61,22 @@ Docker is back on the dev box. Everything pushed.
 Frontier unchanged: M11 Phase 1 (legal) is the critical path; model-doable next = M13.6 page by page
 (11 of 22 converted).**
 
+**Status 2026-09-07 (state sync; NOT a scope change — the block above stays as the
+2026-09-02 record and its numbers were true then).** M15 added 2026-09-03 and is still
+unstarted. **409 backend tests** green on SQLite (410 on real Postgres); migrations
+**0001–0028** (`0027_rate_limit_hits`, `0028_throttle_state`); boot guard now **10 checks
+over 9 variables** (`TURNSTILE_FAIL_OPEN_UNTIL` joined 2026-09-05, keyed on how far out
+the window reaches). **M13.6 at 16 of 22** (`dashboard` 2026-09-05, `applicants`
+2026-09-06). M11 Phase 3: **uptime monitor BUILT and restore drill RUN** 2026-09-05 — the
+two items the block above lists as open; Sentry DSN and scheduled prod backups remain
+BLOCKED-ON-EVAN, so the criterion stays unticked. Rate limiter and all three anti-abuse
+throttles moved to shared tables, which **lifted the ONE-replica constraint**.
+`opportunities/[id]` converted off shadcn onto the editorial system 2026-09-06; 11 files
+still import `@/components/ui/`. **Docker Desktop's daemon is DOWN** as of 2026-09-06, so
+Postgres-dependent checks cannot run. Frontier unchanged: M11 Phase 1 (legal) is the
+critical path, and **Evan turns 18 on «redacted-date»**, which lifts his person-vs-entity
+blocker and nothing else.
+
 ---
 
 ## 1. OBJECTIVE
@@ -187,8 +203,13 @@ The plan is complete when every box checks. Verify each with the command given.
 - [ ] Production error tracking and uptime monitoring are wired; prod Postgres has scheduled
       backups with a documented restore path (M11).
       *(2026-09-02: Sentry is wired and scrubbed, env-gated OFF until a DSN exists (BLOCKED-ON-EVAN,
-      18+ ToS). Uptime monitor: not built. Backups: `scripts/backup_db.py --restore-drill` exists
-      and has never been run for real — Docker is back, so it now can be.)*
+      18+ ToS).)* *(2026-09-05: **uptime monitor BUILT** — `scripts/uptime_check.py` +
+      `.github/workflows/uptime.yml`, polling `/health` every ~15 min from GitHub Actions, i.e.
+      off the app host, at no new account; idle until the `PRODUCTION_URL` repo variable is set.
+      **Restore drill RUN for real** — backup 34,040 bytes, restored into a throwaway db,
+      users/opportunities/hours counts matched the source, drill db dropped; see `docs/BACKUPS.md`
+      and `docs/MONITORING.md`. Box stays OPEN on the two BLOCKED-ON-EVAN halves: the Sentry DSN,
+      and SCHEDULED backups on the production host.)*
 - [ ] A real person can register, get guardian consent, apply, and log verified hours on the
       production site — verified end to end and recorded (M11).
 - [x] Every page renders in v1's editorial system — Fraunces/DM Sans, v1 palette, and v1 component
@@ -494,10 +515,32 @@ must do. Nothing in this milestone is guessed, faked, or worked around.
    in `app/core/consent.py`; `terms/page.tsx` says "at least 13 years old"; `privacy/page.tsx`
    says under-13s may not register. A legal reviewer reading this section for the M11 Phase-1
    gate should take **13** as current — the text above records what was true on 2026-08-05,
-   not today. Evidence: `docs/premortem_2026-09-03_legal-pages.md` T3.)* (the register flow must enforce
+   not today. Evidence: `docs/premortem_2026-09-03_legal-pages.md` T3.)*
+   *(Forward-pointer added 2026-09-06 — **T3 is CLOSED, do not read the citation above as a
+   live finding.** The 2026-09-05 re-run
+   (`docs/premortem_2026-09-05_legal-pages.md`, §T3) resolved it "for the reason it was
+   raised, not merely reworded": a hard floor at exactly COPPA's line means no
+   honestly-registered user is a COPPA "child" at all, so the obligations T3 raised —
+   verifiable parental consent, notice — do not attach to a population the site no longer
+   admits. Verified there by direct read of `backend/app/core/consent.py:21`,
+   `terms/page.tsx:46` and `privacy/page.tsx:90`, not by trusting a commit message. The
+   residual risk is a registrant who lies about their date of birth, which is the ordinary
+   "actual knowledge" edge case. Nothing above is retracted — it was true when written; this
+   line exists because a reviewer arriving at the 2026-09-03 citation has no other way to
+   learn it was later closed.)* (the register flow must enforce
    the minimum age the policy states). Mark the drafts DRAFT — final review/signoff is
    BLOCKED-ON-EVAN (and a guardian/adult — Evan is a minor operating a service for minors; that
-   review is not optional). Done: pages render, linked, drafts flagged for review in HANDOFF.
+   review is not optional).
+   *(Forward-pointer added 2026-09-06 — **the "Evan is a minor" clause above expires
+   «redacted-date».** Evan gave his date of birth, «redacted-dob», so from that date he can be the
+   named operator on the Terms himself and no adult co-signer is required for the
+   person-vs-entity reason. **What does NOT expire is the rest of the sentence**: the
+   review is still not optional, because the platform still holds MINORS' data — guardian
+   consent, breach notification and a support channel are the same duties either way, and
+   an 18-year-old operator is not a substitute for legal review. Read the clause as
+   "BLOCKED-ON-EVAN, and on a legal reviewer" once the date passes, not as
+   "BLOCKED-ON-EVAN alone".)*
+   Done: pages render, linked, drafts flagged for review in HANDOFF.
 3. **Production infrastructure.** Choose host (the Railway plugin is already installed and is
    the default candidate — Evan confirms or overrides), provision managed Postgres, set env
    secrets (JWT secret, DB URL, Resend key, CAPTCHA keys), configure the deploy to run

@@ -3,14 +3,14 @@
 import { Bookmark, CalendarDays, ChartColumn, ClipboardList, Clock, Download, Lock, MapPin, Plus, Settings, TriangleAlert, Trophy, User, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import { ConsentBanner } from "@/components/consent-banner";
 import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import { HOURS_STATUS_LABEL_COMPACT, HOURS_STATUS_PILL } from "@/lib/status";
-import type { ApplicationWithOpportunity, HoursWithOpportunity, MyAwards, Opportunity } from "@/lib/types";
+import { useAuthedQuery } from "@/lib/use-api";
 
 type Tab = "calendar" | "history" | "log" | "saved" | "awards" | "impact" | "profile" | "account";
 const TABS: { id: Tab; label: string; Icon: LucideIcon }[] = [
@@ -30,12 +30,23 @@ export default function DashboardPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("calendar");
-  const [hours, setHours] = useState<HoursWithOpportunity[]>([]);
-  const [awards, setAwards] = useState<MyAwards | null>(null);
-  const [apps, setApps] = useState<ApplicationWithOpportunity[]>([]);
-  const [saved, setSaved] = useState<Opportunity[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [dataError, setDataError] = useState(false);
+  // Keys are shared with the pages that already read the same data (`hours/mine`
+  // and `awards/my` with /portfolio, `applications/my` with /applications,
+  // `saved` with /saved) — that shared cache entry is the point of the key.
+  const isStudent = user?.role === "student";
+  const hoursQ = useAuthedQuery(isStudent ? "hours/mine" : null, (t) => api.listHours(t));
+  const awardsQ = useAuthedQuery(isStudent ? "awards/my" : null, (t) => api.myAwards(t));
+  const appsQ = useAuthedQuery(isStudent ? "applications/my" : null, (t) => api.myApplications(t));
+  const savedQ = useAuthedQuery(isStudent ? "saved" : null, (t) => api.listSaved(t));
+  // Memoized only to keep the `stats` useMemo below off a fresh [] each render.
+  const hours = useMemo(() => hoursQ.data ?? [], [hoursQ.data]);
+  const awards = awardsQ.data ?? null;
+  const apps = appsQ.data ?? [];
+  const saved = savedQ.data ?? [];
+  // One combined pair, unchanged from the pre-SWR shape: every tab body still
+  // shows a skeleton while anything loads and one inline error if anything fails.
+  const dataLoading = hoursQ.loading || awardsQ.loading || appsQ.loading || savedQ.loading;
+  const dataError = Boolean(hoursQ.error || awardsQ.error || appsQ.error || savedQ.error);
   // log-hours form
   const [srOpp, setSrOpp] = useState("");
   const [srHours, setSrHours] = useState(1);
@@ -49,23 +60,35 @@ export default function DashboardPage() {
   const [acctError, setAcctError] = useState<string | null>(null);
 
   function refresh() {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) { setDataLoading(false); return; }
-    setDataLoading(true);
-    setDataError(false);
-    api.autoLogHours(token).catch(() => undefined)
-      .then(() => Promise.all([api.listHours(token), api.myAwards(token), api.myApplications(token), api.listSaved(token)]))
-      .then(([h, a, ap, sv]) => {
-        setHours(h as HoursWithOpportunity[]);
-        setAwards(a);
-        setApps(ap);
-        setSaved(sv);
-        setDataError(false);
-      })
-      .catch(() => setDataError(true))
-      .finally(() => setDataLoading(false));
+    hoursQ.retry();
+    awardsQ.retry();
+    appsQ.retry();
+    savedQ.retry();
   }
-  useEffect(() => { if (!loading) refresh(); }, [loading]);
+
+  // Auto-log is a WRITE, so it cannot live inside a cached read: SWR revalidates
+  // on focus and reconnect, and each of those would re-POST. It runs once per
+  // mount instead, and only forces a re-read when it actually minted rows — the
+  // common case is `created: 0`, where the queries above already have the truth.
+  // (Idempotent server-side: `/hours/auto-log` skips any occurrence date that
+  // already has a row, so a repeat is a no-op, not a duplicate.)
+  const autoLogged = useRef(false);
+  const { mutate: mutateHours } = hoursQ;
+  const { mutate: mutateAwards } = awardsQ;
+  useEffect(() => {
+    if (loading || !isStudent || autoLogged.current) return;
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    autoLogged.current = true;
+    api.autoLogHours(token)
+      .then((r) => {
+        if (r.created > 0) {
+          void mutateHours();
+          void mutateAwards();
+        }
+      })
+      .catch(() => undefined);
+  }, [loading, isStudent, mutateHours, mutateAwards]);
 
   const stats = useMemo(() => {
     let verified = 0, pending = 0, total = 0;
@@ -161,8 +184,10 @@ export default function DashboardPage() {
     return d;
   });
 
-  // Per-section resilience (M13.5): panels load via one refresh(), so a single
-  // skeleton-while-loading + inline error+Retry covers every data tab.
+  // Per-section resilience (M13.5): the four queries are separate since the SWR
+  // conversion, but `dataLoading`/`dataError` still combine them, so a single
+  // skeleton-while-loading + inline error+Retry covers every data tab. Splitting
+  // to per-panel errors is now possible and is deliberately NOT done here.
   const sectionError = (
     <div className="load-error">
       <div className="empty-icon"><TriangleAlert size={40} strokeWidth={1.75} aria-hidden /></div>

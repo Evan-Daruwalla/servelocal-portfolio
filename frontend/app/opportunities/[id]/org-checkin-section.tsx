@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY } from "@/lib/auth-context";
 import type { Opportunity } from "@/lib/types";
@@ -52,19 +50,18 @@ export function OrgCheckinSection({ opp }: { opp: Opportunity }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Check-in codes</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground">
+    <div className="modal-card">
+      <div className="mbody" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 className="mtitle" style={{ marginBottom: 0 }}>Check-in codes</h2>
+        <p className="progress-label" style={{ marginTop: 0 }}>
           Generate a code and share it at the event. Signed-up volunteers redeem it for instantly-verified hours.
         </p>
-        <div className="flex gap-2">
+        <div style={{ display: "flex", gap: 8 }}>
           <select
+            className="fsel"
+            style={{ flex: 1 }}
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-9 flex-1 rounded-md border border-input bg-transparent px-3 text-sm"
           >
             {dates.map((d) => (
               <option key={d} value={d}>
@@ -72,17 +69,26 @@ export function OrgCheckinSection({ opp }: { opp: Opportunity }) {
               </option>
             ))}
           </select>
-          <Button size="sm" onClick={generate} disabled={busy || !date}>
+          <button
+            className="btn-p"
+            type="button"
+            onClick={generate}
+            disabled={busy || !date}
+            style={{ padding: "9px 18px", fontSize: ".83rem" }}
+          >
             {busy ? "…" : "Generate"}
-          </Button>
+          </button>
         </div>
         {code && (
-          <p className="text-sm">
-            Code for {date}: <span className="font-mono text-lg font-semibold tracking-widest">{code}</span>
+          <p style={{ fontSize: ".84rem", color: "var(--text)", margin: 0 }}>
+            Code for {date}:{" "}
+            <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "1.05rem", fontWeight: 700, letterSpacing: ".18em", color: "var(--green)" }}>
+              {code}
+            </span>
           </p>
         )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </CardContent>
-    </Card>
+        {error && <p className="ferr" style={{ marginBottom: 0 }}>{error}</p>}
+      </div>
+    </div>
   );
 }

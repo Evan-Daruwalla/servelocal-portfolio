@@ -72,6 +72,53 @@ types in `lib/types.ts` → calls in `lib/api.ts` → **fetch through `lib/use-a
 - Client errors (4xx) are never retried; the API's 403/404 are settled answers and the rate limiter
   counts every attempt.
 
+## A WRITE in a page's loader never goes inside a fetcher (2026-09-05)
+
+- SWR revalidates on window focus and on reconnect, so anything inside a fetcher runs
+  again on its own schedule. A loader that begins with a write (`dashboard` did:
+  `POST /hours/auto-log`, then four GETs in one `Promise.all`) must have the write
+  LIFTED OUT, not carried along. Converted shape, and the one to copy for `hours`,
+  the last page with this problem:
+  1. the reads become one `useAuthedQuery` per key, nothing special;
+  2. the write runs in its OWN mount-once `useEffect` behind a `useRef` guard;
+  3. on success it revalidates **only the keys that write can affect** (auto-log →
+     `hours/mine` + `awards/my`, never `applications/my` or `saved`), and **only when
+     the server says it changed something** (`created > 0`).
+- Step 3's condition is why the new page is cheaper, not just safer: `{"created": 0}` is
+  the common answer, and there the four queries already hold the truth. The old code
+  always wrote and then always fetched.
+- Idempotence on the server is NOT a licence to skip this. `/hours/auto-log` skips any
+  `(opportunity, user, occurrence_date)` that already has a row, so a replay duplicates
+  nothing — but it still spends a request against the rate limiter and writes an audit
+  row on any run that mints something.
+- **Verified by request count, not by the screen** (2026-09-05, dashboard): mount showed
+  one GET per key + one POST; `created: 1` added exactly `hours/mine` + `awards/my`; a
+  tab switch added nothing; a self-report added its POST + four GETs and NO second
+  auto-log. NOT verified: the focus-revalidation path — a synthetic `focus` event fires
+  nothing because SWR gates it on `document.visibilityState` and the automation tab is
+  hidden (same family as the cached-200 trap in `testing.md`).
+
+## NEVER do blocking I/O in an `async` middleware or route (2026-09-05)
+
+- `TrafficMiddleware.dispatch` is `async`; psycopg/SQLAlchemy are BLOCKING. The counter
+  write ran straight on the event loop — **median 3.48 ms, p95 4.79 ms per counted
+  request**, and up to `pool_timeout` (**30 s**) when the pool saturates. Blocking the
+  loop delays EVERY concurrent request, including ones that never touch the DB. Fixed
+  with `await run_in_threadpool(_record_hit_blocking, …)`.
+- The 75 sync (`def`) routes are fine — Starlette already runs those in the 40-worker
+  threadpool. The hazard is specific to `async def` bodies, of which the middlewares are
+  the main ones. **Measured limits, not assumed:** threadpool 40 (anyio default),
+  `QueuePool` `pool_size` 5 + `max_overflow` 10 = **15 connections**, `pool_timeout` 30 s.
+- A `try/except` around blocking work does NOT make it safe. `traffic_middleware`'s
+  docstring promised "analytics must never cost a user their request" and it was the code
+  most able to freeze the whole server — the exception guard addressed the wrong failure.
+- Test it BEHAVIOURALLY: `test_traffic_write_runs_off_the_event_loop` spies on both
+  `run_in_threadpool` (loop thread) and `record_hit` (must not be) and requires the two
+  thread ids to differ. Proved to fail against the inline version before being trusted.
+- **Beware the excluded route when timing this.** A first timing run read 0.01 ms and
+  looked fine; it probed `/api/v1/health`, which is in `EXCLUDED_ROUTES`, so `record_hit`
+  returned before any DB work. Time a COUNTED route.
+
 ## Cache keys name the ANSWER, not the endpoint (2026-09-02)
 - If a response shape depends on WHO is asking, the asker's role is part of the
   answer and part of the key: `hours/mine` (a student's own ledger) vs

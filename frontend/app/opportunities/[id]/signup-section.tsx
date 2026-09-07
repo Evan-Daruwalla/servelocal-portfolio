@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY } from "@/lib/auth-context";
 import { APPLICATION_STATUS_MESSAGE } from "@/lib/status";
@@ -48,30 +47,32 @@ export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: (
   }
 
   if (status) {
-    return <p className="text-sm font-medium text-primary">{APPLICATION_STATUS_MESSAGE[status] ?? status}</p>;
+    return <p className="progress-label" style={{ color: "var(--green)", fontWeight: 600 }}>{APPLICATION_STATUS_MESSAGE[status] ?? status}</p>;
   }
 
   if (!recurring) {
     const full = opp.spots_remaining <= 0;
     return (
-      <div className="flex flex-col gap-2">
-        <Button onClick={apply} disabled={submitting}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+        <button className="btn-p" type="button" onClick={apply} disabled={submitting}>
           {submitting ? "Applying…" : full ? "Join waitlist" : "Apply"}
-        </Button>
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        </button>
+        {error && <p className="ferr" style={{ marginBottom: 0 }}>{error}</p>}
       </div>
     );
   }
 
   const dates = Object.keys(dateSpots);
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2">
-        <label className="flex items-center gap-2 text-sm">
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* `.fr label` is uppercase-tracked and block — wrong for a radio row, so
+            these keep inline layout and take the body font size directly. */}
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".84rem" }}>
           <input type="radio" name="signup" checked={mode === "all_dates"} onChange={() => setMode("all_dates")} />
           Subscribe to all dates
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".84rem" }}>
           <input
             type="radio"
             name="signup"
@@ -83,9 +84,9 @@ export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: (
       </div>
       {mode === "single_date" && (
         <select
+          className="fsel"
           value={singleDate}
           onChange={(e) => setSingleDate(e.target.value)}
-          className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
         >
           <option value="">Choose a date…</option>
           {dates.map((d) => (
@@ -95,12 +96,17 @@ export function SignupSection({ opp, onChange }: { opp: Opportunity; onChange: (
           ))}
         </select>
       )}
-      <Button onClick={apply} disabled={submitting || (mode === "single_date" && !singleDate)}>
+      <button
+        className="btn-p"
+        type="button"
+        onClick={apply}
+        disabled={submitting || (mode === "single_date" && !singleDate)}
+      >
         {submitting ? "Applying…" : "Apply"}
-      </Button>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      </button>
+      {error && <p className="ferr" style={{ marginBottom: 0 }}>{error}</p>}
       {dates.length > 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="progress-label">
           Upcoming dates: {dates.slice(0, 5).map((d) => `${d} (${dateSpots[d]} left)`).join(" · ")}
         </p>
       )}

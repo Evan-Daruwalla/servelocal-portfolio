@@ -1,6 +1,21 @@
 # gotchas — servelocal-v2
 
-Last updated 2026-09-03.
+Last updated 2026-09-07.
+
+- **A `NEXT_PUBLIC_*` var needs THREE edits, and missing one fails silently.**
+  `lib/flags.ts` (or wherever it is read), an `ARG`+`ENV` pair in
+  `frontend/Dockerfile` **before** `RUN npm run build`, and an entry in
+  `docker-compose.yml`'s `web.build.args`. Docker forwards a build arg only for a
+  DECLARED `ARG` and Next inlines these at BUILD time, so an undeclared one is
+  dropped without a warning and the code reads `undefined` — the `=== "true"`
+  comparison goes false and the feature simply never turns on. Live case:
+  `NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE` was undeclared until 2026-09-07, so
+  following DEPLOY_RAILWAY Step 6 could never clear the legal draft banner, with
+  no error in the build log, the app log, or the page (2026-09-07).
+- **`/terms` and `/privacy` are `ƒ` dynamic, so there is no prerendered HTML to
+  grep** — proving a flag's effect needs `next start` and a request, not a file
+  search in `.next/`. And prove it BOTH ways: a page with no banner proves nothing
+  until the rebuild WITHOUT the flag shows the banner return (2026-09-07).
 
 - **Every role guard is literally named `guard`.** `require_org` and `require_student`
   are both closures returned by `_role_guard`, so matching a route's dependencies by

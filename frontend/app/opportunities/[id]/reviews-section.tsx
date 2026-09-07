@@ -2,8 +2,6 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, api } from "@/lib/api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
 import type { OrgReviews } from "@/lib/types";
@@ -39,38 +37,44 @@ export function ReviewsSection({ orgId }: { orgId: string }) {
     }
   }
 
+  // `.modal-card` + `.mbody`, matching the Featured panel this page already renders
+  // as a sibling — not `.form-box`, so the two cards on one screen agree.
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">
+    <div className="modal-card">
+      <div className="mbody" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <h2 className="mtitle" style={{ marginBottom: 0 }}>
           Reviews
           {data && data.average_rating != null && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
+            <span style={{ marginLeft: 8, fontSize: ".82rem", fontWeight: 400, color: "var(--muted)" }}>
               ★ {data.average_rating} ({data.count})
             </span>
           )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {data && data.reviews.length === 0 && <p className="text-sm text-muted-foreground">No reviews yet.</p>}
+        </h2>
+        {data && data.reviews.length === 0 && <p className="progress-label" style={{ marginTop: 0 }}>No reviews yet.</p>}
         {data?.reviews.map((r) => (
-          <div key={r.id} className="border-b pb-2 last:border-0">
-            <p className="text-sm font-medium">
+          <div key={r.id} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
+            <p style={{ fontSize: ".84rem", fontWeight: 600, color: "var(--text)", margin: 0 }}>
               {"★".repeat(r.rating)}
               {"☆".repeat(5 - r.rating)} · {r.author_name}
             </p>
-            {r.text && <p className="text-sm text-muted-foreground">{r.text}</p>}
+            {r.text && <p className="progress-label" style={{ marginTop: 4 }}>{r.text}</p>}
           </div>
         ))}
 
         {user?.role === "student" && (
-          <form onSubmit={onSubmit} className="flex flex-col gap-2 border-t pt-4">
-            <label htmlFor="review-rating" className="text-sm font-medium">Leave a review</label>
+          <form
+            onSubmit={onSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border)", paddingTop: 16 }}
+          >
+            <div className="fr" style={{ marginBottom: 0 }}>
+              <label htmlFor="review-rating">Leave a review</label>
+            </div>
             <select
               id="review-rating"
+              className="fsel"
+              style={{ width: 140 }}
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
-              className="h-9 w-28 rounded-md border border-input bg-transparent px-3 text-sm"
             >
               {[5, 4, 3, 2, 1].map((n) => (
                 <option key={n} value={n}>
@@ -79,19 +83,25 @@ export function ReviewsSection({ orgId }: { orgId: string }) {
               ))}
             </select>
             <textarea
+              className="fsel"
+              style={{ width: "100%", resize: "vertical", cursor: "text" }}
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={2}
               placeholder="Share your experience (optional)"
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
             />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" size="sm" disabled={submitting} className="self-start">
+            {error && <p className="ferr" style={{ marginBottom: 0 }}>{error}</p>}
+            <button
+              className="btn-p"
+              type="submit"
+              disabled={submitting}
+              style={{ alignSelf: "flex-start", padding: "9px 18px", fontSize: ".83rem" }}
+            >
               {submitting ? "Posting…" : "Post review"}
-            </Button>
+            </button>
           </form>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
