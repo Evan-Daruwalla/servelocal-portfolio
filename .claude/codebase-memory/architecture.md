@@ -64,6 +64,36 @@ Tailwind 3 + shadcn/ui.
   requiring anyone to sign in. It must never raise: a stale token on a public page has
   to still render the page.
 
+## Server push: SSE over Postgres LISTEN/NOTIFY (2026-09-07)
+
+The site had NEITHER a poller nor a subscription before this — SWR revalidated on
+focus and reconnect, so a server-side event reached the browser only when the user
+refocused the tab. This is the missing channel, and it is a NEW capability, not a
+replacement for polling (there was none to replace; verified across 24 SWR call
+sites, zero `setInterval`, no `refreshInterval`, no `SWRConfig`).
+
+Three layers in `core/events.py`, deliberately separable:
+
+| Layer | What it does | Where it runs |
+|---|---|---|
+| `publish(db, ...)` | `SELECT pg_notify(...)` **inside the caller's transaction** | any request |
+| `listen_forever()` | ONE sync psycopg connection per process on a daemon thread, handing each NOTIFY to the loop via `call_soon_threadsafe` (an AsyncConnection until 2026-09-10 — it never ran under uvicorn on Windows; see gotchas.md) | app lifespan |
+| `deliver(user_id, ...)` | in-process fan-out to per-subscriber `asyncio.Queue`s | listener |
+
+- **Why NOTIFY and not an in-process bus.** II.52/II.53 moved the limiter and the
+  throttle onto shared tables precisely so the ONE-replica constraint could be
+  lifted, concluding Redis was not needed. An in-process bus restores that
+  constraint and fails SILENTLY — a user on replica A never sees an event from
+  replica B, with no error. NOTIFY crosses replicas using the database already here.
+- **Publish is transactional on purpose.** Postgres holds NOTIFY until COMMIT, so
+  an event cannot outrun the row that caused it, and a rollback emits nothing.
+- **One publish site**: `services/notifications.py`, the same chokepoint the
+  `is_active` and `consent_blocks` guards live at. The **13** callers get live updates
+  without knowing the transport exists.
+- **Wired to the UI by KEY, not by component**: `lib/use-event-stream.ts` maps an
+  event name to the SWR keys it invalidates (`AFFECTED_KEYS`). Adding an event
+  type = one entry there plus one `publish` call. See conventions.md.
+
 ## Migrations
 **Migration chain 0001–0024, Alembic rules, and schema conventions → `data.md`**
 (canonical).

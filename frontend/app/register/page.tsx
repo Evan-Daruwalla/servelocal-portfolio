@@ -117,7 +117,7 @@ export default function RegisterPage() {
                 <div className="fr">
                   <label htmlFor="register-dob">Date of Birth <span style={{ color: "var(--red)" }}>*</span></label>
                   <input id="register-dob" className="fc" type="date" required value={dob} onChange={(e) => setDob(e.target.value)} />
-                  <div className="fhint">Must be 12 or older. Required for award tracking.</div>
+                  <div className="fhint">Must be 13 or older. Required for award tracking.</div>
                 </div>
               )}
               {isMinor && (

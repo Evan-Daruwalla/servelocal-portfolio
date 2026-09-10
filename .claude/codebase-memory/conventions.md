@@ -72,6 +72,23 @@ types in `lib/types.ts` → calls in `lib/api.ts` → **fetch through `lib/use-a
 - Client errors (4xx) are never retried; the API's 403/404 are settled answers and the rate limiter
   counts every attempt.
 
+## Live updates invalidate SWR KEYS, never components (2026-09-07)
+
+Adding a live-updating surface is two edits: `publish(...)` at the backend site,
+and one entry in `AFFECTED_KEYS` in `lib/use-event-stream.ts` mapping the event
+name to the keys it dirties. Components stay ignorant of the transport — they
+already read those keys, and SWR re-runs the fetcher. Nothing subscribes to a
+component.
+
+- `useEventStream()` is mounted ONCE, in `site-header.tsx`, which renders on every
+  non-`.v1` route. A second mount = a second stream per tab for no benefit.
+- **A shared key must be invalidated by whoever changes it, even from another
+  page.** `/notifications` marking a row read changes the header's unread count,
+  and that page's own `mutate()` only revalidates its own key — so the badge stayed
+  stale until the header remounted. Use the global `mutate(key)` from
+  `useSWRConfig()` for keys the page does not own. This was a real shipped bug,
+  fixed 2026-09-07.
+
 ## A WRITE in a page's loader never goes inside a fetcher (2026-09-05)
 
 - SWR revalidates on window focus and on reconnect, so anything inside a fetcher runs
@@ -159,24 +176,20 @@ types in `lib/types.ts` → calls in `lib/api.ts` → **fetch through `lib/use-a
 
 ## Client-side cache is identity-scoped — clear it on every identity change (2026-09-01)
 
-- SWR's cache is **process-global** and there is no `<SWRConfig>` in this app, so
-  a cache entry outlives a sign-out and survives until a hard page reload.
-  `logout()` cleared the token and left the cache untouched, so in ONE TAB the
-  next account inherited the previous account's data — **one student's private
-  list rendered in another student's session**. Introduced by `6d75394`
-  (SWR adoption); before that, fetches were component-local and could not
-  survive a logout.
+- SWR's cache is **process-global** (no `<SWRConfig>` provider here), so an entry
+  outlives a sign-out until a hard reload. `logout()` cleared the token and left
+  the cache, so in ONE TAB the next account inherited the previous account's data
+  — **one student's private list rendered in another student's session**.
+  Introduced by `6d75394` (SWR adoption); before it, fetches were component-local.
 - **Fix, and the rule:** `auth-context.tsx` `clearCache()` — `mutate(() => true,
-  undefined, { revalidate: false })` — is called from **both `login()` and
-  `logout()`**. Login-side is NOT redundant: `lib/api.ts` drops the token on a
-  401 *without* going through `logout()`, so that path clears no cache and does
-  not reset `user`; the next login is what cleans up after it.
-- Reproduced both directions on a production build. **See `gotchas.md` for the
-  test trap that made the first reproduction attempt falsely pass** — it matters
-  more than this entry, because it is why the fix was briefly weakened.
-- Any future client-side cache (React Query, a service worker, `sessionStorage`)
-  inherits this rule: identity change ⇒ drop everything. (Moved verbatim from
-  `security.md` 2026-09-03 — a frontend rule, not a codebase-security one.)
+  undefined, { revalidate: false })` — called from **both `login()` and
+  `logout()`**. Login-side is NOT redundant: `lib/api.ts` drops the token on a 401
+  *without* going through `logout()`, clearing no cache and not resetting `user`;
+  the next login cleans up after it. Reproduced both directions on a production
+  build; **see `gotchas.md` for the test trap that made the first attempt falsely
+  pass**, which is why the fix was briefly weakened.
+- Any future client-side cache inherits this: identity change ⇒ drop everything.
+  (Moved from `security.md` 2026-09-03 — a frontend rule, not a security one.)
 
 ## Hard rules
 **Definition of done, commit/push, and BLOCKED-ON-EVAN live in `CLAUDE.md` (always loaded) —

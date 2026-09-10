@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSWRConfig } from "swr";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,12 @@ export default function NotificationsPage() {
     retry,
     mutate,
   } = useAuthedQuery("notifications", (t) => api.notifications(t));
+  // Global mutate, for the key this page does NOT own. Marking a notification
+  // read changes the header's unread count, and `mutate()` above only
+  // revalidates "notifications" — so the badge stayed stale until the header
+  // remounted (the M13.6 bug). Invalidating the count key by name is the fix;
+  // the header re-reads it because both components share that one key.
+  const { mutate: mutateKey } = useSWRConfig();
   const [emailPref, setEmailPref] = useState(true);
   const [savingPref, setSavingPref] = useState(false);
 
@@ -46,6 +53,7 @@ export default function NotificationsPage() {
     if (!token) return;
     await api.markNotificationRead(id, token);
     void mutate();
+    void mutateKey("notifications/unread-count");
   }
 
   async function markAll() {
@@ -53,6 +61,7 @@ export default function NotificationsPage() {
     if (!token) return;
     await api.markAllNotificationsRead(token);
     void mutate();
+    void mutateKey("notifications/unread-count");
   }
 
   if (loading) return null;

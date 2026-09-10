@@ -29,7 +29,7 @@ import type {
   User,
 } from "@/lib/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 // The localStorage key the JWT is stored under. Defined HERE (not in
 // auth-context) so the 401 interceptor below can clear it without importing
@@ -255,6 +255,11 @@ export const api = {
   // ── Notifications ──
   notifications: (token: string) => request<Notification[]>("/notifications", { token }),
   unreadCount: (token: string) => request<{ unread: number }>("/notifications/unread-count", { token }),
+  // Exchanges the access token for a 30s ticket that opens the SSE stream.
+  // EventSource cannot send an Authorization header and the access token must
+  // never appear in a URL, so the stream gets its own short-lived credential.
+  streamTicket: (token: string) =>
+    request<{ ticket: string; expires_in: number }>("/events/ticket", { method: "POST", token }),
   markNotificationRead: (id: string, token: string) =>
     request<Notification>(`/notifications/${id}/read`, { method: "PATCH", token }),
   markAllNotificationsRead: (token: string) =>

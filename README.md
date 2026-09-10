@@ -12,12 +12,11 @@ published for a platform that serves minors.
 
 | Path | What it is |
 |---|---|
-| `project-history/` | The whole-project chronological record (v1 → v2), append-only, with its script-generated HTML twin — every decision, bug, and pivot, dated |
 | `docs/record_2026-07-07.md` | The v2 build log: per-task WHAT/WHY/HOW entries, honest about failures and abandoned approaches |
-| `HANDOFF.md` | The living project snapshot (status + workstream table) |
-| `PRD_ROADMAP.md` | The standing milestone plan the build executes against (append-mostly: dropped work is struck through with dated reasons, never erased) |
+| `docs/record_2026-07-16.md` | The build log, continued — published through the last entry that has been reviewed for publication; later entries stay in the private repo until they are |
 | `docs/research/` | Sourced research briefs that fed design decisions |
-| `.claude/codebase-memory/` | Binned technical memory (architecture, conventions, features, gotchas, performance) — the private tree's other bins, `security.md` among them, are intentionally omitted |
+| `docs/adr/` | Architecture decision records |
+| `.claude/codebase-memory/` | Binned technical memory (architecture, conventions, features, gotchas) — the private tree's other bins, `security.md` among them, are intentionally omitted |
 | `frontend/` | The Next.js 16 / React 19 / TypeScript frontend — served to every browser anyway, so public by definition |
 
 ## Why the process is documented like this
@@ -28,6 +27,6 @@ decisions, verification pasted rather than claimed, and docs a fresh
 collaborator (or a cheaper model) can execute from without the author filling
 gaps from memory.
 
-*The build log and history mention env-variable names (e.g. `STRIPE_SECRET_KEY`);
+*The build logs mention env-variable names (e.g. `STRIPE_SECRET_KEY`);
 no secret values have ever been committed to either repo — a scanner gates every
 commit.*

@@ -1,6 +1,33 @@
 # gotchas — servelocal-v2
 
-Last updated 2026-09-07.
+Last updated 2026-09-10.
+
+- **psycopg CANNOT run async on Windows' default ProactorEventLoop — and setting the loop
+  policy in `main.py` does NOT fix it under uvicorn** (supersedes this entry's 2026-09-07
+  version, which said it did). uvicorn creates its event loop BEFORE importing `app.main`,
+  so a policy set at import time arrives after a Proactor loop already exists. The
+  2026-09-07 'proof' set the policy before `asyncio.run` in a standalone script — the one
+  ordering uvicorn never uses — and the test suite could not catch it because `conftest.py`
+  imports `app.main` before any loop exists. Seen for real 2026-09-10: the server
+  crash-looped on `InterfaceError`, backing off to 30s, while every test passed. **Fix: no
+  async psycopg on the loop at all** — the SSE listener is a sync connection on a daemon
+  thread, handing notifies over with `call_soon_threadsafe`. Lesson: verify a fix under the
+  REAL entry point (`uvicorn app.main:app`), not a script that sets up conditions for you
+  (2026-09-10).
+- **GZipMiddleware silently breaks SSE.** It wraps a streaming response in a gzip
+  buffer, so frames stop arriving promptly and the symptom reads as "events are
+  slow", not as a compression bug. Starlette skips any response that already
+  declares an encoding, so the stream sets `Content-Encoding: identity`. Confirmed
+  on the wire: the response carries `content-encoding: identity` and frames arrive
+  immediately (2026-09-07).
+- **`settings.DATABASE_URL` is NOT the database the app is using, under test.**
+  The suite builds its own SQLite engine and redirects modules at it while the
+  setting still names the dev Postgres. Gating anything on the SETTING therefore
+  fires in tests: the SSE lifespan did exactly that and started a real Postgres
+  listener inside every SQLite test boot, crash-looping against a database the
+  test was not using. Gate on `app.db.session.engine.dialect.name`, which
+  `conftest._redirect_module_sessions` redirects alongside `SessionLocal`
+  (2026-09-07).
 
 - **A `NEXT_PUBLIC_*` var needs THREE edits, and missing one fails silently.**
   `lib/flags.ts` (or wherever it is read), an `ARG`+`ENV` pair in

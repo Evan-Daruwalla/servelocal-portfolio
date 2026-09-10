@@ -14,7 +14,7 @@ Last updated 2026-09-03.
   routed every reader here for milestone status — so a session following INDEX's own
   instruction found no mention of the two most launch-relevant milestones (audit
   2026-09-02). Current: **M13.1–.5 done**; **M13.6 REOPENED** — Evan reversed the
-  skip 2026-08-31 and adopted SWR, now **16 of 22 pages** converted (`lib/use-api.ts`,
+  skip 2026-08-31 and adopted SWR, now **17 of 22 pages** converted (`lib/use-api.ts`,
   `useAuthedQuery`/`usePublicQuery`; `dashboard` 2026-09-05, `applicants` 2026-09-06); **M14.1 site analytics DONE** (`route_hits`,
   migration 0025, admin-only `GET /analytics/traffic`, and the `/admin` "Site
   traffic" section that reads it — 2026-09-02; it had no frontend consumer at all
@@ -43,7 +43,8 @@ Last updated 2026-09-03.
   **SHARED STORE since 2026-09-05** (migration 0027, `rate_limit_hits`): fixed windows with a
   weighted look-back, so instances share one view instead of each keeping its own count and
   doubling the effective limit. Postgres, not Redis — no new service. Costs ~4 ms on auth/write
-  requests only; FAILS OPEN on a store error, by design. (M9.2) `audit_log` table (migration 0020) + `append_audit()` on
+  requests only; its failure behaviour lives in `performance.md` (withheld from the public
+  mirror since 2026-09-10, because it describes current behaviour). (M9.2) `audit_log` table (migration 0020) + `append_audit()` on
   login/password_reset/consent_*/plan_*/hours_* events; admin-only `GET /audit-log`; admin =
   the `User.is_admin` column ONLY (2026-08-06; supersedes "seeded from ADMIN_EMAILS at register
   OR email in ADMIN_EMAILS at request time" — with no email verification anywhere, that handed
@@ -80,6 +81,22 @@ Last updated 2026-09-03.
   opportunity's reusable fields (no date/time or runtime fields). `POST/GET /opportunity-templates`,
   org-owner-gated. Create-from-template is a client-side pre-fill of the normal opportunity POST.
 - Reviews shipped but is OUT of PRD scope (kept as a bonus at Evan's direction).
+
+## Live updates (off-roadmap, 2026-09-07, Evan-directed)
+
+**Proven end to end on real Postgres 2026-09-10:** a committed `create_notification` reached
+an open stream under uvicorn, and the header badge went `(1)` → `(2)` with no reload and no
+focus event.
+
+Server-sent events over Postgres LISTEN/NOTIFY. **Shipped slice: the notification
+badge.** A notification created anywhere pushes to that user's open stream and the
+header's unread count re-reads itself with no refocus and no remount. Other
+surfaces still update on focus/reconnect — the transport is there, the wiring is
+not (applicants, inbox, hours are the obvious next `AFFECTED_KEYS` entries).
+
+Not a replacement for polling: **nothing on this site has ever polled** (verified
+2026-09-07 across 24 SWR call sites — no `setInterval`, no `refreshInterval`, no
+`SWRConfig`). See architecture.md.
 
 ## Semantics (match v1 behavior; v1's CLAUDE.md §Key Concepts is the reference)
 - Roles: `student` / `org` (+ `admin`). Students free forever.

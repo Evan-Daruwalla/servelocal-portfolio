@@ -3,34 +3,35 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
+import { useAuthedQuery } from "@/lib/use-api";
+import { useEventStream } from "@/lib/use-event-stream";
 import { isV1Route } from "@/lib/v1-routes";
 
 export function SiteHeader() {
   const { user, loading, logout } = useAuth();
-  // null = not known (never fetched, or the fetch failed). Distinct from 0.
-  const [unread, setUnread] = useState<number | null>(0);
   const pathname = usePathname();
 
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || !user) {
-      setUnread(null);
-      return;
-    }
-    // Reset to 0 only on success. Swallowing the error left the previous count
-    // standing or showed 0 — indistinguishable from "nothing unread" — on any
-    // transient failure (audit 2026-09-01). A badge is not worth a visible
-    // error, but it must not assert a number it does not have.
-    api
-      .unreadCount(token)
-      .then((r) => setUnread(r.unread))
-      .catch(() => setUnread(null));
-  }, [user]);
+  // The one open SSE stream for the tab. Mounted here because the header is on
+  // every non-`.v1` route; an event invalidates the keys below and the badge
+  // re-reads itself. This is what makes the count live rather than
+  // refocus-driven (2026-09-07).
+  useEventStream();
+
+  // M13.6: was a hand-rolled useEffect + useState. The key is SHARED with
+  // /notifications, so marking one read updates the badge instead of leaving it
+  // stale until the header remounted — the bug HANDOFF listed under M13.6 and
+  // the reason this component was worth converting first.
+  const { data, error } = useAuthedQuery("notifications/unread-count", (t) =>
+    api.unreadCount(t),
+  );
+  // null = not known (never fetched, or the fetch failed). Distinct from 0: a
+  // badge must not assert a number it does not have, and showing 0 on a failed
+  // read is indistinguishable from "nothing unread" (audit 2026-09-01).
+  const unread = error || !data ? null : data.unread;
 
   if (isV1Route(pathname)) return null;
 
