@@ -6,7 +6,9 @@ the complete engineering-process documentation plus the frontend source. The
 full application (FastAPI/Postgres backend) lives in a **private** repo; its
 security-relevant internals (auth, guardian-consent mechanics, rate limiting,
 billing webhooks, deploy runbook, secret registry) are deliberately not
-published for a platform that serves minors.
+published for a platform that serves minors. The security bin's FILE is withheld;
+its one-line INVARIANTS ship deliberately in `.claude/codebase-memory/INDEX.md`
+(the rules a reviewer needs, never the mechanism that implements them).
 
 ## What's here
 
