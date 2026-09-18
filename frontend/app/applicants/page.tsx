@@ -11,6 +11,7 @@ import { V1Shell } from "@/components/v1/v1-shell";
 import { ApiError, api } from "@/lib/api";
 import { useAuthedQuery } from "@/lib/use-api";
 import { TOKEN_KEY, useAuth } from "@/lib/auth-context";
+import { toCsv } from "@/lib/csv";
 import type { Opportunity } from "@/lib/types";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -208,7 +209,7 @@ export default function OrgDashboardPage() {
     const rows = [["Student", "Email", "Opportunity", "Date", "Hours", "Status"]];
     for (const h of hours)
       rows.push([h.student_name ?? "", h.student_email ?? "", h.opportunity.title, h.occurrence_date ?? "", String(h.hours), h.status]);
-    const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = toCsv(rows);
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;

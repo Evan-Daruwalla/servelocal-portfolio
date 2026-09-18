@@ -17,6 +17,37 @@ const draftBanner = {
   lineHeight: 1.6,
 } as const;
 
+// Same gold treatment as the draft banner: an unanswered clause should look
+// unanswered, not like ordinary body copy a reader skims past.
+const openClause = {
+  background: "var(--gold-pale)",
+  border: "1px solid var(--gold)",
+  borderRadius: 6,
+  padding: "10px 14px",
+} as const;
+
+// The two values a legal reviewer must supply (M11 Phase 1). BLOCKED-ON-EVAN:
+// they are a liability decision about who operates a service holding minors'
+// data, so they are never guessed here — null means "not yet answered".
+//
+// WHY THEY ARE CONSTANTS AND NOT ANOTHER NEXT_PUBLIC_ FLAG (2026-09-15, Appendix F
+// MEDIUM). A new `NEXT_PUBLIC_*` var must also be declared as an ARG/ENV in
+// `frontend/Dockerfile` or the build silently inlines an empty string — that is
+// exactly the defect found on 2026-09-07, where `NEXT_PUBLIC_LEGAL_SIGNOFF_COMPLETE`
+// had no ARG and so could never clear the draft banner in a container. Two literals
+// edited in place cannot fail that way.
+const GOVERNING_STATE: string | null = null;
+const LEGAL_ENTITY_NAME: string | null = null;
+
+// `LEGAL_SIGNOFF_COMPLETE` is a boolean and a boolean cannot see a bracket, so on
+// its own it let the page print "In effect" above a governing-law clause that still
+// named a bracket. Effect now requires BOTH: counsel signed off, and the
+// values they were signing off ON are actually present. `backend/tests/
+// test_legal_pages_are_publishable.py` enforces the same rule from the other side;
+// this makes the page itself incapable of the claim rather than relying on a test
+// that only fires when someone sets the env var during a CI run.
+const LEGAL_VALUES_FILLED = GOVERNING_STATE !== null && LEGAL_ENTITY_NAME !== null;
+const IN_EFFECT = LEGAL_SIGNOFF_COMPLETE && LEGAL_VALUES_FILLED;
 export default function TermsPage() {
   return (
     <V1Shell>
@@ -24,10 +55,10 @@ export default function TermsPage() {
         <div className="sec-tag">Legal</div>
         <h2 className="sec-title" style={{ marginBottom: 6 }}>Terms of Service</h2>
         <p className="sec-sub" style={{ marginBottom: 20 }}>
-          {LEGAL_SIGNOFF_COMPLETE ? `In effect · last revised ${LEGAL_LAST_REVISED}` : `Draft dated: July 16, 2026 · last revised ${LEGAL_LAST_REVISED}`}
+          {IN_EFFECT ? `In effect · last revised ${LEGAL_LAST_REVISED}` : `Draft dated: July 16, 2026 · last revised ${LEGAL_LAST_REVISED}`}
         </p>
 
-        {!LEGAL_SIGNOFF_COMPLETE && (
+        {!IN_EFFECT && (
           <div style={draftBanner} role="note">
             <strong style={{ display: "block", fontSize: ".95rem", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".03em" }}>
               Draft: pending legal review and sign-off
@@ -88,7 +119,16 @@ export default function TermsPage() {
           <p>We may update these Terms. Material changes will be reflected by the date at the top, and (once the service is live) meaningful changes will be communicated to account holders. Continued use after an update means you accept the updated Terms.</p>
 
           <h3>Governing law</h3>
-          <p>These Terms are governed by the laws of the State of [GOVERNING STATE — Evan], without regard to its conflict-of-laws rules, and you agree to the exclusive jurisdiction of the state and federal courts located there for any dispute that isn&rsquo;t subject to another agreed process. ServeLocal is operated by [LEGAL ENTITY NAME — Evan].</p>
+          {LEGAL_VALUES_FILLED ? (
+            <p>These Terms are governed by the laws of the State of {GOVERNING_STATE}, without regard to its conflict-of-laws rules, and you agree to the exclusive jurisdiction of the state and federal courts located there for any dispute that isn&rsquo;t subject to another agreed process. ServeLocal is operated by {LEGAL_ENTITY_NAME}.</p>
+          ) : (
+            <p style={openClause} role="note">
+              <strong>Not yet settled.</strong> The governing state and the legal entity that operates
+              ServeLocal are still with a legal reviewer, so this clause is deliberately blank rather
+              than filled with a guess: [GOVERNING STATE — Evan] and [LEGAL ENTITY NAME — Evan]. Until
+              they are answered these Terms remain a draft and are not in effect.
+            </p>
+          )}
 
           <h3>Contact</h3>
           <p>Questions about these Terms: <SupportEmail />. See also our <Link href="/privacy">Privacy Policy</Link>.</p>
